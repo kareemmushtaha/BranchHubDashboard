@@ -1,0 +1,71 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Almarai', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* تطبيق خط Almarai على جميع العناصر */
+* {
+    font-family: 'Almarai', 'Segoe UI', 'Tahoma', 'Arial', sans-serif !important;
+}
+
+body {
+    font-family: 'Almarai', 'Segoe UI', 'Tahoma', 'Arial', sans-serif !important;
+}
+
+/* تحسين مظهر النصوص العربية */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+}
+
+.nav-link {
+    font-weight: 400;
+}
+
+.btn {
+    font-weight: 400;
+}
+
+.card-title {
+    font-weight: 700;
+}
+
+.table th {
+    font-weight: 700;
+}
+
+.table td {
+    font-weight: 400;
+}
+
+/* تحسين مظهر النصوص في الجداول */
+.table {
+    font-size: 0.9rem;
+}
+
+/* تحسين مظهر الأزرار */
+.btn-sm {
+    font-size: 0.875rem;
+}
+
+.btn-lg {
+    font-size: 1.125rem;
+}
+
+/* تحسين مظهر العناوين في الشريط الجانبي */
+.sidebar h5 {
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+/* تحسين مظهر الروابط في الشريط الجانبي */
+.sidebar .nav-link {
+    font-weight: 400;
+    font-size: 0.95rem;
+}
