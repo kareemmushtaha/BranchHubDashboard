@@ -113,7 +113,11 @@ class UserController extends Controller
     public function show(User $user)
     {
         $user->load(['wallet', 'sessions.payment', 'sessions.drinks', 'overTimes']);
-        return view('users.show', compact('user'));
+        $drinkInvoices = \App\Models\DrinkInvoice::where('user_id', $user->id)
+            ->with(['items.drink'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return view('users.show', compact('user', 'drinkInvoices'));
     }
 
     /**

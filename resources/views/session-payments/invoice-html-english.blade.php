@@ -351,16 +351,16 @@
                     </td>
                     <td>
                         @if($sessionPayment->session)
-                            ₪{{ number_format($sessionPayment->session->calculateInternetCost(), 2) }}
+                            {{ number_format($sessionPayment->session->calculateInternetCost(), 2) }} Shekels
                         @else
-                            ₪0.00
+                          0.00  Shekels
                         @endif
                     </td>
                     <td>
                         @if($sessionPayment->session)
-                            ₪{{ number_format($sessionPayment->session->calculateInternetCost(), 2) }}
+                           {{ number_format($sessionPayment->session->calculateInternetCost(), 2) }}
                         @else
-                            ₪0.00
+                           0.00 Shekels
                         @endif
                     </td>
                 </tr>
@@ -399,9 +399,9 @@
                         <td>Internet Cost:</td>
                         <td>
                             @if($sessionPayment->session)
-                                ₪{{ number_format($sessionPayment->session->calculateInternetCost(), 2) }}
+                               {{ number_format($sessionPayment->session->calculateInternetCost(), 2) }} Shekels
                             @else
-                                ₪0.00
+                               0.00 Shekels
                             @endif
                         </td>
                     </tr>
@@ -409,15 +409,15 @@
                         <td>Drinks Cost:</td>
                         <td>
                             @if($sessionPayment->session)
-                                ₪{{ number_format($sessionPayment->session->drinks->sum('price'), 2) }}
+                               {{ number_format($sessionPayment->session->drinks->sum('price'), 2) }} Shekels
                             @else
-                                ₪0.00
+                               0.00 Shekels
                             @endif
                         </td>
                     </tr>
                     <tr>
                         <td><strong>Total:</strong></td>
-                        <td><strong>₪{{ number_format($sessionPayment->total_price, 2) }}</strong></td>
+                        <td><strong>{{ number_format($sessionPayment->total_price, 2) }} Shekels</strong></td>
                     </tr>
                 </tbody>
             </table>
@@ -428,16 +428,16 @@
             <div class="payment-info">
                 <div class="section-title">Payment Information</div>
                 <div class="info-item">
-                    <span class="info-label">Amount Paid (Bank):</span> ₪{{ number_format($sessionPayment->amount_bank ?? 0, 2) }}
+                    <span class="info-label">Amount Paid (Bank):</span>{{ number_format($sessionPayment->amount_bank ?? 0, 2) }} Shekels
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Amount Paid (Cash):</span> ₪{{ number_format($sessionPayment->amount_cash ?? 0, 2) }}
+                    <span class="info-label">Amount Paid (Cash):</span>{{ number_format($sessionPayment->amount_cash ?? 0, 2) }} Shekels
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Total Paid:</span> ₪{{ number_format(($sessionPayment->amount_bank ?? 0) + ($sessionPayment->amount_cash ?? 0), 2) }}
+                    <span class="info-label">Total Paid:</span>{{ number_format(($sessionPayment->amount_bank ?? 0) + ($sessionPayment->amount_cash ?? 0), 2) }} Shekels
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Remaining Amount:</span> ₪{{ number_format($sessionPayment->remaining_amount ?? 0, 2) }}
+                    <span class="info-label">Remaining Amount:</span>{{ number_format($sessionPayment->remaining_amount ?? 0, 2) }} Shekels
                 </div>
             </div>
             <div class="payment-info">

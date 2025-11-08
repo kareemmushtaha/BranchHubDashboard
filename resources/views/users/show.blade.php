@@ -298,6 +298,9 @@
         </div>
     </div>
     <div class="btn-group">
+        <a href="{{ route('drink-invoices.create', ['user_id' => $user->id]) }}" class="btn btn-primary btn-custom me-2">
+            <i class="bi bi-cup-hot me-1"></i> فاتورة مشروبات
+        </a>
         <a href="{{ route('users.edit', $user) }}" class="btn btn-warning btn-custom me-2">
             <i class="bi bi-pencil me-1"></i> تعديل
         </a>
@@ -870,5 +873,92 @@
         </div>
     </div>
 </div>
+
+<!-- فواتير المشروبات -->
+@if($user->user_type == 'subscription')
+<div class="card sessions-card mb-4">
+    <div class="card-header bg-transparent border-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-cup-hot me-2"></i>
+                فواتير المشروبات
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+                <div class="badge bg-primary badge-custom">
+                    {{ $drinkInvoices->count() }} فاتورة
+                </div>
+                <a href="{{ route('drink-invoices.create', ['user_id' => $user->id]) }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle"></i> فاتورة جديدة
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        @if($drinkInvoices && $drinkInvoices->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-custom">
+                    <thead>
+                        <tr>
+                            <th>رقم الفاتورة</th>
+                            <th>عدد المشروبات</th>
+                            <th>إجمالي المبلغ</th>
+                            <th>حالة الدفع</th>
+                            <th>المتبقي</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($drinkInvoices as $invoice)
+                        <tr>
+                            <td>
+                                <a href="{{ route('drink-invoices.show', $invoice) }}" class="text-decoration-none session-link">
+                                    #{{ $invoice->id }}
+                                </a>
+                            </td>
+                            <td>{{ $invoice->items->sum('quantity') }}</td>
+                            <td>₪{{ number_format($invoice->total_price, 2) }}</td>
+                            <td>
+                                @if($invoice->payment_status == 'pending')
+                                    <span class="badge bg-warning">قيد الانتظار</span>
+                                @elseif($invoice->payment_status == 'paid')
+                                    <span class="badge bg-success">مدفوع</span>
+                                @elseif($invoice->payment_status == 'partial')
+                                    <span class="badge bg-info">مدفوع جزئياً</span>
+                                @else
+                                    <span class="badge bg-danger">ملغي</span>
+                                @endif
+                            </td>
+                            <td class="{{ $invoice->remaining_amount > 0 ? 'text-danger fw-bold' : 'text-success' }}">
+                                ₪{{ number_format($invoice->remaining_amount, 2) }}
+                            </td>
+                            <td>{{ $invoice->created_at->format('Y-m-d H:i') }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ route('drink-invoices.show', $invoice) }}" class="btn btn-sm btn-primary" title="عرض">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('drink-invoices.edit', $invoice) }}" class="btn btn-sm btn-warning" title="تعديل">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="text-center py-4">
+                <i class="bi bi-cup-hot display-4 text-muted mb-3"></i>
+                <p class="text-muted">لا توجد فواتير مشروبات لهذا المستخدم</p>
+                <a href="{{ route('drink-invoices.create', ['user_id' => $user->id]) }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> إنشاء فاتورة جديدة
+                </a>
+            </div>
+        @endif
+    </div>
+</div>
+@endif
 
 @endsection

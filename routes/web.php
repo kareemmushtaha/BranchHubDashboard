@@ -6,7 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SessionPaymentController;
-
+use App\Http\Controllers\DrinkInvoiceController;
 use App\Http\Controllers\DrinkController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SessionAuditController;
@@ -95,11 +95,20 @@ Route::post('users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name(
 Route::post('users/bulk-restore', [UserController::class, 'bulkRestore'])->name('users.bulk-restore');
 Route::post('users/bulk-force-delete', [UserController::class, 'bulkForceDelete'])->name('users.bulk-force-delete');
 
+// Drink Invoices Routes
+Route::resource('drink-invoices', DrinkInvoiceController::class);
+Route::post('drink-invoices/{drinkInvoice}/add-drink', [DrinkInvoiceController::class, 'addDrink'])->name('drink-invoices.add-drink');
+Route::delete('drink-invoices/{drinkInvoice}/items/{item}', [DrinkInvoiceController::class, 'removeDrink'])->name('drink-invoices.remove-drink');
+Route::put('drink-invoices/{drinkInvoice}/items/{item}/update-date', [DrinkInvoiceController::class, 'updateDrinkDate'])->name('drink-invoices.update-drink-date');
+Route::get('drink-invoices/{drinkInvoice}/invoice', [DrinkInvoiceController::class, 'generateInvoice'])->name('drink-invoices.invoice');
+Route::get('drink-invoices/{drinkInvoice}/invoice/show', [DrinkInvoiceController::class, 'showInvoice'])->name('drink-invoices.invoice.show');
+
 // Sessions Routes
 Route::resource('sessions', SessionController::class);
 Route::post('sessions/{session}/end', [SessionController::class, 'endSession'])->name('sessions.end');
 Route::post('sessions/{session}/cancel', [SessionController::class, 'cancelSession'])->name('sessions.cancel');
 Route::post('sessions/{session}/add-drink', [SessionController::class, 'addDrink'])->name('sessions.add-drink');
+Route::put('sessions/{session}/drinks/{sessionDrink}/update-date', [SessionController::class, 'updateDrinkDate'])->name('sessions.update-drink-date');
 Route::delete('sessions/{session}/drinks/{sessionDrink}', [SessionController::class, 'removeDrink'])->name('sessions.remove-drink');
 
 

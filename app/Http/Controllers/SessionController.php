@@ -9,6 +9,7 @@ use App\Models\SessionDrink;
 use App\Models\Drink;
 use App\Models\PublicPrice;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class SessionController extends Controller
@@ -456,6 +457,50 @@ class SessionController extends Controller
         }
 
         return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Update drink date and time
+     */
+    public function updateDrinkDate(Request $request, Session $session, SessionDrink $sessionDrink)
+    {
+        // التحقق من أن الجلسة نشطة أو مكتملة
+        if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
+            return redirect()->back()->with('error', 'لا يمكن تعديل تاريخ المشروبات في الجلسات الملغية');
+        }
+
+        // التحقق من أن المشروب ينتمي للجلسة
+        if ($sessionDrink->session_id !== $session->id) {
+            return redirect()->back()->with('error', 'المشروب لا ينتمي لهذه الجلسة');
+        }
+
+        $request->validate([
+            'created_at' => 'required|date'
+        ]);
+
+        $oldDate = $sessionDrink->created_at->format('Y-m-d H:i:s');
+        $newDate = Carbon::parse($request->created_at);
+
+        // تحديث التاريخ والوقت مباشرة في قاعدة البيانات
+        // لأن Laravel لا يسمح بتحديث created_at عبر update()
+        DB::table('session_drinks')
+            ->where('id', $sessionDrink->id)
+            ->update([
+                'created_at' => $newDate,
+                'updated_at' => now()
+            ]);
+        
+        // إعادة تحميل النموذج للحصول على القيم المحدثة
+        $sessionDrink->refresh();
+
+        // تسجيل audit log
+        $drinkName = $sessionDrink->drink->name ?? 'غير محدد';
+        $sessionDrink->logCustomAudit(
+            'update_drink_date',
+            "تم تحديث تاريخ ووقت مشروب {$drinkName} من {$oldDate} إلى {$newDate->format('Y-m-d H:i:s')}"
+        );
+
+        return redirect()->back()->with('success', 'تم تحديث تاريخ ووقت المشروب بنجاح');
     }
 
     /**

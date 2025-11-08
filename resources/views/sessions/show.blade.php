@@ -66,7 +66,7 @@
                                     <small>هذه الجلسة نشطة ولكن لم تبدأ بعد. يمكن تعديلها أو إلغاؤها قبل بدايتها.</small>
                                 </div>
                             @endif
-                            
+
                             @if($session->isSubscription())
                                 <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#updateExpectedEndDateModal">
                                     <i class="bi bi-calendar-plus"></i> تحديث تاريخ الانتهاء
@@ -95,7 +95,7 @@
                 <i class="bi bi-printer"></i> عرض للطباعة
             </a>
         @endif
-        
+
         <a href="{{ route('sessions.audit', $session) }}" class="btn btn-info">
             <i class="bi bi-clock-history"></i> سجلات التدقيق
         </a>
@@ -138,7 +138,7 @@
                     <div class="col-sm-6">
                         @if($session->session_category == 'hourly')
                             <span class="badge bg-info">ساعي</span>
-                        
+
                         @elseif($session->session_category == 'subscription')
                             <span class="badge bg-success">اشتراك</span>
                         @else
@@ -242,7 +242,7 @@
                         @endif
                     </div>
                 </div>
-                
+
                 <!-- التاريخ المتوقع للانتهاء -->
                 @php
                     $expectedEndDate = $session->getExpectedEndDate();
@@ -250,7 +250,7 @@
                     $isOverdue = $session->isOverdue();
                     $remainingDays = $session->getRemainingDays();
                 @endphp
-                
+
                 @if($expectedEndDate)
                 <hr>
                 <div class="row">
@@ -259,14 +259,14 @@
                         <span class="text-primary">{{ $expectedEndDate->format('Y-m-d') }}</span>
                         <br>
                         <small class="text-muted">{{ $expectedEndDate->format('H:i') }}</small>
-                        
+
                         @if($session->isSubscription() && $session->expected_end_date)
                             <br><span class="badge bg-secondary mt-1">
                                 <i class="bi bi-calendar-check"></i>
                                 محدد يدوياً
                             </span>
                         @endif
-                        
+
                         @if(!$session->end_at)
                             @if($isOverdue)
                                 @php
@@ -302,7 +302,7 @@
                     </div>
                 </div>
                 @endif
-                
+
                 @if($session->note)
                 <hr>
                 <div class="row">
@@ -310,7 +310,7 @@
                     <div class="col-sm-6">{{ $session->note }}</div>
                 </div>
                 @endif
-                
+
                 <!-- معلومات إضافية للجلسات الاشتراكية -->
                 @if($session->isSubscription())
                 <hr>
@@ -347,20 +347,20 @@
                     </div>
                 </div>
                 @endif
-                
+
                 <!-- تفاصيل تكلفة الإنترنت -->
                 @php
                     $publicPrices = \App\Models\PublicPrice::first();
                     $sessionCost = $session->calculateInternetCost();
                     $hourlyRate = 0;
                     $duration = 0;
-                    
+
                     // حساب المدة والسعر بالساعة للعرض
                     $startTime = $session->start_at;
                     $endTime = $session->end_at ?? now();
                     $durationInMinutes = $startTime->diffInMinutes($endTime);
                     $duration = $durationInMinutes / 60;
-                    
+
                     switch ($session->session_category) {
                         case 'hourly':
                             $hourlyRate = $publicPrices->hourly_rate ?? 5.00;
@@ -375,7 +375,7 @@
                             break;
                     }
                 @endphp
-                
+
                 @if($session->session_category == 'hourly' || $session->session_category == 'overtime')
                 <hr>
                 <div class="row">
@@ -410,7 +410,7 @@
                                 @endif
                             </small>
                         @endif
-                        
+
                         @if($session->session_status == 'active' || $session->session_status == 'completed')
                         <div class="mt-2">
                             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editInternetCostModal">
@@ -421,7 +421,7 @@
                     </div>
                 </div>
                 @endif
-                
+
                 <!-- تكلفة الإنترنت للجلسات الاشتراكية -->
                 @if($session->isSubscription())
                 <hr>
@@ -445,7 +445,7 @@
                                 @endif
                             </div>
                         @endif
-                        
+
                         @if($session->session_status == 'active' || $session->session_status == 'completed')
                         <div class="mt-2">
                             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editInternetCostModal">
@@ -477,11 +477,12 @@
                     $drinksCost = $session->drinks->sum('price');
                     $internetCost = $session->calculateInternetCost();
                 @endphp
-                
+
                 <div class="row">
                     <div class="col-sm-6"><strong>تكلفة الإنترنت:</strong></div>
                     <div class="col-sm-6 internet-cost-display">₪{{ number_format($internetCost, 2) }}</div>
                 </div>
+                @if(!$session->user || $session->user->user_type != 'subscription')
                 <hr>
                 <div class="row">
                     <div class="col-sm-6"><strong>تكلفة المشروبات:</strong></div>
@@ -490,6 +491,7 @@
                     </div>
                 </div>
                 <hr>
+                @endif
                 <div class="row bg-light p-3 rounded border">
                     <div class="col-sm-6"><strong> اجمالي المبلغ المستحق:</strong></div>
                     <div class="col-sm-6">
@@ -566,18 +568,18 @@
                 @else
                 <p class="text-muted">لم يتم إنشاء سجل دفع بعد</p>
                 @endif
-                
+
                 <!-- أزرار إدارة المدفوعة -->
                 <div class="mt-3">
                     @if($session->payment)
                              <a href="{{ route('session-payments.edit', $session->payment->id) }}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil"></i> تعديل المدفوعة
                             </a>
-                        
+
                         <a href="{{ route('session-payments.show', $session->payment->id) }}" class="btn btn-primary btn-sm">
                             <i class="bi bi-eye"></i> عرض تفاصيل المدفوعة
                         </a>
-                        
+
                         <!-- أزرار PDF والطباعة - متاحة لجميع الجلسات التي لديها مدفوعة -->
                         <a href="{{ route('session-payments.invoice', $session->payment->id) }}" class="btn btn-danger btn-sm">
                             <i class="bi bi-file-pdf"></i> تصدير PDF
@@ -585,14 +587,14 @@
                         <a href="{{ route('session-payments.invoice.show', $session->payment->id) }}" target="_blank" class="btn btn-info btn-sm">
                             <i class="bi bi-printer"></i> عرض للطباعة
                         </a>
-                        
-                   
+
+
                     @else
                         <a href="{{ route('session-payments.create', ['session_id' => $session->id]) }}" class="btn btn-success btn-sm">
                             <i class="bi bi-plus-circle"></i> إنشاء مدفوعة
                         </a>
                     @endif
-                    
+
 
                 </div>
             </div>
@@ -603,6 +605,7 @@
 
 
 <!-- المشروبات -->
+@if(!$session->user || $session->user->user_type != 'subscription')
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -650,7 +653,14 @@
                                 </td>
 
                                 <td>{{ $sessionDrink->note ?: '-' }}</td>
-                                <td>{{ $sessionDrink->created_at->format('H:i') }}</td>
+                                <td>
+                                    {{ $sessionDrink->created_at->format('Y-m-d H:i') }}
+                                    @if($session->session_status == 'active' || $session->session_status == 'completed')
+                                        <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#editDrinkDateModal{{ $sessionDrink->id }}">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    @endif
+                                </td>
                                 @if($session->session_status == 'active' || $session->session_status == 'completed')
                                 <td>
                                     <div class="btn-group" role="group">
@@ -675,7 +685,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    
+
 
                 </div>
                 @else
@@ -685,9 +695,10 @@
         </div>
     </div>
 </div>
+@endif
 
 <!-- Modal إضافة مشروب -->
-@if($session->session_status == 'active' || $session->session_status == 'completed')
+@if(($session->session_status == 'active' || $session->session_status == 'completed') && (!$session->user || $session->user->user_type != 'subscription'))
 <div class="modal fade" id="addDrinkModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -711,7 +722,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="quantity" class="form-label">عدد المشروبات</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" 
+                        <input type="number" class="form-control" id="quantity" name="quantity"
                                min="1" value="1" required>
                     </div>
                     <div class="mb-3">
@@ -720,7 +731,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="drink_note" class="form-label">ملاحظات</label>
-                        <input type="text" class="form-control" id="drink_note" name="note" 
+                        <input type="text" class="form-control" id="drink_note" name="note"
                                placeholder="ملاحظات إضافية (اختياري)">
                     </div>
                 </div>
@@ -732,6 +743,49 @@
         </div>
     </div>
 </div>
+@endif
+
+<!-- Modal تعديل تاريخ ووقت المشروب -->
+@if(($session->session_status == 'active' || $session->session_status == 'completed') && (!$session->user || $session->user->user_type != 'subscription'))
+@foreach($session->drinks as $sessionDrink)
+<div class="modal fade" id="editDrinkDateModal{{ $sessionDrink->id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل تاريخ ووقت المشروب</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('sessions.update-drink-date', ['session' => $session, 'sessionDrink' => $sessionDrink]) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">المشروب:</label>
+                        <div class="form-control-plaintext">{{ $sessionDrink->drink->name ?? 'غير محدد' }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="drink_date_{{ $sessionDrink->id }}" class="form-label">تاريخ ووقت الطلب</label>
+                        <input type="datetime-local" class="form-control" id="drink_date_{{ $sessionDrink->id }}"
+                               name="created_at"
+                               value="{{ $sessionDrink->created_at->format('Y-m-d\TH:i') }}" required>
+                        <div class="form-text">اختر التاريخ والوقت الجديد لطلب المشروب</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">التاريخ والوقت الحالي:</label>
+                        <div class="form-control-plaintext">{{ $sessionDrink->created_at->format('Y-m-d H:i:s') }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> حفظ التغييرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
 @endif
 
 <!-- Modal تعديل تكلفة الإنترنت -->
@@ -761,16 +815,16 @@
                             </ul>
                         </div>
                     @endif
-                    
+
                     <div class="mb-3">
                         <label for="custom_internet_cost" class="form-label">تكلفة الإنترنت المخصصة</label>
                         <div class="input-group">
                             <span class="input-group-text">₪</span>
-                            <input type="number" step="0.01" min="0" 
-                                   class="form-control @error('custom_internet_cost') is-invalid @enderror" 
-                                   id="custom_internet_cost" 
-                                   name="custom_internet_cost" 
-                                   value="{{ old('custom_internet_cost', $session->custom_internet_cost ?? ($session->isSubscription() ? '' : $sessionCost)) }}" 
+                            <input type="number" step="0.01" min="0"
+                                   class="form-control @error('custom_internet_cost') is-invalid @enderror"
+                                   id="custom_internet_cost"
+                                   name="custom_internet_cost"
+                                   value="{{ old('custom_internet_cost', $session->custom_internet_cost ?? ($session->isSubscription() ? '' : $sessionCost)) }}"
                                    placeholder="0.00">
                         </div>
                         @error('custom_internet_cost')
@@ -784,7 +838,7 @@
                             @endif
                         </small>
                     </div>
-                    
+
                     <div class="alert alert-info">
                         <h6><i class="bi bi-info-circle"></i> معلومات:</h6>
                         <ul class="mb-0 small">
@@ -793,7 +847,7 @@
                                 <li>التكلفة الافتراضية: مجانية (30 يوم)</li>
                                 <li>المدة الحالية: {{ $session->formatDuration($session->end_at ?? now()) }}</li>
                                 @if($session->expected_end_date)
-                                    <li>التاريخ المتوقع للانتهاء: {{ $session->expected_end_date->format('Y-m-d H:i') }}</li>
+                                    <li>التاريخ المتوقع للإنتهاء: {{ $session->expected_end_date->format('Y-m-d H:i') }}</li>
                                 @endif
                                 @if($session->hasCustomInternetCost())
                                     <li class="text-warning">هناك تكلفة مخصصة حالياً: ₪{{ number_format($session->custom_internet_cost, 2) }}</li>
@@ -827,20 +881,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const quantityInput = document.getElementById('quantity');
     const sessionId = {{ $session->id }};
     let updateInterval;
-    
+
     // تحديث أسعار المشروبات
     function updateTotalPrice() {
         const selectedOption = drinkSelect.options[drinkSelect.selectedIndex];
         const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
         const quantity = parseInt(quantityInput.value) || 1;
         const totalPrice = price * quantity;
-        
+
         const totalPriceDisplay = document.getElementById('total_price_display');
         if (totalPriceDisplay) {
             totalPriceDisplay.textContent = '₪' + totalPrice.toFixed(2);
         }
     }
-    
+
     // تحديث أسعار الجلسة بشكل ديناميكي
     function updateSessionPricing() {
         fetch(`/sessions/${sessionId}/pricing`)
@@ -861,7 +915,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('خطأ في تحديث الأسعار:', error);
             });
     }
-    
+
     // تحديث عرض الأسعار
     function updatePricingDisplay(data) {
         // تحديث تكلفة الإنترنت
@@ -869,25 +923,25 @@ document.addEventListener('DOMContentLoaded', function() {
         internetCostElements.forEach(element => {
             element.textContent = '₪' + data.pricing.internet_cost;
         });
-        
+
         // تحديث تكلفة المشروبات
         const drinksCostElements = document.querySelectorAll('.drinks-cost-display');
         drinksCostElements.forEach(element => {
             element.textContent = '₪' + data.pricing.drinks_cost;
         });
-        
+
         // تحديث التكلفة الإجمالية
         const totalCostElements = document.querySelectorAll('.total-cost-display');
         totalCostElements.forEach(element => {
             element.textContent = '₪' + data.pricing.total_cost;
         });
-        
+
         // تحديث المدة
         const durationElements = document.querySelectorAll('.session-duration-display');
         durationElements.forEach(element => {
             element.textContent = data.duration;
         });
-        
+
         // تحديث المبلغ المتبقي
         const remainingElements = document.querySelectorAll('.remaining-amount-display');
         remainingElements.forEach(element => {
@@ -898,13 +952,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 element.className = 'remaining-amount-display text-success fw-bold';
             }
         });
-        
+
         // تحديث وقت آخر تحديث
         const lastUpdateElement = document.getElementById('last-update-time');
         if (lastUpdateElement) {
             lastUpdateElement.textContent = new Date().toLocaleTimeString('ar-SA');
         }
-        
+
         // تحديث معلومات الجلسات الاشتراكية
         if (data.session_info && data.session_info.is_subscription) {
             // تحديث شارات الجلسات الاشتراكية
@@ -922,12 +976,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
-    
+
     // تحديث تكلفة الإنترنت يدوياً
     function updateInternetCost() {
         // إظهار رسالة تحميل
         showNotification('جاري تحديث تكلفة الإنترنت...', 'info');
-        
+
         fetch(`/sessions/${sessionId}/update-internet-cost`, {
             method: 'POST',
             headers: {
@@ -943,11 +997,11 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             console.log('Response data:', data);
-            
+
             if (data.success) {
                 // تحديث العرض
                 updateSessionPricing();
-                
+
                 // إظهار رسالة نجاح مع التفاصيل
                 const message = `تم تحديث تكلفة الإنترنت بنجاح - التكلفة: ₪${data.internet_cost}`;
                 showNotification(message, 'success');
@@ -960,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('حدث خطأ في الاتصال: ' + error.message, 'error');
         });
     }
-    
+
     // إظهار إشعار
     function showNotification(message, type) {
         // تحديد لون الإشعار
@@ -986,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 alertClass = 'alert-info';
                 iconClass = 'info-circle';
         }
-        
+
         const notification = document.createElement('div');
         notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
         notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 500px;';
@@ -995,9 +1049,9 @@ document.addEventListener('DOMContentLoaded', function() {
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         // إزالة الإشعار بعد 4 ثوان
         setTimeout(() => {
             if (notification.parentNode) {
@@ -1005,7 +1059,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 4000);
     }
-    
+
     // إضافة أزرار التحديث
     function addUpdateButtons() {
         const pricingSection = document.querySelector('.card-body');
@@ -1014,30 +1068,30 @@ document.addEventListener('DOMContentLoaded', function() {
             const buttonContainer = document.createElement('div');
             buttonContainer.className = 'mt-3 p-2 bg-light rounded';
             buttonContainer.innerHTML = '<small class="text-muted mb-2 d-block">تحديث الأسعار:</small>';
-            
+
             const updateButton = document.createElement('button');
             updateButton.className = 'btn btn-sm btn-outline-primary me-2';
             updateButton.innerHTML = '<i class="bi bi-arrow-clockwise"></i> تحديث الآن';
             updateButton.onclick = updateInternetCost;
-            
+
             const autoUpdateToggle = document.createElement('button');
             autoUpdateToggle.className = 'btn btn-sm btn-outline-success';
             autoUpdateToggle.innerHTML = '<i class="bi bi-play-circle"></i> التحديث التلقائي';
             autoUpdateToggle.onclick = toggleAutoUpdate;
-            
+
             buttonContainer.appendChild(updateButton);
             buttonContainer.appendChild(autoUpdateToggle);
             pricingSection.appendChild(buttonContainer);
         }
     }
-    
+
     // تبديل التحديث التلقائي
     function toggleAutoUpdate() {
         if (updateInterval) {
             clearInterval(updateInterval);
             updateInterval = null;
             showNotification('تم إيقاف التحديث التلقائي', 'info');
-            
+
             // تحديث نص الزر
             const button = event.target;
             button.innerHTML = '<i class="bi bi-play-circle"></i> التحديث التلقائي';
@@ -1045,34 +1099,34 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             updateInterval = setInterval(updateSessionPricing, 30000); // تحديث كل 30 ثانية
             showNotification('تم تفعيل التحديث التلقائي', 'success');
-            
+
             // تحديث نص الزر
             const button = event.target;
             button.innerHTML = '<i class="bi bi-pause-circle"></i> إيقاف التحديث';
             button.className = 'btn btn-sm btn-outline-warning mt-2 ms-2';
         }
     }
-    
+
     // تهيئة النظام
     if (drinkSelect) {
         drinkSelect.addEventListener('change', updateTotalPrice);
     }
-    
+
     if (quantityInput) {
         quantityInput.addEventListener('input', updateTotalPrice);
     }
-    
+
     // إضافة أزرار التحديث
     addUpdateButtons();
-    
+
     // تحديث أولي للأسعار
     updateSessionPricing();
-    
+
     // تحديث تلقائي كل دقيقة للجلسات النشطة
     if ({{ $session->session_status === 'active' ? 'true' : 'false' }}) {
         updateInterval = setInterval(updateSessionPricing, 60000);
     }
-    
+
     // تحسينات للجلسات الاشتراكية
     @if($session->isSubscription())
     // تحديث التاريخ المتوقع للانتهاء
@@ -1081,21 +1135,21 @@ document.addEventListener('DOMContentLoaded', function() {
         expectedEndDateInput.addEventListener('change', function() {
             const selectedDate = new Date(this.value);
             const startDate = new Date('{{ $session->start_at->format("Y-m-d\TH:i") }}');
-            
+
             if (selectedDate <= startDate) {
                 alert('تاريخ انتهاء الجلسة يجب أن يكون بعد تاريخ البداية');
                 this.value = '{{ $session->getExpectedEndDate()->format("Y-m-d\TH:i") }}';
             }
         });
     }
-    
+
     // تحسين نافذة إنهاء الجلسة الاشتراكية
     const endTimeInput = document.getElementById('end_time');
     if (endTimeInput) {
         endTimeInput.addEventListener('change', function() {
             const selectedDate = new Date(this.value);
             const startDate = new Date('{{ $session->start_at->format("Y-m-d\TH:i") }}');
-            
+
             if (selectedDate <= startDate) {
                 alert('وقت انتهاء الجلسة يجب أن يكون بعد وقت البداية');
                 this.value = new Date().toISOString().slice(0, 16);
@@ -1122,14 +1176,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="bi bi-info-circle me-2"></i>
                         <strong>تنبيه:</strong> عند تغيير تاريخ بداية الجلسة، سيتم إعادة حساب تكلفة الإنترنت تلقائياً إذا لم تكن هناك تكلفة مخصصة.
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="start_time" class="form-label">تاريخ ووقت بداية الجلسة</label>
-                        <input type="datetime-local" class="form-control" id="start_time" name="start_time" 
+                        <input type="datetime-local" class="form-control" id="start_time" name="start_time"
                                value="{{ $session->start_at->format('Y-m-d\TH:i') }}" required>
                         <div class="form-text">اختر التاريخ والوقت الجديد لبداية الجلسة</div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">التاريخ الحالي</label>
                         <div class="form-control-plaintext">{{ $session->start_at->format('Y-m-d H:i:s') }}</div>
@@ -1163,14 +1217,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="bi bi-info-circle me-2"></i>
                         <strong>تنبيه:</strong> يمكنك تحديد تاريخ انتهاء مخصص للجلسة الاشتراكية. إذا لم تحدد تاريخاً، سيتم استخدام التاريخ الافتراضي (30 يوم من تاريخ البداية).
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="expected_end_date" class="form-label">التاريخ المتوقع للانتهاء</label>
-                        <input type="datetime-local" class="form-control" id="expected_end_date" name="expected_end_date" 
+                        <input type="datetime-local" class="form-control" id="expected_end_date" name="expected_end_date"
                                value="{{ $session->expected_end_date ? $session->expected_end_date->format('Y-m-d\TH:i') : $session->getExpectedEndDate()->format('Y-m-d\TH:i') }}" required>
                         <div class="form-text">اختر التاريخ والوقت المتوقع لانتهاء الجلسة</div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">التاريخ الحالي المتوقع</label>
                         <div class="form-control-plaintext">
@@ -1182,7 +1236,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             @endif
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">تاريخ بداية الجلسة</label>
                         <div class="form-control-plaintext">{{ $session->start_at->format('Y-m-d H:i:s') }}</div>
@@ -1214,18 +1268,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="bi bi-exclamation-triangle me-2"></i>
                         <strong>تنبيه:</strong> سيتم إنهاء الجلسة الاشتراكية نهائياً. لا يمكن التراجع عن هذا الإجراء.
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="end_time" class="form-label">وقت انتهاء الجلسة (اختياري)</label>
-                        <input type="datetime-local" class="form-control" id="end_time" name="end_time" 
+                        <input type="datetime-local" class="form-control" id="end_time" name="end_time"
                                value="{{ now()->format('Y-m-d\TH:i') }}">
                         <div class="form-text">اترك الحقل فارغاً لإنهاء الجلسة في الوقت الحالي</div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">معلومات الجلسة</label>
                         <div class="form-control-plaintext">
-                            <strong>المستخدم:</strong> 
+                            <strong>المستخدم:</strong>
                             @if($session->user)
                                 <a href="{{ route('users.show', $session->user) }}" class="text-decoration-none">
                                     <span class="text-primary fw-bold">{{ $session->user->name }}</span>
@@ -1237,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <br>
                             <strong>تاريخ البداية:</strong> {{ $session->start_at->format('Y-m-d H:i:s') }}<br>
                             <strong>المدة الحالية:</strong> {{ $session->formatDuration() }}<br>
-                            <strong>التاريخ المتوقع للانتهاء:</strong> {{ $session->getExpectedEndDate()->format('Y-m-d H:i:s') }}
+                          <strong>التاريخ المتوقع للانتهاء:</strong> {{ $session->getExpectedEndDate()->format('Y-m-d H:i:s') }}
                         </div>
                     </div>
                 </div>
