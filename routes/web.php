@@ -1,0 +1,171 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\SessionController;
+use App\Http\Controllers\SessionPaymentController;
+use App\Http\Controllers\DrinkInvoiceController;
+use App\Http\Controllers\DrinkController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SessionAuditController;
+use App\Http\Controllers\SessionPriceController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\BookingRequestController;
+
+
+// Branch Hub Landing Page (for non-authenticated users)
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('branchhub-landing');
+})->name('branchhub.landing');
+
+// Welcome Page (alternative welcome page)
+Route::get('/welcome', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('welcome');
+})->name('welcome');
+
+// Advanced Landing Page
+Route::get('/landing-advanced', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('landing-advanced');
+})->name('landing.advanced');
+
+// Simple Landing Page
+Route::get('/landing-simple', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('landing-simple');
+})->name('landing.simple');
+
+// Branch Hub Landing Page (alternative route)
+Route::get('/branchhub', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('branchhub-landing');
+})->name('branchhub');
+
+// Branch Hub Booking Form
+Route::get('/booking', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('booking-form');
+})->name('booking.form');
+
+// Authentication Routes
+Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('login', [AuthController::class, 'login']);
+Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+
+// Profile Routes
+Route::get('profile', [AuthController::class, 'showProfile'])->name('profile');
+Route::put('profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+Route::post('profile/change-password', [AuthController::class, 'changePassword'])->name('profile.change-password');
+
+// Protected Routes
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard/real-time', function() {
+    return view('dashboard.real-time');
+})->name('dashboard.real-time');
+
+// Users Routes
+Route::resource('users', UserController::class);
+Route::post('users/{user}/charge-wallet', [UserController::class, 'chargeWallet'])->name('users.charge-wallet');
+Route::get('users/{user}/wallet-history', [UserController::class, 'walletHistory'])->name('users.wallet-history');
+
+// Soft Delete Routes for Users
+Route::get('users-trashed', [UserController::class, 'trashed'])->name('users.trashed');
+Route::post('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
+Route::delete('users/{id}/force-delete', [UserController::class, 'forceDelete'])->name('users.force-delete');
+
+// Bulk Actions Routes for Users
+Route::post('users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
+Route::post('users/bulk-restore', [UserController::class, 'bulkRestore'])->name('users.bulk-restore');
+Route::post('users/bulk-force-delete', [UserController::class, 'bulkForceDelete'])->name('users.bulk-force-delete');
+
+// Drink Invoices Routes
+Route::resource('drink-invoices', DrinkInvoiceController::class);
+Route::post('drink-invoices/{drinkInvoice}/add-drink', [DrinkInvoiceController::class, 'addDrink'])->name('drink-invoices.add-drink');
+Route::delete('drink-invoices/{drinkInvoice}/items/{item}', [DrinkInvoiceController::class, 'removeDrink'])->name('drink-invoices.remove-drink');
+Route::put('drink-invoices/{drinkInvoice}/items/{item}/update-date', [DrinkInvoiceController::class, 'updateDrinkDate'])->name('drink-invoices.update-drink-date');
+Route::get('drink-invoices/{drinkInvoice}/invoice', [DrinkInvoiceController::class, 'generateInvoice'])->name('drink-invoices.invoice');
+Route::get('drink-invoices/{drinkInvoice}/invoice/show', [DrinkInvoiceController::class, 'showInvoice'])->name('drink-invoices.invoice.show');
+
+// Sessions Routes
+Route::resource('sessions', SessionController::class);
+Route::post('sessions/{session}/end', [SessionController::class, 'endSession'])->name('sessions.end');
+Route::post('sessions/{session}/cancel', [SessionController::class, 'cancelSession'])->name('sessions.cancel');
+Route::post('sessions/{session}/add-drink', [SessionController::class, 'addDrink'])->name('sessions.add-drink');
+Route::put('sessions/{session}/drinks/{sessionDrink}/update-date', [SessionController::class, 'updateDrinkDate'])->name('sessions.update-drink-date');
+Route::delete('sessions/{session}/drinks/{sessionDrink}', [SessionController::class, 'removeDrink'])->name('sessions.remove-drink');
+
+
+// Soft Delete Routes for Sessions
+Route::get('sessions-trashed', [SessionController::class, 'trashed'])->name('sessions.trashed');
+Route::post('sessions/{id}/restore', [SessionController::class, 'restore'])->name('sessions.restore');
+Route::delete('sessions/{id}/force-delete', [SessionController::class, 'forceDelete'])->name('sessions.force-delete');
+
+// Bulk Actions Routes for Sessions
+Route::post('sessions/bulk-destroy', [SessionController::class, 'bulkDestroy'])->name('sessions.bulk-destroy');
+Route::post('sessions/bulk-restore', [SessionController::class, 'bulkRestore'])->name('sessions.bulk-restore');
+Route::post('sessions/bulk-force-delete', [SessionController::class, 'bulkForceDelete'])->name('sessions.bulk-force-delete');
+
+
+// Session Payments Routes
+Route::resource('session-payments', SessionPaymentController::class);
+Route::get('session-payments/{sessionPayment}/invoice', [SessionPaymentController::class, 'generateInvoice'])->name('session-payments.invoice');
+Route::get('session-payments/{sessionPayment}/invoice/show', [SessionPaymentController::class, 'showInvoice'])->name('session-payments.invoice.show');
+
+
+
+// Drinks Routes
+Route::resource('drinks', DrinkController::class);
+
+// Reports Routes
+Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+Route::get('reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
+Route::get('reports/users', [ReportController::class, 'users'])->name('reports.users');
+Route::get('reports/drinks', [ReportController::class, 'drinks'])->name('reports.drinks');
+
+// Audit Routes
+Route::get('sessions/{session}/audit', [SessionAuditController::class, 'show'])->name('sessions.audit');
+Route::get('audit', [SessionAuditController::class, 'index'])->name('audit.index');
+Route::get('audit/export', [SessionAuditController::class, 'export'])->name('audit.export');
+
+// Dynamic Pricing Routes
+Route::put('sessions/{session}/update-internet-cost', [SessionPriceController::class, 'updateInternetCost'])->name('sessions.update-internet-cost');
+Route::post('sessions/{session}/update-internet-cost-form', [SessionPriceController::class, 'updateInternetCostForm'])->name('sessions.update-internet-cost-form');
+Route::get('sessions/{session}/pricing', [SessionPriceController::class, 'getSessionPricing'])->name('sessions.pricing');
+Route::post('sessions/update-all-pricing', [SessionPriceController::class, 'updateAllActiveSessions'])->name('sessions.update-all-pricing');
+
+// Session Start Time Update Route
+Route::put('sessions/{session}/update-start-time', [SessionController::class, 'updateStartTime'])->name('sessions.update-start-time');
+Route::get('sessions/real-time-stats', [SessionPriceController::class, 'getRealTimePricingStats'])->name('sessions.real-time-stats');
+
+// Subscription Session Management Routes
+Route::put('sessions/{session}/update-expected-end-date', [SessionController::class, 'updateExpectedEndDate'])->name('sessions.update-expected-end-date');
+Route::post('sessions/{session}/end-subscription', [SessionController::class, 'endSubscriptionSession'])->name('sessions.end-subscription');
+
+// Expenses Routes
+Route::resource('expenses', ExpenseController::class);
+
+// Booking Requests Routes (Admin only) - excluding store method
+Route::resource('booking-requests', BookingRequestController::class)->except(['store']);
+Route::put('booking-requests/{id}/status', [BookingRequestController::class, 'updateStatus'])->name('booking-requests.update-status');
+
+});
+
+// Public booking request submission (no auth required)
+Route::post('booking-requests', [BookingRequestController::class, 'store'])->name('booking-requests.store');
