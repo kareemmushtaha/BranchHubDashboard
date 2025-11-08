@@ -150,11 +150,13 @@ class DrinkInvoiceController extends Controller
 
         $drink = Drink::findOrFail($request->drink_id);
         $quantity = $request->quantity ?? 1;
-        $totalPrice = $drink->price * $quantity;
+        $unitPrice = $drink->price; // حفظ سعر الوحدة في وقت الإضافة
+        $totalPrice = $unitPrice * $quantity;
 
         DrinkInvoiceItem::create([
             'drink_invoice_id' => $drinkInvoice->id,
             'drink_id' => $request->drink_id,
+            'unit_price' => $unitPrice, // حفظ سعر الوحدة
             'quantity' => $quantity,
             'price' => $totalPrice,
             'status' => 'ordered',

@@ -12,6 +12,7 @@ class DrinkInvoiceItem extends Model
     protected $fillable = [
         'drink_invoice_id',
         'drink_id',
+        'unit_price',
         'quantity',
         'price',
         'status',
@@ -19,6 +20,7 @@ class DrinkInvoiceItem extends Model
     ];
 
     protected $casts = [
+        'unit_price' => 'decimal:2',
         'price' => 'decimal:2',
     ];
 
