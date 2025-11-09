@@ -138,7 +138,7 @@
                             <tr>
                                 <td>{{ $item->drink->name ?? 'غير محدد' }}</td>
                                 <td>{{ $item->quantity ?? 1 }}</td>
-                                <td>₪{{ number_format($item->drink->price ?? 0, 2) }}</td>
+                                <td>₪{{ number_format($item->unit_price ?? $item->drink->price ?? 0, 2) }}</td>
                                 <td>₪{{ number_format($item->price, 2) }}</td>
                                 <td>
                                     @if($item->status == 'ordered')

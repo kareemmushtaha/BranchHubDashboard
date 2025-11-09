@@ -192,13 +192,43 @@
             margin: 5px 0;
             font-size: 12px;
         }
+        
+        .qrcode-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 2px solid #dc3545;
+        }
+        
+        .qrcode-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #dc3545;
+            margin-bottom: 10px;
+        }
+        
+        .qrcode-image {
+            width: 100px;
+            height: 100px;
+            margin: 10px auto;
+            border: 2px solid #dc3545;
+            padding: 5px;
+            background: #fff;
+        }
+        
+        .qrcode-text {
+            font-size: 11px;
+            color: #666;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <img src="{{ public_path('images/logo.jpeg') }}" alt="BranchHUB Logo" style="width: 80px; height: 80px; margin: 0 auto 10px; display: block; border-radius: 10px;">
         <div class="company-name">BranchHUB</div>
-        <div class="company-info">Internet & Cafe Center</div>
+        <div class="company-info">Workspace</div>
         <div class="company-info">Phone: +972592782897</div>
     </div>
 
@@ -351,6 +381,13 @@
         <p style="margin-top: 15px; font-size: 12px; color: #999;">
             This invoice was generated on {{ $sessionPayment->created_at->format('Y-m-d H:i:s') }}
         </p>
+    </div>
+
+    <!-- QR Code Section -->
+    <div class="qrcode-section">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://branchub.net/" alt="QR Code" class="qrcode-image">
+        <div class="qrcode-text">Scan this QR code to visit our website</div>
+        <div class="qrcode-text" style="font-size: 10px; color: #999; margin-top: 5px;">https://branchub.net/</div>
     </div>
 </body>
 </html>
