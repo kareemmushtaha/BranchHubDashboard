@@ -2,394 +2,307 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Session Invoice #{{ $sessionPayment->session->id ?? 'N/A' }}</title>
+    <!-- Set title using session ID -->
+    <title>Invoice #{{ $sessionPayment->session->id ?? 'N/A' }}</title>
     <style>
+        /* Reset and basic body styling */
         body {
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
             color: #333;
             background: #fff;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
         }
 
+        /* Main container for the invoice */
+        .invoice-container {
+            width: 800px;
+            margin: 40px auto;
+            padding: 40px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Header section with logo and invoice title */
         .header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 30px;
-            border-bottom: 2px solid #dc3545;
-            padding-bottom: 20px;
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-logo {
+            width: 100px;
+            height: auto;
+            margin-bottom: 15px;
         }
 
         .company-name {
             font-size: 24px;
             font-weight: bold;
-            color: #dc3545;
-            margin-bottom: 10px;
-        }
-
-        .company-info {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 5px;
+            color: #000;
+            margin: 0;
         }
 
         .invoice-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            margin: 20px 0 10px;
+            flex: 1;
+            text-align: right;
         }
 
-        .invoice-number {
-            font-size: 16px;
-            color: #dc3545;
-            font-weight: bold;
+        .invoice-title h1 {
+            font-size: 28px;
+            margin: 0;
+            color: #000;
         }
 
-        .invoice-date {
-            color: #666;
-            font-size: 14px;
+        /* Company details section */
+        .company-details {
+            margin-bottom: 30px;
         }
 
-        .info-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-        }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #dc3545;
-            margin-bottom: 10px;
-        }
-
-        .info-item {
-            margin: 5px 0;
-            font-size: 14px;
-        }
-
-        .info-label {
-            font-weight: bold;
+        .company-details p {
+            margin: 4px 0;
+            font-size: 13px;
             color: #555;
         }
 
-        .items-table {
+        /* Table styling for customer info and items */
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        table.customer-table th,
+        table.customer-table td {
             border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
         }
 
-        .items-table th {
-            background: #dc3545;
-            color: #fff;
-            padding: 10px;
-            text-align: left;
+        table.customer-table th {
+            background-color: #f9f9f9;
             font-weight: bold;
-            font-size: 14px;
+            width: 150px; /* Fixed width for labels */
         }
 
-        .items-table td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-            font-size: 14px;
-        }
-
-        .items-table tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-
-        .total-section {
-            text-align: right;
-            margin-bottom: 20px;
-        }
-
-        .total-table {
-            width: 300px;
-            border-collapse: collapse;
-            border: 1px solid #ddd;
-            margin-left: auto;
-        }
-
-        .total-table th {
-            background: #dc3545;
-            color: #fff;
-            padding: 8px 10px;
-            text-align: left;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .total-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-            font-size: 14px;
-        }
-
-        .total-table tr:last-child {
-            background: #dc3545;
-            color: #fff;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .payment-section {
-            margin-bottom: 20px;
+        /* Service details section */
+        .service-details {
+            margin-bottom: 30px;
             padding: 15px;
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
+            background-color: #fdfdfd;
+            border: 1px solid #eee;
             border-radius: 5px;
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-weight: bold;
-            font-size: 12px;
-            text-align: center;
-            min-width: 100px;
-        }
-
-        .status-paid {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
-        .status-partial {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 20px;
-            background: #f8f9fa;
-            border-top: 2px solid #dc3545;
-            margin-top: 30px;
-        }
-
-        .footer h3 {
-            color: #dc3545;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .footer p {
-            color: #666;
+        .service-details p {
             margin: 5px 0;
-            font-size: 12px;
         }
 
+        .service-details span {
+            font-weight: bold;
+            color: #000;
+        }
+
+        /* Items table (Sub Total, VAT, etc.) */
+        table.items-table {
+            border: 1px solid #ddd;
+        }
+
+        table.items-table th,
+        table.items-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        table.items-table th {
+            background-color: #f9f9f9;
+            font-weight: bold;
+            border-bottom: 2px solid #ddd;
+        }
+
+        table.items-table .total-row td {
+            font-weight: bold;
+            font-size: 16px;
+            border-top: 2px solid #000;
+        }
+
+        /* Styling for the total value box, matching the image */
+        .total-value {
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            display: inline-block;
+            min-width: 120px;
+            text-align: right;
+        }
+
+        /* QR Code section */
         .qrcode-section {
             text-align: center;
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-top: 2px solid #dc3545;
+            margin-top: 40px;
         }
 
-        .qrcode-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: #dc3545;
-            margin-bottom: 10px;
+        .qrcode-section img {
+            width: 120px;
+            height: 120px;
         }
 
-        .qrcode-image {
-            width: 100px;
-            height: 100px;
-            margin: 10px auto;
-            border: 2px solid #dc3545;
-            padding: 5px;
-            background: #fff;
-        }
-
-        .qrcode-text {
-            font-size: 11px;
-            color: #666;
-            margin-top: 10px;
+        .qrcode-section p {
+            font-size: 13px;
+            color: #555;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <img src="{{ public_path('images/logo.jpeg') }}" alt="BranchHUB Logo" style="width: 80px; height: 80px; margin: 0 auto 10px; display: block; border-radius: 10px;">
-        <div class="company-name">BranchHUB</div>
-        <div class="company-info">Workspace</div>
-        <div class="company-info">Phone: +972592782897</div>
-    </div>
-
-    <div class="invoice-title">Subscription Invoice</div>
-    <div style="color: #666; font-size: 11px; margin: 5px 0 15px 0; font-style: italic;">
-        This invoice contains subscription details including internet usage, and payment information
-    </div>
-    <div class="invoice-number">Invoice #: {{ $sessionPayment->session->id ?? 'N/A' }}</div>
-
-    <div class="info-section">
-        <div class="section-title">Customer Information</div>
-        <div class="info-item">
-            <span class="info-label">Name:</span> {{ $sessionPayment->session->user->name ?? 'Not Specified' }}
-        </div>
-        <div class="info-item">
-            <span class="info-label">Phone:</span> {{ $sessionPayment->session->user->phone ?? 'Not Specified' }}
-        </div>
-        <div class="info-item">
-            <span class="info-label">Email:</span> {{ $sessionPayment->session->user->email ?? 'Not Specified' }}
-        </div>
-    </div>
-
-    <div class="info-section">
-        <div class="section-title">Subscription Information</div>
-        <div class="info-item">
-            <span class="info-label">Subscription ID:</span> #{{ $sessionPayment->session->id ?? 'N/A' }}
-        </div>
-        <div class="info-item">
-            <span class="info-label">Subscription Date:</span> {{ $sessionPayment->session->start_at ? $sessionPayment->session->start_at->format('Y-m-d H:i') : 'Not Specified' }}
-        </div>
-        <div class="info-item">
-            <span class="info-label">Subscription End At:</span>
-            @if($sessionPayment->session)
-                @if($sessionPayment->session->expected_end_date)
-                    {{ $sessionPayment->session->expected_end_date->format('Y-m-d') }}
-                @elseif($sessionPayment->session->end_at)
-                    {{ $sessionPayment->session->end_at->format('Y-m-d') }}
-                @else
-                   {{  $sessionPayment->session->getExpectedEndDate()}}
-                @endif
-            @else
-                Not Specified
-            @endif
-        </div>
-        <div class="info-item">
-            <span class="info-label">Subscription Type:</span>
-            @if($sessionPayment->session)
-                @if($sessionPayment->session->session_category == 'hourly')
-                    Hourly
-
-                @elseif($sessionPayment->session->session_category == 'subscription')
-                    Subscription
-                @else
-                    Additional
-                @endif
-            @else
-                Not Specified
-            @endif
-        </div>
-        <div class="info-item">
-            <span class="info-label">Subscription Status:</span>
-            @if($sessionPayment->session)
-                @if($sessionPayment->session->session_status == 'active')
-                    Active
-                @elseif($sessionPayment->session->session_status == 'completed')
-                    Completed
-                @else
-                    Cancelled
-                @endif
-            @else
-                Not Specified
-            @endif
-        </div>
-    </div>
-
-    <div class="info-section">
-        <div class="section-title">Cost Details</div>
-        <div class="info-item">
-            <span class="info-label">Internet Cost:</span>
-            @if($sessionPayment->session)
-                {{ number_format($sessionPayment->session->calculateInternetCost(), 2) }} Shekels
-            @else
-                0.00 Shekels
-            @endif
-        </div>
-        <div class="info-item">
-            <span class="info-label">Drinks Cost:</span>
-            @if($sessionPayment->session)
-                {{ number_format($sessionPayment->session->drinks->sum('price'), 2) }} Shekels
-            @else
-                0.00 Shekels
-            @endif
-        </div>
-        <div class="info-item">
-            <span class="info-label">Total:</span> {{ number_format($sessionPayment->total_price, 2) }} Shekels
-        </div>
-    </div>
-
-    <div class="info-section">
-        <div class="section-title">Payment Information</div>
-        <div class="info-item">
-            <span class="info-label">Amount Paid (Bank):</span>{{ number_format($sessionPayment->amount_bank ?? 0, 2) }} Shekels
-        </div>
-        <div class="info-item">
-            <span class="info-label">Amount Paid (Cash):</span> {{ number_format($sessionPayment->amount_cash ?? 0, 2) }} Shekels
-        </div>
-        <div class="info-item">
-            <span class="info-label">Total Paid:</span> {{ number_format(($sessionPayment->amount_bank ?? 0) + ($sessionPayment->amount_cash ?? 0), 2) }} Shekels
-        </div>
-        <div class="info-item">
-            <span class="info-label">Remaining Amount: {{ number_format($sessionPayment->remaining_amount ?? 0, 2) }} Shekels </span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Refund Amount:</span>
-            @php
-                $totalPaid = ($sessionPayment->amount_bank ?? 0) + ($sessionPayment->amount_cash ?? 0);
-                $refundAmount = $totalPaid - $sessionPayment->total_price;
-            @endphp
-            @if($refundAmount > 0)
-                <span style="color: #28a745; font-weight: bold;">{{ number_format($refundAmount, 2) }} Shekels (Should be refunded) </span>
-{{--            @elseif($refundAmount < 0)--}}
-{{--                <span style="color: #dc3545; font-weight: bold;">{{ number_format(abs($refundAmount), 2) }} Shekels (Remaining to pay)</span>--}}
-            @else
-                <span style="color: #6c757d;">0.00 Shekels (No refund needed)</span>
-            @endif
-        </div>
-        <div class="info-item">
-            <span class="info-label">Payment Status:</span>
-            @if($sessionPayment->payment_status == 'paid')
-                Fully Paid
-            @elseif($sessionPayment->payment_status == 'pending')
-                Pending
-            @elseif($sessionPayment->payment_status == 'partial')
-                Partial Payment
-            @elseif($sessionPayment->payment_status == 'cancelled')
-                Cancelled
-            @else
-                Pending
-            @endif
-        </div>
-        @if($sessionPayment->note)
-            <div class="info-item">
-                <span class="info-label">Note:</span> {{ $sessionPayment->note }}
+    <div class="invoice-container">
+        <!-- Header: Logo and Invoice Number -->
+        <div class="header">
+            <div class="company-info">
+                <!-- Using your existing logo path -->
+                <img src="{{ public_path('images/logo.jpeg') }}" alt="Company Logo" class="company-logo">
+                {{-- Replace with your company name from the image --}}
+                <h2 class="company-name">Al-Mutamayiz Medical Care</h2>
             </div>
-        @endif
-    </div>
+            <div class="invoice-title">
+                <!-- Using your session ID for the invoice number -->
+                <h1>Invoice #{{ $sessionPayment->session->id ?? 'N/A' }}</h1>
+            </div>
+        </div>
 
-    <div class="footer">
-        <h3>Thank you for choosing BranchHUB</h3>
-        <p>Phone: +972592782897</p>
-        <p>Email: {{ config('app.email', 'info@branchhub.com') }}</p>
-        <p style="margin-top: 15px; font-size: 12px; color: #999;">
-            This invoice was generated on {{ $sessionPayment->created_at->format('Y-m-d H:i:s') }}
-        </p>
-    </div>
+        <!-- Company Details: Tax, CR, Address -->
+        <div class="company-details">
+            {{-- Static text from the image. Replace with your actual details. --}}
+            <p style="font-weight: bold; font-size: 16px;">Simplified Tax Invoice</p>
+            <p>Tax No: 310388104700003</p>
+            <p>CR: 2050126726</p>
+            <p>King Saud St, Dammam 32248</p>
+        </div>
 
-    <!-- QR Code Section -->
-    <div class="qrcode-section">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://branchub.net/" alt="QR Code" class="qrcode-image">
-        <div class="qrcode-text">Scan this QR code to visit our website</div>
-        <div class="qrcode-text" style="font-size: 10px; color: #999; margin-top: 5px;">https://branchub.net/</div>
+        <!-- Customer Information Table -->
+        <table class="customer-table">
+            <tbody>
+                <tr>
+                    <th>Invoice For</th>
+                    <td>{{ $sessionPayment->session->user->name ?? 'Not Specified' }}</td>
+                </tr>
+                <tr>
+                    <th>Phone</th>
+                    <td>{{ $sessionPayment->session->user->phone ?? 'Not Specified' }}</td>
+                </tr>
+                <tr>
+                    {{-- The image had "Identity", which isn't in your old code. Added as a placeholder. --}}
+                    <th>Identity</th>
+                    <td>{{ $sessionPayment->session->user->email ?? 'Not Specified' }}</td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    {{-- Using the payment creation date. Adjust if needed. --}}
+                    <td>{{ $sessionPayment->created_at->format('Y-m-d') }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Service Details -->
+        <div class="service-details">
+            <p>
+                <span>Main Service:</span> 
+                {{-- Mapping your session type to "Main Service" --}}
+                @if($sessionPayment->session)
+                    @if($sessionPayment->session->session_category == 'hourly')
+                        Hourly Workspace
+                    @elseif($sessionPayment->session->session_category == 'subscription')
+                        Subscription
+                    @else
+                        Additional Services
+                    @endif
+                @else
+                    Not Specified
+                @endif
+            </p>
+            <p>
+                <span>Sub Service:</span>
+                {{-- Using Subscription ID as "Sub Service" --}}
+                Subscription ID #{{ $sessionPayment->session->id ?? 'N/A' }}
+            </p>
+            <p>
+                <span>Details:</span>
+                {{-- Placeholder for details. You can add more info here. --}}
+                Payment for workspace subscription and services.
+                Status:
+                @if($sessionPayment->payment_status == 'paid')
+                    Fully Paid
+                @elseif($sessionPayment->payment_status == 'pending')
+                    Pending
+                @elseif($sessionPayment->payment_status == 'partial')
+                    Partial Payment
+                @else
+                    {{ ucfirst($sessionPayment->payment_status) }}
+                @endif
+            </p>
+        </div>
+
+        <!--
+            Calculating totals based on the image structure (Sub Total, VAT, Total).
+            We assume your 'total_price' INCLUDES 15% VAT, so we back-calculate.
+            If 'total_price' is pre-tax, you should adjust this logic.
+        -->
+        @php
+            // Assume total_price includes 15% VAT
+            $totalPrice = $sessionPayment->total_price ?? 0;
+            $subTotal = $totalPrice / 1.15;
+            $vat = $totalPrice - $subTotal;
+
+            // Calculate refund (if any)
+            $totalPaid = ($sessionPayment->amount_bank ?? 0) + ($sessionPayment->amount_cash ?? 0);
+            $refundAmount = $totalPaid - $totalPrice;
+            $refundDisplay = $refundAmount > 0 ? $refundAmount : 0.00;
+        @endphp
+
+        <!-- Items Table: Sub Total, VAT, Refunded, Total -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th style="text-align: right;">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Sub Total</td>
+                    <td style="text-align: right;">{{ number_format($subTotal, 2) }} SAR</td>
+                </tr>
+                <tr>
+                    <td>Vat (15%)</td>
+                    <td style="text-align: right;">{{ number_format($vat, 2) }} SAR</td>
+                </tr>
+                <tr>
+                    <td>Refunded</td>
+                    <td style="text-align: right;">{{ number_format($refundDisplay, 2) }} SAR</td>
+                </tr>
+                <tr class="total-row">
+                    <td><strong>Total</strong></td>
+                    <td style="text-align: right;">
+                        <!-- Styled box for the final total -->
+                        <span class="total-value">{{ number_format($totalPrice, 2) }} SAR</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- QR Code Section -->
+        <div class="qrcode-section">
+            <!-- Using the same QR generator but pointing to your site -->
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://branchub.net/" alt="QR Code">
+            <p>Scan to verify</p>
+        </div>
     </div>
 </body>
 </html>
