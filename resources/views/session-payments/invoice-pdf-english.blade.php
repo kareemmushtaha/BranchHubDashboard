@@ -339,7 +339,7 @@
             <span class="info-label">Total Paid:</span> {{ number_format(($sessionPayment->amount_bank ?? 0) + ($sessionPayment->amount_cash ?? 0), 2) }} Shekels
         </div>
         <div class="info-item">
-            <span class="info-label" style="color: #dc3545; font-weight: bold;">Remaining Amount:</span> {{ number_format($sessionPayment->remaining_amount ?? 0, 2) }} Shekels
+            <span class="info-label">Remaining Amount: {{ number_format($sessionPayment->remaining_amount ?? 0, 2) }} Shekels </span>
         </div>
         <div class="info-item">
             <span class="info-label">Refund Amount:</span>
