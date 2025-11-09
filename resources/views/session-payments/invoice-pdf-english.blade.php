@@ -263,9 +263,9 @@
             <span class="info-label">Subscription End At:</span>
             @if($sessionPayment->session)
                 @if($sessionPayment->session->expected_end_date)
-                    {{ $sessionPayment->session->expected_end_date->format('Y-m-d H:i') }}
+                    {{ $sessionPayment->session->expected_end_date->format('Y-m-d') }}
                 @elseif($sessionPayment->session->end_at)
-                    {{ $sessionPayment->session->end_at->format('Y-m-d H:i') }}
+                    {{ $sessionPayment->session->end_at->format('Y-m-d') }}
                 @else
                    {{  $sessionPayment->session->getExpectedEndDate()}}
                 @endif
@@ -339,7 +339,7 @@
             <span class="info-label">Total Paid:</span> {{ number_format(($sessionPayment->amount_bank ?? 0) + ($sessionPayment->amount_cash ?? 0), 2) }} Shekels
         </div>
         <div class="info-item">
-            <span class="info-label">Remaining Amount:</span> {{ number_format($sessionPayment->remaining_amount ?? 0, 2) }} Shekels
+            <span class="info-label" style="color: #dc3545; font-weight: bold;">Remaining Amount:</span> {{ number_format($sessionPayment->remaining_amount ?? 0, 2) }} Shekels
         </div>
         <div class="info-item">
             <span class="info-label">Refund Amount:</span>
@@ -349,8 +349,8 @@
             @endphp
             @if($refundAmount > 0)
                 <span style="color: #28a745; font-weight: bold;">{{ number_format($refundAmount, 2) }} Shekels (Should be refunded) </span>
-            @elseif($refundAmount < 0)
-                <span style="color: #dc3545; font-weight: bold;">{{ number_format(abs($refundAmount), 2) }} Shekels (Remaining to pay)</span>
+{{--            @elseif($refundAmount < 0)--}}
+{{--                <span style="color: #dc3545; font-weight: bold;">{{ number_format(abs($refundAmount), 2) }} Shekels (Remaining to pay)</span>--}}
             @else
                 <span style="color: #6c757d;">0.00 Shekels (No refund needed)</span>
             @endif
