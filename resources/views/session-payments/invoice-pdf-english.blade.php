@@ -192,7 +192,7 @@
             margin: 5px 0;
             font-size: 12px;
         }
-        
+
         .qrcode-section {
             text-align: center;
             margin-top: 30px;
@@ -200,14 +200,14 @@
             background: #f8f9fa;
             border-top: 2px solid #dc3545;
         }
-        
+
         .qrcode-title {
             font-size: 14px;
             font-weight: bold;
             color: #dc3545;
             margin-bottom: 10px;
         }
-        
+
         .qrcode-image {
             width: 100px;
             height: 100px;
@@ -216,7 +216,7 @@
             padding: 5px;
             background: #fff;
         }
-        
+
         .qrcode-text {
             font-size: 11px;
             color: #666;
@@ -228,13 +228,15 @@
     <div class="header">
         <img src="{{ public_path('images/logo.jpeg') }}" alt="BranchHUB Logo" style="width: 80px; height: 80px; margin: 0 auto 10px; display: block; border-radius: 10px;">
         <div class="company-name">BranchHUB</div>
-        <div class="company-info">Internet & Cafe Center</div>
+        <div class="company-info">Workspace</div>
         <div class="company-info">Phone: +972592782897</div>
     </div>
 
-    <div class="invoice-title">Session Invoice</div>
+    <div class="invoice-title">Subscription Invoice</div>
+    <div style="color: #666; font-size: 11px; margin: 5px 0 15px 0; font-style: italic;">
+        This invoice contains subscription details including internet usage, and payment information
+    </div>
     <div class="invoice-number">Invoice #: {{ $sessionPayment->session->id ?? 'N/A' }}</div>
-    <div class="invoice-date">Invoice Date: {{ $sessionPayment->created_at->format('Y-m-d H:i') }}</div>
 
     <div class="info-section">
         <div class="section-title">Customer Information</div>
@@ -250,15 +252,15 @@
     </div>
 
     <div class="info-section">
-        <div class="section-title">Session Information</div>
+        <div class="section-title">Subscription Information</div>
         <div class="info-item">
-            <span class="info-label">Session ID:</span> #{{ $sessionPayment->session->id ?? 'N/A' }}
+            <span class="info-label">Subscription ID:</span> #{{ $sessionPayment->session->id ?? 'N/A' }}
         </div>
         <div class="info-item">
-            <span class="info-label">Session Date:</span> {{ $sessionPayment->session->start_at ? $sessionPayment->session->start_at->format('Y-m-d H:i') : 'Not Specified' }}
+            <span class="info-label">Subscription Date:</span> {{ $sessionPayment->session->start_at ? $sessionPayment->session->start_at->format('Y-m-d H:i') : 'Not Specified' }}
         </div>
         <div class="info-item">
-            <span class="info-label">Session End At:</span>
+            <span class="info-label">Subscription End At:</span>
             @if($sessionPayment->session)
                 @if($sessionPayment->session->expected_end_date)
                     {{ $sessionPayment->session->expected_end_date->format('Y-m-d H:i') }}
@@ -272,7 +274,7 @@
             @endif
         </div>
         <div class="info-item">
-            <span class="info-label">Session Type:</span>
+            <span class="info-label">Subscription Type:</span>
             @if($sessionPayment->session)
                 @if($sessionPayment->session->session_category == 'hourly')
                     Hourly
@@ -287,7 +289,7 @@
             @endif
         </div>
         <div class="info-item">
-            <span class="info-label">Session Status:</span>
+            <span class="info-label">Subscription Status:</span>
             @if($sessionPayment->session)
                 @if($sessionPayment->session->session_status == 'active')
                     Active

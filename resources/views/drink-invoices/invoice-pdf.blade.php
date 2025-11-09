@@ -200,7 +200,7 @@
     <div class="header">
         <img src="{{ public_path('images/logo.jpeg') }}" alt="BranchHUB Logo" style="width: 80px; height: 80px; margin: 0 auto 10px; display: block; border-radius: 10px;">
         <div class="company-name">BranchHUB</div>
-        <div class="company-info">Internet & Cafe Center</div>
+        <div class="company-info">Workspace</div>
         <div class="company-info">Phone: +972592782897</div>
     </div>
 
