@@ -212,13 +212,45 @@ class DrinkInvoiceController extends Controller
     }
 
     /**
+     * Update drink item unit price and quantity
+     */
+    public function updateDrinkPrice(Request $request, DrinkInvoice $drinkInvoice, DrinkInvoiceItem $item)
+    {
+        if ($item->drink_invoice_id !== $drinkInvoice->id) {
+            return redirect()->back()->with('error', 'المشروب لا ينتمي لهذه الفاتورة');
+        }
+
+        $request->validate([
+            'unit_price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:1'
+        ]);
+
+        $newUnitPrice = $request->unit_price;
+        $newQuantity = $request->quantity;
+        $newTotalPrice = $newUnitPrice * $newQuantity;
+
+        $item->update([
+            'unit_price' => $newUnitPrice,
+            'quantity' => $newQuantity,
+            'price' => $newTotalPrice
+        ]);
+
+        // تحديث إجمالي الفاتورة
+        $drinkInvoice->updateTotal();
+
+        return redirect()->back()->with('success', 'تم تحديث السعر والكمية بنجاح');
+    }
+
+    /**
      * Generate PDF invoice for the drink invoice
      */
     public function generateInvoice(DrinkInvoice $drinkInvoice)
     {
         try {
             // Load the drink invoice with relationships
-            $drinkInvoice->load(['user', 'items.drink']);
+            $drinkInvoice->load(['user', 'items' => function($query) {
+                $query->orderBy('created_at', 'asc');
+            }, 'items.drink']);
             
             // Generate PDF using DOMPDF
             $pdf = \PDF::loadView('drink-invoices.invoice-pdf', compact('drinkInvoice'));
@@ -248,7 +280,9 @@ class DrinkInvoiceController extends Controller
     {
         try {
             // Load the drink invoice with relationships
-            $drinkInvoice->load(['user', 'items.drink']);
+            $drinkInvoice->load(['user', 'items' => function($query) {
+                $query->orderBy('created_at', 'asc');
+            }, 'items.drink']);
             
             return view('drink-invoices.invoice-pdf', compact('drinkInvoice'));
             

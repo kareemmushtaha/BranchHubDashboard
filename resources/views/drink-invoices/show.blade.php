@@ -134,11 +134,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($drinkInvoice->items as $item)
+                            @foreach($drinkInvoice->items->sortBy('created_at') as $item)
                             <tr>
                                 <td>{{ $item->drink->name ?? 'غير محدد' }}</td>
                                 <td>{{ $item->quantity ?? 1 }}</td>
-                                <td>₪{{ number_format($item->unit_price ?? $item->drink->price ?? 0, 2) }}</td>
+                                <td>
+                                    ₪{{ number_format($item->unit_price ?? $item->drink->price ?? 0, 2) }}
+                                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#editDrinkPriceModal{{ $item->id }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </td>
                                 <td>₪{{ number_format($item->price, 2) }}</td>
                                 <td>
                                     @if($item->status == 'ordered')
@@ -272,6 +277,58 @@
 </div>
 @endforeach
 
+<!-- Modal تعديل سعر الواحدة والكمية -->
+@foreach($drinkInvoice->items as $item)
+<div class="modal fade" id="editDrinkPriceModal{{ $item->id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل السعر والكمية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('drink-invoices.update-drink-price', ['drinkInvoice' => $drinkInvoice, 'item' => $item]) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">المشروب:</label>
+                        <div class="form-control-plaintext">{{ $item->drink->name ?? 'غير محدد' }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity_{{ $item->id }}" class="form-label">الكمية</label>
+                        <input type="number" step="1" min="1" class="form-control" id="quantity_{{ $item->id }}" 
+                               name="quantity" 
+                               value="{{ $item->quantity ?? 1 }}" required>
+                        <div class="form-text">الكمية الحالية: {{ $item->quantity ?? 1 }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="unit_price_{{ $item->id }}" class="form-label">سعر الواحدة (₪)</label>
+                        <input type="number" step="0.01" min="0" class="form-control" id="unit_price_{{ $item->id }}" 
+                               name="unit_price" 
+                               value="{{ $item->unit_price ?? $item->drink->price ?? 0 }}" required>
+                        <div class="form-text">السعر الحالي: ₪{{ number_format($item->unit_price ?? $item->drink->price ?? 0, 2) }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">السعر الإجمالي الحالي:</label>
+                        <div class="form-control-plaintext">₪{{ number_format($item->price, 2) }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">السعر الإجمالي الجديد:</label>
+                        <div class="form-control-plaintext fw-bold text-primary" id="new_total_price_{{ $item->id }}">₪{{ number_format($item->price, 2) }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> حفظ التغييرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const drinkSelect = document.getElementById('drink_id');
@@ -296,6 +353,29 @@ document.addEventListener('DOMContentLoaded', function() {
     if (quantityInput) {
         quantityInput.addEventListener('input', updateTotalPrice);
     }
+    
+    // حساب السعر الإجمالي الجديد عند تعديل سعر الواحدة أو الكمية
+    @foreach($drinkInvoice->items as $item)
+    (function() {
+        const unitPriceInput{{ $item->id }} = document.getElementById('unit_price_{{ $item->id }}');
+        const quantityInput{{ $item->id }} = document.getElementById('quantity_{{ $item->id }}');
+        const newTotalPriceDisplay{{ $item->id }} = document.getElementById('new_total_price_{{ $item->id }}');
+        
+        if (unitPriceInput{{ $item->id }} && quantityInput{{ $item->id }} && newTotalPriceDisplay{{ $item->id }}) {
+            function updateNewTotalPrice{{ $item->id }}() {
+                const unitPrice = parseFloat(unitPriceInput{{ $item->id }}.value) || 0;
+                const quantity = parseInt(quantityInput{{ $item->id }}.value) || 1;
+                const newTotalPrice = unitPrice * quantity;
+                newTotalPriceDisplay{{ $item->id }}.textContent = '₪' + newTotalPrice.toFixed(2);
+            }
+            
+            unitPriceInput{{ $item->id }}.addEventListener('input', updateNewTotalPrice{{ $item->id }});
+            unitPriceInput{{ $item->id }}.addEventListener('change', updateNewTotalPrice{{ $item->id }});
+            quantityInput{{ $item->id }}.addEventListener('input', updateNewTotalPrice{{ $item->id }});
+            quantityInput{{ $item->id }}.addEventListener('change', updateNewTotalPrice{{ $item->id }});
+        }
+    })();
+    @endforeach
 });
 </script>
 
