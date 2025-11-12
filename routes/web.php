@@ -100,6 +100,7 @@ Route::resource('drink-invoices', DrinkInvoiceController::class);
 Route::post('drink-invoices/{drinkInvoice}/add-drink', [DrinkInvoiceController::class, 'addDrink'])->name('drink-invoices.add-drink');
 Route::delete('drink-invoices/{drinkInvoice}/items/{item}', [DrinkInvoiceController::class, 'removeDrink'])->name('drink-invoices.remove-drink');
 Route::put('drink-invoices/{drinkInvoice}/items/{item}/update-date', [DrinkInvoiceController::class, 'updateDrinkDate'])->name('drink-invoices.update-drink-date');
+Route::put('drink-invoices/{drinkInvoice}/items/{item}/update-price', [DrinkInvoiceController::class, 'updateDrinkPrice'])->name('drink-invoices.update-drink-price');
 Route::get('drink-invoices/{drinkInvoice}/invoice', [DrinkInvoiceController::class, 'generateInvoice'])->name('drink-invoices.invoice');
 Route::get('drink-invoices/{drinkInvoice}/invoice/show', [DrinkInvoiceController::class, 'showInvoice'])->name('drink-invoices.invoice.show');
 
