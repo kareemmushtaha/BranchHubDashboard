@@ -110,6 +110,7 @@ Route::post('sessions/{session}/end', [SessionController::class, 'endSession'])-
 Route::post('sessions/{session}/cancel', [SessionController::class, 'cancelSession'])->name('sessions.cancel');
 Route::post('sessions/{session}/add-drink', [SessionController::class, 'addDrink'])->name('sessions.add-drink');
 Route::put('sessions/{session}/drinks/{sessionDrink}/update-date', [SessionController::class, 'updateDrinkDate'])->name('sessions.update-drink-date');
+Route::put('sessions/{session}/drinks/{sessionDrink}/update-price', [SessionController::class, 'updateDrinkPrice'])->name('sessions.update-drink-price');
 Route::delete('sessions/{session}/drinks/{sessionDrink}', [SessionController::class, 'removeDrink'])->name('sessions.remove-drink');
 
 

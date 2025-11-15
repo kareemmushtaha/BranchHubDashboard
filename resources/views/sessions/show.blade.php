@@ -640,7 +640,14 @@
                             <tr>
                                 <td>{{ $sessionDrink->drink->name ?? 'غير محدد' }}</td>
                                 <td>{{ $sessionDrink->quantity ?? 1 }}</td>
-                                <td>₪{{ number_format($sessionDrink->drink->price ?? 0, 2) }}</td>
+                                <td>
+                                    ₪{{ number_format(($sessionDrink->price / ($sessionDrink->quantity ?? 1)), 2) }}
+                                    @if($session->session_status == 'active' || $session->session_status == 'completed')
+                                        <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#editDrinkPriceModal{{ $sessionDrink->id }}">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    @endif
+                                </td>
                                 <td>₪{{ number_format($sessionDrink->price, 2) }}</td>
                                 <td>
                                     @if($sessionDrink->status == 'ordered')
@@ -773,6 +780,60 @@
                     <div class="mb-3">
                         <label class="form-label">التاريخ والوقت الحالي:</label>
                         <div class="form-control-plaintext">{{ $sessionDrink->created_at->format('Y-m-d H:i:s') }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> حفظ التغييرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+@endif
+
+<!-- Modal تعديل سعر الواحدة والكمية -->
+@if(($session->session_status == 'active' || $session->session_status == 'completed') && (!$session->user || $session->user->user_type != 'subscription'))
+@foreach($session->drinks as $sessionDrink)
+<div class="modal fade" id="editDrinkPriceModal{{ $sessionDrink->id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل السعر والكمية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('sessions.update-drink-price', ['session' => $session, 'sessionDrink' => $sessionDrink]) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">المشروب:</label>
+                        <div class="form-control-plaintext">{{ $sessionDrink->drink->name ?? 'غير محدد' }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity_{{ $sessionDrink->id }}" class="form-label">الكمية</label>
+                        <input type="number" step="1" min="1" class="form-control" id="quantity_{{ $sessionDrink->id }}" 
+                               name="quantity" 
+                               value="{{ $sessionDrink->quantity ?? 1 }}" required>
+                        <div class="form-text">الكمية الحالية: {{ $sessionDrink->quantity ?? 1 }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="unit_price_{{ $sessionDrink->id }}" class="form-label">سعر الواحدة (₪)</label>
+                        <input type="number" step="0.01" min="0" class="form-control" id="unit_price_{{ $sessionDrink->id }}" 
+                               name="unit_price" 
+                               value="{{ number_format(($sessionDrink->price / ($sessionDrink->quantity ?? 1)), 2, '.', '') }}" required>
+                        <div class="form-text">السعر الحالي: ₪{{ number_format(($sessionDrink->price / ($sessionDrink->quantity ?? 1)), 2) }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">السعر الإجمالي الحالي:</label>
+                        <div class="form-control-plaintext">₪{{ number_format($sessionDrink->price, 2) }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">السعر الإجمالي الجديد:</label>
+                        <div class="form-control-plaintext fw-bold text-primary" id="new_total_price_{{ $sessionDrink->id }}">₪{{ number_format($sessionDrink->price, 2) }}</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1306,5 +1367,34 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 @endif
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // حساب السعر الإجمالي الجديد عند تعديل سعر الواحدة أو الكمية
+    @if(($session->session_status == 'active' || $session->session_status == 'completed') && (!$session->user || $session->user->user_type != 'subscription'))
+    @foreach($session->drinks as $sessionDrink)
+    (function() {
+        const unitPriceInput{{ $sessionDrink->id }} = document.getElementById('unit_price_{{ $sessionDrink->id }}');
+        const quantityInput{{ $sessionDrink->id }} = document.getElementById('quantity_{{ $sessionDrink->id }}');
+        const newTotalPriceDisplay{{ $sessionDrink->id }} = document.getElementById('new_total_price_{{ $sessionDrink->id }}');
+        
+        if (unitPriceInput{{ $sessionDrink->id }} && quantityInput{{ $sessionDrink->id }} && newTotalPriceDisplay{{ $sessionDrink->id }}) {
+            function updateNewTotalPrice{{ $sessionDrink->id }}() {
+                const unitPrice = parseFloat(unitPriceInput{{ $sessionDrink->id }}.value) || 0;
+                const quantity = parseInt(quantityInput{{ $sessionDrink->id }}.value) || 1;
+                const newTotalPrice = unitPrice * quantity;
+                newTotalPriceDisplay{{ $sessionDrink->id }}.textContent = '₪' + newTotalPrice.toFixed(2);
+            }
+            
+            unitPriceInput{{ $sessionDrink->id }}.addEventListener('input', updateNewTotalPrice{{ $sessionDrink->id }});
+            unitPriceInput{{ $sessionDrink->id }}.addEventListener('change', updateNewTotalPrice{{ $sessionDrink->id }});
+            quantityInput{{ $sessionDrink->id }}.addEventListener('input', updateNewTotalPrice{{ $sessionDrink->id }});
+            quantityInput{{ $sessionDrink->id }}.addEventListener('change', updateNewTotalPrice{{ $sessionDrink->id }});
+        }
+    })();
+    @endforeach
+    @endif
+});
+</script>
 
 @endsection

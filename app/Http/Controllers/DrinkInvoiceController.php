@@ -120,7 +120,10 @@ class DrinkInvoiceController extends Controller
             'note' => $request->note
         ]);
 
-        $drinkInvoice->updateRemainingAmount();
+        // تحديث المبلغ المتبقي فقط دون تغيير حالة الدفع (لأنها محددة يدوياً)
+        $totalPaid = $drinkInvoice->amount_bank + $drinkInvoice->amount_cash;
+        $drinkInvoice->remaining_amount = max(0, $drinkInvoice->total_price - $totalPaid);
+        $drinkInvoice->save();
 
         return redirect()->route('drink-invoices.show', $drinkInvoice)
             ->with('success', 'تم تحديث الفاتورة بنجاح');
