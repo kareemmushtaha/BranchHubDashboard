@@ -504,6 +504,75 @@ class SessionController extends Controller
     }
 
     /**
+     * Update drink item unit price and quantity
+     */
+    public function updateDrinkPrice(Request $request, Session $session, SessionDrink $sessionDrink)
+    {
+        // التحقق من أن الجلسة نشطة أو مكتملة
+        if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
+            return redirect()->back()->with('error', 'لا يمكن تعديل سعر المشروبات في الجلسات الملغية');
+        }
+
+        // التحقق من أن المشروب ينتمي للجلسة
+        if ($sessionDrink->session_id !== $session->id) {
+            return redirect()->back()->with('error', 'المشروب لا ينتمي لهذه الجلسة');
+        }
+
+        $request->validate([
+            'unit_price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:1'
+        ]);
+
+        $oldPrice = $sessionDrink->price;
+        $oldQuantity = $sessionDrink->quantity;
+        $newUnitPrice = $request->unit_price;
+        $newQuantity = $request->quantity;
+        $newTotalPrice = $newUnitPrice * $newQuantity;
+
+        // حفظ حالة الدفع قبل التحديث
+        $oldPaymentStatus = $session->payment ? $session->payment->payment_status : null;
+
+        // تحديث السعر والكمية
+        $sessionDrink->update([
+            'quantity' => $newQuantity,
+            'price' => $newTotalPrice
+        ]);
+
+        // تسجيل audit log
+        $drinkName = $sessionDrink->drink->name ?? 'غير محدد';
+        $sessionDrink->logCustomAudit(
+            'update_drink_price',
+            "تم تحديث سعر وكمية مشروب {$drinkName} (الكمية: {$oldQuantity} → {$newQuantity}, السعر: \${$oldPrice} → \${$newTotalPrice})"
+        );
+
+        // تحديث إجمالي المبلغ
+        $this->updateSessionTotal($session);
+        
+        // التحقق من تغيير حالة الدفع
+        $session->refresh();
+        $newPaymentStatus = $session->payment ? $session->payment->payment_status : null;
+        
+        $message = 'تم تحديث السعر والكمية بنجاح';
+        if ($oldPaymentStatus && $newPaymentStatus && $oldPaymentStatus !== $newPaymentStatus) {
+            $statusText = '';
+            switch ($newPaymentStatus) {
+                case 'paid':
+                    $statusText = 'مدفوع بالكامل';
+                    break;
+                case 'partial':
+                    $statusText = 'مدفوع جزئياً';
+                    break;
+                case 'pending':
+                    $statusText = 'قيد الانتظار';
+                    break;
+            }
+            $message .= ' - تم تحديث حالة الدفع إلى: ' . $statusText;
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
      * Calculate session cost based on time and category
      */
     private function calculateSessionCost(Session $session)
