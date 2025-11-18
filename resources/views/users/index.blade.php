@@ -3,6 +3,16 @@
 @section('title', 'إدارة المستخدمين')
 
 @section('content')
+@php
+    $userTypeBadges = [
+        'hourly' => ['label' => 'ساعي', 'class' => 'bg-info'],
+        'subscription' => ['label' => 'اشتراك', 'class' => 'bg-success'],
+        'prepaid' => ['label' => 'مدفوع مسبقاً', 'class' => 'bg-primary'],
+        'manager' => ['label' => 'مدير إداري', 'class' => 'bg-warning text-dark'],
+        'admin' => ['label' => 'مدير النظام', 'class' => 'bg-danger'],
+    ];
+@endphp
+
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">إدارة المستخدمين</h1>
     <div>
@@ -80,6 +90,38 @@
             </div>
         </div>
     </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-secondary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['manager_users'] }}</h4>
+                        <p class="card-text">مديرين إداريين</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-shield-check fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['admin_users'] }}</h4>
+                        <p class="card-text">مديرو النظام</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-person-gear fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- فلاتر البحث والفلترة -->
@@ -120,6 +162,8 @@
                                 <option value="">الكل</option>
                                 <option value="hourly" {{ request('user_type') == 'hourly' ? 'selected' : '' }}>ساعي</option>
                                 <option value="subscription" {{ request('user_type') == 'subscription' ? 'selected' : '' }}>اشتراك</option>
+                                <option value="manager" {{ request('user_type') == 'manager' ? 'selected' : '' }}>مدير إداري</option>
+                                <option value="admin" {{ request('user_type') == 'admin' ? 'selected' : '' }}>مدير النظام</option>
                             </select>
                             <small class="text-muted">فلترة فورية</small>
                         </div>
@@ -250,12 +294,10 @@
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->email }}</td>
                         <td>
-                            @if($user->user_type == 'hourly')
-                                <span class="badge bg-info">ساعي</span>
-
-                            @else
-                                <span class="badge bg-success">اشتراك</span>
-                            @endif
+                            @php
+                                $typeInfo = $userTypeBadges[$user->user_type] ?? ['label' => 'غير معروف', 'class' => 'bg-secondary'];
+                            @endphp
+                            <span class="badge {{ $typeInfo['class'] }}">{{ $typeInfo['label'] }}</span>
                         </td>
                         <td>
                             @if($user->status == 'active')

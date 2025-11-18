@@ -61,6 +61,8 @@ class UserController extends Controller
             'active_users' => User::where('status', 'active')->count(),
             'hourly_users' => User::where('user_type', 'hourly')->count(),
             'subscription_users' => User::where('user_type', 'subscription')->count(),
+            'admin_users' => User::where('user_type', 'admin')->count(),
+            'manager_users' => User::where('user_type', 'manager')->count(),
             'filtered_count' => $users->total(),
         ];
 
@@ -84,7 +86,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:users',
             'phone' => 'nullable|string|max:20',
-            'user_type' => 'required|in:hourly,subscription',
+            'user_type' => 'required|in:hourly,subscription,admin,manager',
             'status' => 'required|in:active,inactive,suspended'
         ]);
 
@@ -137,7 +139,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
-            'user_type' => 'required|in:hourly,subscription',
+            'user_type' => 'required|in:hourly,subscription,admin,manager',
             'status' => 'required|in:active,inactive,suspended'
         ]);
 

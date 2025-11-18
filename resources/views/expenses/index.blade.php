@@ -18,10 +18,12 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>قيمة المبلغ</th>
-                            <th>نوع الدفع</th>
-                            <th>التفاصيل</th>
-                            <th>المستخدم</th>
+                            <th>اسم البند</th>
+                            <th>سعر البند</th>
+                            <th>طريقة الدفع</th>
+                            <th>تاريخ الدفع</th>
+                            <th>الوصف</th>
+                            <th>تم الإدخال بواسطة</th>
                             <th>تاريخ الإضافة</th>
                             <th>الإجراءات</th>
                         </tr>
@@ -30,6 +32,9 @@
                         @foreach($expenses as $expense)
                         <tr>
                             <td>{{ $expense->id }}</td>
+                            <td>
+                                <strong>{{ $expense->item_name ?? 'غير محدد' }}</strong>
+                            </td>
                             <td>
                                 <span class="badge bg-danger fs-6">
                                     {{ number_format($expense->amount, 2) }} ₪
@@ -41,11 +46,26 @@
                                 </span>
                             </td>
                             <td>
+                                <i class="bi bi-calendar me-1"></i>
+                                {{ $expense->payment_date ? $expense->payment_date->format('Y-m-d') : $expense->created_at->format('Y-m-d') }}
+                            </td>
+                            <td>
                                 <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ $expense->details }}">
                                     {{ $expense->details }}
                                 </span>
                             </td>
-                            <td>{{ $expense->user->name }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle me-2 text-primary"></i>
+                                    <div>
+                                        <strong>{{ $expense->user->name }}</strong>
+                                        @if($expense->user->email)
+                                            <br>
+                                            <small class="text-muted">{{ $expense->user->email }}</small>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
                             <td>{{ $expense->created_at->format('Y-m-d H:i') }}</td>
                             <td>
                                 <div class="btn-group" role="group">

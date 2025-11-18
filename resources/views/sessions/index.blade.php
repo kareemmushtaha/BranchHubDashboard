@@ -281,7 +281,7 @@
                         <select name="session_category" id="session_category" class="form-select">
                             <option value="">جميع الأنواع</option>
                             @foreach($categories as $value => $label)
-                                <option value="{{ $value }}" {{ request('session_category') == $value ? 'selected' : '' }}>
+                                <option value="{{ $value }}" {{ (request('session_category') === null ? 'hourly' : request('session_category')) == $value ? 'selected' : '' }}>
                                     {{ $label }}
                                 </option>
                             @endforeach
@@ -294,7 +294,7 @@
                         </label>
                         <select name="session_status" id="session_status" class="form-select">
                             <option value="">جميع الحالات</option>
-                            <option value="active" {{ request('session_status') == 'active' ? 'selected' : '' }}>نشط</option>
+                            <option value="active" {{ (request('session_status') === null ? 'active' : request('session_status')) == 'active' ? 'selected' : '' }}>نشط</option>
                             <option value="completed" {{ request('session_status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
                             <option value="cancelled" {{ request('session_status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
                         </select>
@@ -334,7 +334,7 @@
                                name="start_date_from" 
                                id="start_date_from" 
                                class="form-control"
-                               value="{{ request('start_date_from') }}">
+                               value="{{ request('start_date_from', \Carbon\Carbon::today()->format('Y-m-d')) }}">
                     </div>
                     <div class="col-md-2">
                         <label for="start_date_to" class="form-label">
@@ -345,7 +345,7 @@
                                name="start_date_to" 
                                id="start_date_to" 
                                class="form-control"
-                               value="{{ request('start_date_to') }}">
+                               value="{{ request('start_date_to', \Carbon\Carbon::today()->format('Y-m-d')) }}">
                     </div>
                     <div class="col-md-2">
                         <label for="search" class="form-label">
@@ -534,13 +534,10 @@
                         <th>صاحب الجلسة</th>
                         <th>الفئة</th>
                         <th>بداية الجلسة</th>
-                        <th>نهاية الجلسة</th>
-                        <th>المدة</th>
                         <th>التكلفة</th>
                         <th>المبلغ المرتجع</th>
                         <th>حالة الدفع</th>
                         <th>الحالة</th>
-                        <th>معلومات إضافية</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
@@ -583,24 +580,6 @@
                             @endif
                         </td>
                         <td>{{ $session->start_at->format('Y-m-d H:i') }}</td>
-                        <td>{{ $session->end_at ? $session->end_at->format('Y-m-d H:i') : '-' }}</td>
-                        <td>
-                            @if($session->end_at)
-                                {{-- الجلسة منتهية: عرض المدة من البداية حتى تاريخ الانتهاء --}}
-                                {{ $session->start_at->diffForHumans($session->end_at, true) }}
-                            @else
-                                {{-- الجلسة نشطة: عرض المدة من البداية حتى الوقت الحالي --}}
-                                @php
-                                    $now = \Carbon\Carbon::now();
-                                    $duration = $session->start_at->diffForHumans($now, true);
-                                @endphp
-                                <span class="text-success">
-                                    <i class="bi bi-clock"></i>
-                                    {{ $duration }}
-                                    <small class="text-muted">(حتى الآن)</small>
-                                </span>
-                            @endif
-                        </td>
                         <td>
                             @if($session->payment)
                                 @php
@@ -683,36 +662,6 @@
                             @endif
                         </td>
                         <td>
-                            @if($session->isSubscription())
-                                @if($session->end_at)
-                                    <span class="text-muted small">منتهية</span>
-                                @else
-                                    @php
-                                        $remainingDays = $session->getRemainingDays();
-                                        $isOverdue = $session->isOverdue();
-                                    @endphp
-                                    @if($isOverdue)
-                                        <span class="badge bg-danger small">
-                                            <i class="bi bi-exclamation-triangle"></i>
-                                            متأخرة
-                                        </span>
-                                    @elseif($remainingDays !== null)
-                                        @if($remainingDays == 0)
-                                            <span class="badge bg-warning small">تنتهي اليوم</span>
-                                        @elseif($remainingDays == 1)
-                                            <span class="badge bg-warning small">تنتهي غداً</span>
-                                        @else
-                                            <span class="badge bg-info small">{{ $remainingDays }} يوم</span>
-                                        @endif
-                                    @else
-                                        <span class="text-muted small">غير محدد</span>
-                                    @endif
-                                @endif
-                            @else
-                                <span class="text-muted small">-</span>
-                            @endif
-                        </td>
-                        <td>
                             <div class="btn-group" role="group">
                                 <a href="{{ route('sessions.show', $session) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
@@ -731,14 +680,7 @@
                                         <i class="bi bi-x-circle"></i>
                                     </button>
                                 </form>
-                                @endif
-                                
-                                <!-- زر تصدير PDF - متاح لجميع الجلسات التي لديها مدفوعة -->
-                                @if($session->payment)
-                                    <a href="{{ route('session-payments.invoice', $session->payment->id) }}" class="btn btn-sm btn-outline-danger" title="تصدير PDF">
-                                        <i class="bi bi-file-pdf"></i>
-                                    </a>
-                                @endif
+                                @endif                              
                                 
                                 <form action="{{ route('sessions.destroy', $session) }}" method="POST" class="d-inline session-delete-form">
                                     @csrf

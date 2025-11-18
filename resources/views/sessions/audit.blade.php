@@ -195,24 +195,32 @@
                                 القيم القديمة
                             </h6>
                             @if($log->old_values)
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>الحقل</th>
-                                                <th>القيمة</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($log->old_values as $field => $value)
-                                            <tr>
-                                                <td><strong>{{ $field }}</strong></td>
-                                                <td>{{ is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value }}</td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
+                                @php
+                                    $oldValues = is_string($log->old_values) ? json_decode($log->old_values, true) : $log->old_values;
+                                    $oldValues = is_array($oldValues) ? $oldValues : [];
+                                @endphp
+                                @if(!empty($oldValues))
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>الحقل</th>
+                                                    <th>القيمة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($oldValues as $field => $value)
+                                                <tr>
+                                                    <td><strong>{{ $field }}</strong></td>
+                                                    <td>{{ is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value }}</td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <p class="text-muted">لا توجد قيم قديمة</p>
+                                @endif
                             @else
                                 <p class="text-muted">لا توجد قيم قديمة</p>
                             @endif
@@ -223,24 +231,32 @@
                                 القيم الجديدة
                             </h6>
                             @if($log->new_values)
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>الحقل</th>
-                                                <th>القيمة</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($log->new_values as $field => $value)
-                                            <tr>
-                                                <td><strong>{{ $field }}</strong></td>
-                                                <td>{{ is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value }}</td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
+                                @php
+                                    $newValues = is_string($log->new_values) ? json_decode($log->new_values, true) : $log->new_values;
+                                    $newValues = is_array($newValues) ? $newValues : [];
+                                @endphp
+                                @if(!empty($newValues))
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>الحقل</th>
+                                                    <th>القيمة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($newValues as $field => $value)
+                                                <tr>
+                                                    <td><strong>{{ $field }}</strong></td>
+                                                    <td>{{ is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value }}</td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <p class="text-muted">لا توجد قيم جديدة</p>
+                                @endif
                             @else
                                 <p class="text-muted">لا توجد قيم جديدة</p>
                             @endif

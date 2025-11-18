@@ -22,13 +22,21 @@ class SessionController extends Controller
         $query = Session::with(['user', 'payment']);
 
         // Filter by session category
-        if ($request->filled('session_category')) {
+        // إذا لم يكن هناك نوع محدد في الطلب، استخدم "hourly" كقيمة افتراضية
+        if ($request->has('session_category') && $request->session_category !== '') {
             $query->where('session_category', $request->session_category);
+        } else {
+            // إذا لم يكن هناك نوع محدد في الطلب، استخدم "hourly" تلقائياً
+            $query->where('session_category', 'hourly');
         }
 
         // Filter by session status
-        if ($request->filled('session_status')) {
+        // إذا لم يكن هناك حالة محددة في الطلب، استخدم "active" كقيمة افتراضية
+        if ($request->has('session_status') && $request->session_status !== '') {
             $query->where('session_status', $request->session_status);
+        } else {
+            // إذا لم يكن هناك حالة محددة في الطلب، استخدم "active" تلقائياً
+            $query->where('session_status', 'active');
         }
 
         // Search by user name or session owner name
@@ -78,12 +86,21 @@ class SessionController extends Controller
         }
 
         // Filter by session start date
+        // إذا لم يكن هناك تاريخ محدد، استخدم تاريخ اليوم الحالي
+        $today = Carbon::today()->format('Y-m-d');
+        
         if ($request->filled('start_date_from')) {
             $query->whereDate('start_at', '>=', $request->start_date_from);
+        } else {
+            // إذا لم يكن هناك تاريخ محدد، استخدم تاريخ اليوم
+            $query->whereDate('start_at', '>=', $today);
         }
 
         if ($request->filled('start_date_to')) {
             $query->whereDate('start_at', '<=', $request->start_date_to);
+        } else {
+            // إذا لم يكن هناك تاريخ محدد، استخدم تاريخ اليوم
+            $query->whereDate('start_at', '<=', $today);
         }
 
         $sessions = $query->orderBy('id', 'desc')->paginate(20);
@@ -95,12 +112,19 @@ class SessionController extends Controller
         $statsQuery = Session::query();
         
         // Apply same filters to stats
-        if ($request->filled('session_category')) {
+        if ($request->has('session_category') && $request->session_category !== '') {
             $statsQuery->where('session_category', $request->session_category);
+        } else {
+            // إذا لم يكن هناك نوع محدد في الطلب، استخدم "hourly" تلقائياً
+            $statsQuery->where('session_category', 'hourly');
         }
 
-        if ($request->filled('session_status')) {
+        // Apply same session status filter to stats
+        if ($request->has('session_status') && $request->session_status !== '') {
             $statsQuery->where('session_status', $request->session_status);
+        } else {
+            // إذا لم يكن هناك حالة محددة في الطلب، استخدم "active" تلقائياً
+            $statsQuery->where('session_status', 'active');
         }
 
         if ($request->filled('search')) {
@@ -147,12 +171,19 @@ class SessionController extends Controller
             }
         }
 
+        // Apply same date filter to stats
         if ($request->filled('start_date_from')) {
             $statsQuery->whereDate('start_at', '>=', $request->start_date_from);
+        } else {
+            // إذا لم يكن هناك تاريخ محدد، استخدم تاريخ اليوم
+            $statsQuery->whereDate('start_at', '>=', $today);
         }
 
         if ($request->filled('start_date_to')) {
             $statsQuery->whereDate('start_at', '<=', $request->start_date_to);
+        } else {
+            // إذا لم يكن هناك تاريخ محدد، استخدم تاريخ اليوم
+            $statsQuery->whereDate('start_at', '<=', $today);
         }
 
         $stats = [
@@ -243,11 +274,52 @@ class SessionController extends Controller
     }
 
     /**
+     * Create a session directly for a specific user
+     */
+    public function createForUser(User $user)
+    {
+        // التحقق من أن المستخدم نشط
+        if ($user->status !== 'active') {
+            return redirect()->back()
+                ->with('error', 'لا يمكن بدء جلسة لمستخدم غير نشط');
+        }
+
+        // التحقق من أن المستخدم ليس لديه جلسة نشطة
+        $activeSession = $user->sessions()->where('session_status', 'active')->first();
+        if ($activeSession) {
+            return redirect()->route('sessions.show', $activeSession)
+                ->with('info', 'المستخدم لديه جلسة نشطة بالفعل');
+        }
+
+        // تحديد نوع الجلسة بناءً على نوع المستخدم
+        $sessionCategory = in_array($user->user_type, ['hourly', 'subscription']) 
+            ? $user->user_type 
+            : 'hourly';
+
+        $session = Session::create([
+            'start_at' => Carbon::now(),
+            'user_id' => $user->id,
+            'session_category' => $sessionCategory,
+            'session_status' => 'active',
+        ]);
+
+        // إنشاء سجل دفع فارغ
+        SessionPayment::create([
+            'session_id' => $session->id,
+            'total_price' => 0,
+            'payment_status' => 'pending'
+        ]);
+
+        return redirect()->route('sessions.show', $session)
+            ->with('success', 'تم بدء الجلسة بنجاح');
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(Session $session)
     {
-        $session->load(['user', 'payment', 'drinks.drink']);
+        $session->load(['user', 'payment', 'drinks.drink', 'overtimes']);
         $drinks = Drink::where('status', 'available')->get();
         
         return view('sessions.show', compact('session', 'drinks'));
@@ -573,6 +645,191 @@ class SessionController extends Controller
     }
 
     /**
+     * Add overtime to session
+     */
+    public function addOvertime(Request $request, Session $session)
+    {
+        // التحقق من أن الجلسة نشطة أو مكتملة
+        if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
+            return redirect()->back()->with('error', 'لا يمكن إضافة ساعات إضافية للجلسات الملغية');
+        }
+
+        $request->validate([
+            'start_at' => 'required|date',
+            'end_at' => 'required|date|after:start_at'
+        ]);
+
+        $startAt = \Carbon\Carbon::parse($request->start_at);
+        $endAt = \Carbon\Carbon::parse($request->end_at);
+
+        $overtime = \App\Models\SessionOvertime::create([
+            'session_id' => $session->id,
+            'start_at' => $startAt,
+            'end_at' => $endAt
+        ]);
+
+        // تسجيل audit log
+        $session->auditLogs()->create([
+            'action' => 'add_overtime',
+            'action_type' => 'overtime',
+            'description' => "تم إضافة ساعات إضافية: {$overtime->total_hour} ساعة",
+            'old_values' => null,
+            'new_values' => [
+                'start_at' => $startAt->format('Y-m-d H:i:s'),
+                'end_at' => $endAt->format('Y-m-d H:i:s'),
+                'total_hour' => $overtime->total_hour
+            ],
+            'user_id' => auth()->id()
+        ]);
+
+        // تحديث إجمالي المبلغ
+        $this->updateSessionTotal($session);
+
+        return redirect()->back()->with('success', 'تم إضافة الساعات الإضافية بنجاح');
+    }
+
+    /**
+     * Update overtime rate for session
+     */
+    public function updateOvertimeRate(Request $request, Session $session)
+    {
+        // التحقق من أن الجلسة نشطة أو مكتملة
+        if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
+            return redirect()->back()->with('error', 'لا يمكن تعديل سعر الساعات الإضافية للجلسات الملغية');
+        }
+
+        $request->validate([
+            'custom_overtime_rate' => 'nullable|numeric|min:0'
+        ]);
+
+        $oldRate = $session->custom_overtime_rate;
+        $newRate = $request->custom_overtime_rate === '' || $request->custom_overtime_rate === null 
+            ? null 
+            : $request->custom_overtime_rate;
+
+        $session->update(['custom_overtime_rate' => $newRate]);
+
+        // تسجيل audit log
+        $session->auditLogs()->create([
+            'action' => 'update_overtime_rate',
+            'action_type' => 'overtime',
+            'description' => $newRate 
+                ? "تم تحديث سعر الساعات الإضافية إلى: ₪{$newRate}/ساعة"
+                : 'تم إزالة السعر المخصص للـ overtime',
+            'old_values' => ['custom_overtime_rate' => $oldRate],
+            'new_values' => ['custom_overtime_rate' => $newRate],
+            'user_id' => auth()->id()
+        ]);
+
+        // تحديث إجمالي المبلغ
+        $this->updateSessionTotal($session);
+
+        $message = $newRate 
+            ? "تم تحديث سعر الساعات الإضافية إلى: ₪{$newRate}/ساعة"
+            : 'تم إزالة السعر المخصص والعودة للسعر الافتراضي';
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Update overtime record
+     */
+    public function updateOvertime(Request $request, Session $session, \App\Models\SessionOvertime $overtime)
+    {
+        // التحقق من أن الجلسة نشطة أو مكتملة
+        if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
+            return redirect()->back()->with('error', 'لا يمكن تعديل الساعات الإضافية في الجلسات الملغية');
+        }
+
+        // التحقق من أن الـ overtime ينتمي للجلسة
+        if ($overtime->session_id !== $session->id) {
+            return redirect()->back()->with('error', 'الساعات الإضافية لا تنتمي لهذه الجلسة');
+        }
+
+        $request->validate([
+            'start_at' => 'required|date',
+            'end_at' => 'required|date|after:start_at'
+        ]);
+
+        $oldStartAt = $overtime->start_at;
+        $oldEndAt = $overtime->end_at;
+        $oldTotalHour = $overtime->total_hour;
+
+        $startAt = \Carbon\Carbon::parse($request->start_at);
+        $endAt = \Carbon\Carbon::parse($request->end_at);
+
+        // تحديث الـ overtime
+        $overtime->update([
+            'start_at' => $startAt,
+            'end_at' => $endAt
+        ]);
+
+        // إعادة تحميل للحصول على total_hour المحسوب تلقائياً
+        $overtime->refresh();
+
+        // تسجيل audit log
+        $session->auditLogs()->create([
+            'action' => 'update_overtime',
+            'action_type' => 'overtime',
+            'description' => "تم تعديل ساعات إضافية: من {$oldTotalHour} ساعة إلى {$overtime->total_hour} ساعة",
+            'old_values' => [
+                'start_at' => $oldStartAt->format('Y-m-d H:i:s'),
+                'end_at' => $oldEndAt->format('Y-m-d H:i:s'),
+                'total_hour' => $oldTotalHour
+            ],
+            'new_values' => [
+                'start_at' => $startAt->format('Y-m-d H:i:s'),
+                'end_at' => $endAt->format('Y-m-d H:i:s'),
+                'total_hour' => $overtime->total_hour
+            ],
+            'user_id' => auth()->id()
+        ]);
+
+        // تحديث إجمالي المبلغ
+        $this->updateSessionTotal($session);
+
+        return redirect()->back()->with('success', 'تم تحديث الساعات الإضافية بنجاح');
+    }
+
+    /**
+     * Remove overtime from session
+     */
+    public function removeOvertime(Session $session, \App\Models\SessionOvertime $overtime)
+    {
+        // التحقق من أن الجلسة نشطة أو مكتملة
+        if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
+            return redirect()->back()->with('error', 'لا يمكن حذف الساعات الإضافية من الجلسات الملغية');
+        }
+
+        // التحقق من أن الـ overtime ينتمي للجلسة
+        if ($overtime->session_id !== $session->id) {
+            return redirect()->back()->with('error', 'الساعات الإضافية لا تنتمي لهذه الجلسة');
+        }
+
+        // تسجيل audit log قبل الحذف
+        $session->auditLogs()->create([
+            'action' => 'remove_overtime',
+            'action_type' => 'overtime',
+            'description' => "تم حذف ساعات إضافية: {$overtime->total_hour} ساعة",
+            'old_values' => [
+                'start_at' => $overtime->start_at->format('Y-m-d H:i:s'),
+                'end_at' => $overtime->end_at->format('Y-m-d H:i:s'),
+                'total_hour' => $overtime->total_hour
+            ],
+            'new_values' => null,
+            'user_id' => auth()->id()
+        ]);
+
+        // حذف الـ overtime
+        $overtime->delete();
+
+        // تحديث إجمالي المبلغ
+        $this->updateSessionTotal($session);
+
+        return redirect()->back()->with('success', 'تم حذف الساعات الإضافية بنجاح');
+    }
+
+    /**
      * Calculate session cost based on time and category
      */
     private function calculateSessionCost(Session $session)
@@ -599,7 +856,11 @@ class SessionController extends Controller
             $sessionCost = $this->calculateInternetCostByTime($session);
         }
         
-        $totalCost = $sessionCost + $drinksCost;
+        // إعادة تحميل الجلسة مع العلاقات
+        $session->load('overtimes');
+        $overtimeCost = $session->calculateOvertimeCost();
+        
+        $totalCost = $sessionCost + $drinksCost + $overtimeCost;
         $totalPaid = $payment->amount_bank + $payment->amount_cash;
         $remainingAmount = $totalCost - $totalPaid;
         
@@ -624,16 +885,18 @@ class SessionController extends Controller
             'payment_id' => $payment->id,
             'session_cost' => $sessionCost,
             'drinks_cost' => $drinksCost,
+            'overtime_cost' => $overtimeCost,
             'total_cost' => $totalCost,
             'total_paid' => $totalPaid,
             'remaining_amount' => $remainingAmount,
             'payment_status' => $paymentStatus,
-            'custom_internet_cost' => $session->custom_internet_cost
+            'custom_internet_cost' => $session->custom_internet_cost,
+            'custom_overtime_rate' => $session->custom_overtime_rate
         ]);
         
         // إعادة تحميل الجلسة والعلاقات للتأكد من التحديث
         $session->refresh();
-        $session->load('payment');
+        $session->load('payment', 'overtimes');
     }
 
     /**
@@ -1052,6 +1315,34 @@ class SessionController extends Controller
 
             return redirect()->back()->with('error', 'حدث خطأ أثناء إنهاء الجلسة');
         }
+    }
+
+    /**
+     * Update session note only
+     */
+    public function updateNote(Request $request, Session $session)
+    {
+        $request->validate([
+            'note' => 'nullable|string|max:1000',
+        ]);
+
+        $oldNote = $session->note;
+        $session->update([
+            'note' => $request->note
+        ]);
+
+        // تسجيل audit log
+        $session->auditLogs()->create([
+            'action' => 'update_note',
+            'action_type' => 'session',
+            'description' => 'تم تحديث ملاحظة الجلسة',
+            'user_id' => auth()->id(),
+            'old_values' => json_encode(['note' => $oldNote]),
+            'new_values' => json_encode(['note' => $request->note])
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'تم تحديث الملاحظة بنجاح');
     }
 
     /**

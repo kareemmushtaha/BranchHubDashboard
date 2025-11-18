@@ -8,11 +8,15 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SessionPaymentController;
 use App\Http\Controllers\DrinkInvoiceController;
 use App\Http\Controllers\DrinkController;
+use App\Http\Controllers\CalendarNoteController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SessionAuditController;
 use App\Http\Controllers\SessionPriceController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\BookingRequestController;
+use App\Http\Controllers\ElectricityMeterReadingController;
+use App\Http\Controllers\EmployeeSalaryController;
+use App\Http\Controllers\EmployeeNoteController;
 
 
 // Branch Hub Landing Page (for non-authenticated users)
@@ -106,12 +110,17 @@ Route::get('drink-invoices/{drinkInvoice}/invoice/show', [DrinkInvoiceController
 
 // Sessions Routes
 Route::resource('sessions', SessionController::class);
+Route::post('users/{user}/create-session', [SessionController::class, 'createForUser'])->name('users.create-session');
 Route::post('sessions/{session}/end', [SessionController::class, 'endSession'])->name('sessions.end');
 Route::post('sessions/{session}/cancel', [SessionController::class, 'cancelSession'])->name('sessions.cancel');
 Route::post('sessions/{session}/add-drink', [SessionController::class, 'addDrink'])->name('sessions.add-drink');
 Route::put('sessions/{session}/drinks/{sessionDrink}/update-date', [SessionController::class, 'updateDrinkDate'])->name('sessions.update-drink-date');
 Route::put('sessions/{session}/drinks/{sessionDrink}/update-price', [SessionController::class, 'updateDrinkPrice'])->name('sessions.update-drink-price');
 Route::delete('sessions/{session}/drinks/{sessionDrink}', [SessionController::class, 'removeDrink'])->name('sessions.remove-drink');
+Route::post('sessions/{session}/add-overtime', [SessionController::class, 'addOvertime'])->name('sessions.add-overtime');
+Route::put('sessions/{session}/update-overtime-rate', [SessionController::class, 'updateOvertimeRate'])->name('sessions.update-overtime-rate');
+Route::put('sessions/{session}/overtimes/{overtime}', [SessionController::class, 'updateOvertime'])->name('sessions.update-overtime');
+Route::delete('sessions/{session}/overtimes/{overtime}', [SessionController::class, 'removeOvertime'])->name('sessions.remove-overtime');
 
 
 // Soft Delete Routes for Sessions
@@ -134,6 +143,18 @@ Route::get('session-payments/{sessionPayment}/invoice/show', [SessionPaymentCont
 
 // Drinks Routes
 Route::resource('drinks', DrinkController::class);
+
+// Calendar Notes Routes
+Route::get('calendar-notes', [CalendarNoteController::class, 'index'])->name('calendar-notes.index');
+Route::post('calendar-notes', [CalendarNoteController::class, 'store'])->name('calendar-notes.store');
+Route::put('calendar-notes/{calendarNote}', [CalendarNoteController::class, 'update'])->name('calendar-notes.update');
+Route::delete('calendar-notes/{calendarNote}', [CalendarNoteController::class, 'destroy'])->name('calendar-notes.destroy');
+
+// Employee Notes Routes
+Route::get('employee-notes', [EmployeeNoteController::class, 'index'])->name('employee-notes.index');
+Route::post('employee-notes', [EmployeeNoteController::class, 'store'])->name('employee-notes.store');
+Route::put('employee-notes/{employeeNote}', [EmployeeNoteController::class, 'update'])->name('employee-notes.update');
+Route::delete('employee-notes/{employeeNote}', [EmployeeNoteController::class, 'destroy'])->name('employee-notes.destroy');
 
 // Reports Routes
 Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
@@ -160,8 +181,17 @@ Route::get('sessions/real-time-stats', [SessionPriceController::class, 'getRealT
 Route::put('sessions/{session}/update-expected-end-date', [SessionController::class, 'updateExpectedEndDate'])->name('sessions.update-expected-end-date');
 Route::post('sessions/{session}/end-subscription', [SessionController::class, 'endSubscriptionSession'])->name('sessions.end-subscription');
 
+// Session Note Update Route (available for all sessions including completed)
+Route::put('sessions/{session}/update-note', [SessionController::class, 'updateNote'])->name('sessions.update-note');
+
 // Expenses Routes
 Route::resource('expenses', ExpenseController::class);
+
+// Employee Salaries Routes
+Route::resource('employee-salaries', EmployeeSalaryController::class);
+
+// Electricity Meter Readings Routes
+Route::resource('electricity-meter-readings', ElectricityMeterReadingController::class);
 
 // Booking Requests Routes (Admin only) - excluding store method
 Route::resource('booking-requests', BookingRequestController::class)->except(['store']);

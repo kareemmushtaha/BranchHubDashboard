@@ -26,9 +26,24 @@
                     @csrf
                     @method('PUT')
                     
+                    <div class="mb-3">
+                        <label for="item_name" class="form-label">اسم البند <span class="text-danger">*</span></label>
+                        <input type="text" 
+                               class="form-control @error('item_name') is-invalid @enderror" 
+                               id="item_name" 
+                               name="item_name" 
+                               value="{{ old('item_name', $expense->item_name ?? '') }}" 
+                               placeholder="مثال: شراء كرسي" 
+                               maxlength="255" 
+                               required>
+                        @error('item_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="amount" class="form-label">قيمة المبلغ <span class="text-danger">*</span></label>
+                            <label for="amount" class="form-label">سعر البند (شيكل) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="number" 
                                        class="form-control @error('amount') is-invalid @enderror" 
@@ -37,6 +52,7 @@
                                        value="{{ old('amount', $expense->amount) }}" 
                                        step="0.01" 
                                        min="0.01" 
+                                       placeholder="105" 
                                        required>
                                 <span class="input-group-text">₪</span>
                             </div>
@@ -46,14 +62,14 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label for="payment_type" class="form-label">نوع الدفع <span class="text-danger">*</span></label>
+                            <label for="payment_type" class="form-label">طريقة الدفع <span class="text-danger">*</span></label>
                             <select class="form-select @error('payment_type') is-invalid @enderror" 
                                     id="payment_type" 
                                     name="payment_type" 
                                     required>
-                                <option value="">اختر نوع الدفع</option>
+                                <option value="">اختر طريقة الدفع</option>
                                 <option value="bank" {{ old('payment_type', $expense->payment_type) === 'bank' ? 'selected' : '' }}>بنكي</option>
-                                <option value="cash" {{ old('payment_type', $expense->payment_type) === 'cash' ? 'selected' : '' }}>نقدي</option>
+                                <option value="cash" {{ old('payment_type', $expense->payment_type) === 'cash' ? 'selected' : '' }}>كاش</option>
                             </select>
                             @error('payment_type')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -62,13 +78,26 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="details" class="form-label">التفاصيل <span class="text-danger">*</span></label>
+                        <label for="payment_date" class="form-label">تاريخ الدفع</label>
+                        <input type="date" 
+                               class="form-control @error('payment_date') is-invalid @enderror" 
+                               id="payment_date" 
+                               name="payment_date" 
+                               value="{{ old('payment_date', $expense->payment_date ? $expense->payment_date->format('Y-m-d') : date('Y-m-d')) }}">
+                        <div class="form-text">إذا لم تقم بتحديد تاريخ، سيتم استخدام التاريخ الحالي تلقائياً</div>
+                        @error('payment_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="details" class="form-label">وصف عن المنتج الذي تم شراؤه <span class="text-danger">*</span></label>
                         <textarea class="form-control @error('details') is-invalid @enderror" 
                                   id="details" 
                                   name="details" 
                                   rows="4" 
                                   maxlength="1000" 
-                                  placeholder="اكتب تفاصيل المصروف هنا..." 
+                                  placeholder="اكتب وصفاً عن المنتج الذي تم شراؤه..." 
                                   required>{{ old('details', $expense->details) }}</textarea>
                         <div class="form-text">الحد الأقصى 1000 حرف</div>
                         @error('details')
@@ -99,8 +128,17 @@
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label fw-bold">المستخدم:</label>
-                    <p class="form-control-plaintext">{{ $expense->user->name }}</p>
+                    <label class="form-label fw-bold">تم الإدخال بواسطة:</label>
+                    <div class="d-flex align-items-center p-2 bg-light rounded">
+                        <i class="bi bi-person-circle me-2 text-primary"></i>
+                        <div>
+                            <strong>{{ $expense->user->name }}</strong>
+                            @if($expense->user->email)
+                                <br>
+                                <small class="text-muted">{{ $expense->user->email }}</small>
+                            @endif
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="mb-3">

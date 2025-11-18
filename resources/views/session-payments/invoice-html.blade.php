@@ -416,6 +416,25 @@
                         </td>
                     </tr>
                     <tr>
+                        <td>تكلفة ساعات العمل الإضافية:</td>
+                        <td>
+                            @if($sessionPayment->session)
+                                @php
+                                    $sessionPayment->session->load('overtimes');
+                                    $overtimeCost = $sessionPayment->session->calculateOvertimeCost();
+                                @endphp
+                                ${{ number_format($overtimeCost, 2) }}
+                                @if($sessionPayment->session->overtimes->count() > 0)
+                                    <span style="font-size: 11px; color: #718096;">
+                                        ({{ number_format($sessionPayment->session->overtimes->sum('total_hour'), 2) }} ساعة)
+                                    </span>
+                                @endif
+                            @else
+                                $0.00
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
                         <td><strong>الإجمالي:</strong></td>
                         <td><strong>${{ number_format($sessionPayment->total_price, 2) }}</strong></td>
                     </tr>

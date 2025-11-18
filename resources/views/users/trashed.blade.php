@@ -3,6 +3,15 @@
 @section('title', 'المستخدمين المحذوفين')
 
 @section('content')
+@php
+    $userTypeBadges = [
+        'hourly' => ['label' => 'ساعي', 'class' => 'bg-info'],
+        'subscription' => ['label' => 'اشتراك', 'class' => 'bg-success'],
+        'prepaid' => ['label' => 'مدفوع مسبقاً', 'class' => 'bg-primary'],
+        'manager' => ['label' => 'مدير إداري', 'class' => 'bg-warning text-dark'],
+        'admin' => ['label' => 'مدير النظام', 'class' => 'bg-danger'],
+    ];
+@endphp
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">المستخدمين المحذوفين (سلة المحذوفات)</h1>
     <div>
@@ -92,6 +101,8 @@
                                 <option value="hourly" {{ request('user_type') == 'hourly' ? 'selected' : '' }}>ساعي</option>
 
                                 <option value="subscription" {{ request('user_type') == 'subscription' ? 'selected' : '' }}>اشتراك</option>
+                                <option value="manager" {{ request('user_type') == 'manager' ? 'selected' : '' }}>مدير إداري</option>
+                                <option value="admin" {{ request('user_type') == 'admin' ? 'selected' : '' }}>مدير النظام</option>
                             </select>
                         </div>
                         
@@ -231,12 +242,10 @@
                         <td>{{ $user->email }}</td>
                         <td>{{ $user->phone ?: '-' }}</td>
                         <td>
-                            @if($user->user_type == 'hourly')
-                                <span class="badge bg-info">ساعي</span>
-
-                            @else
-                                <span class="badge bg-success">اشتراك</span>
-                            @endif
+                            @php
+                                $typeInfo = $userTypeBadges[$user->user_type] ?? ['label' => 'غير معروف', 'class' => 'bg-secondary'];
+                            @endphp
+                            <span class="badge {{ $typeInfo['class'] }}">{{ $typeInfo['label'] }}</span>
                         </td>
                         <td>
                             @if($user->wallet)

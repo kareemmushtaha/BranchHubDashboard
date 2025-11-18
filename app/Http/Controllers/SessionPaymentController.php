@@ -87,7 +87,8 @@ class SessionPaymentController extends Controller
         $session = Session::find($request->session_id);
         $sessionTotal = 0;
         if ($session) {
-            $sessionTotal = $session->calculateInternetCost() + $session->drinks->sum('price');
+            $session->load('overtimes');
+            $sessionTotal = $session->calculateInternetCost() + $session->drinks->sum('price') + $session->calculateOvertimeCost();
         }
         $totalPaid = ($request->amount_bank ?? 0) + ($request->amount_cash ?? 0);
         $refundAmount = max(0, $totalPaid - $sessionTotal);
@@ -161,7 +162,8 @@ class SessionPaymentController extends Controller
         // Calculate refund amount to determine if note is required
         $sessionTotal = 0;
         if ($sessionPayment->session) {
-            $sessionTotal = $sessionPayment->session->calculateInternetCost() + $sessionPayment->session->drinks->sum('price');
+            $sessionPayment->session->load('overtimes');
+            $sessionTotal = $sessionPayment->session->calculateInternetCost() + $sessionPayment->session->drinks->sum('price') + $sessionPayment->session->calculateOvertimeCost();
         }
         $totalPaid = ($request->amount_bank ?? 0) + ($request->amount_cash ?? 0);
         $refundAmount = max(0, $totalPaid - $sessionTotal);
@@ -255,7 +257,7 @@ class SessionPaymentController extends Controller
     {
         try {
             // Load the session payment with relationships
-            $sessionPayment->load(['session.user', 'session.drinks.drink']);
+            $sessionPayment->load(['session.user', 'session.drinks.drink', 'session.overtimes']);
             
             return view('session-payments.invoice-html-english', compact('sessionPayment'));
             
@@ -277,7 +279,7 @@ class SessionPaymentController extends Controller
     {
         try {
             // Load the session payment with relationships
-            $sessionPayment->load(['session.user', 'session.drinks.drink']);
+            $sessionPayment->load(['session.user', 'session.drinks.drink', 'session.overtimes']);
             
             // Use DOMPDF with HTML entities for Arabic support
             return $this->generateDOMPDF($sessionPayment);

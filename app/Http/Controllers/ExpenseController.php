@@ -34,22 +34,29 @@ class ExpenseController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'item_name' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01',
             'payment_type' => 'required|in:bank,cash',
+            'payment_date' => 'nullable|date',
             'details' => 'required|string|max:1000',
         ], [
+            'item_name.required' => 'اسم البند مطلوب',
+            'item_name.max' => 'اسم البند يجب أن يكون أقل من 255 حرف',
             'amount.required' => 'قيمة المبلغ مطلوبة',
             'amount.numeric' => 'قيمة المبلغ يجب أن تكون رقماً',
             'amount.min' => 'قيمة المبلغ يجب أن تكون أكبر من صفر',
             'payment_type.required' => 'نوع الدفع مطلوب',
             'payment_type.in' => 'نوع الدفع يجب أن يكون بنكي أو نقدي',
+            'payment_date.date' => 'تاريخ الدفع يجب أن يكون تاريخاً صحيحاً',
             'details.required' => 'التفاصيل مطلوبة',
             'details.max' => 'التفاصيل يجب أن تكون أقل من 1000 حرف',
         ]);
 
         Expense::create([
+            'item_name' => $request->item_name,
             'amount' => $request->amount,
             'payment_type' => $request->payment_type,
+            'payment_date' => $request->payment_date ?? now()->toDateString(),
             'details' => $request->details,
             'user_id' => Auth::id(),
         ]);
@@ -81,22 +88,29 @@ class ExpenseController extends Controller
     public function update(Request $request, Expense $expense)
     {
         $request->validate([
+            'item_name' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01',
             'payment_type' => 'required|in:bank,cash',
+            'payment_date' => 'nullable|date',
             'details' => 'required|string|max:1000',
         ], [
+            'item_name.required' => 'اسم البند مطلوب',
+            'item_name.max' => 'اسم البند يجب أن يكون أقل من 255 حرف',
             'amount.required' => 'قيمة المبلغ مطلوبة',
             'amount.numeric' => 'قيمة المبلغ يجب أن تكون رقماً',
             'amount.min' => 'قيمة المبلغ يجب أن تكون أكبر من صفر',
             'payment_type.required' => 'نوع الدفع مطلوب',
             'payment_type.in' => 'نوع الدفع يجب أن يكون بنكي أو نقدي',
+            'payment_date.date' => 'تاريخ الدفع يجب أن يكون تاريخاً صحيحاً',
             'details.required' => 'التفاصيل مطلوبة',
             'details.max' => 'التفاصيل يجب أن تكون أقل من 1000 حرف',
         ]);
 
         $expense->update([
+            'item_name' => $request->item_name,
             'amount' => $request->amount,
             'payment_type' => $request->payment_type,
+            'payment_date' => $request->payment_date ?? now()->toDateString(),
             'details' => $request->details,
         ]);
 

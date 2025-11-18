@@ -54,9 +54,15 @@
                             <select class="form-select @error('user_type') is-invalid @enderror" 
                                     id="user_type" name="user_type" required>
                                 <option value="">اختر نوع المستخدم</option>
-                                <option value="hourly" {{ old('user_type') == 'hourly' ? 'selected' : '' }}>ساعي</option>
+                                <optgroup label="عملاء">
+                                    <option value="hourly" {{ old('user_type') == 'hourly' ? 'selected' : '' }}>ساعي</option>
 
-                                <option value="subscription" {{ old('user_type') == 'subscription' ? 'selected' : '' }}>اشتراك</option>
+                                    <option value="subscription" {{ old('user_type') == 'subscription' ? 'selected' : '' }}>اشتراك</option>
+                                </optgroup>
+                                <optgroup label="إدارة النظام">
+                                    <option value="manager" {{ old('user_type') == 'manager' ? 'selected' : '' }}>مدير إداري</option>
+                                    <option value="admin" {{ old('user_type') == 'admin' ? 'selected' : '' }}>مدير النظام (صلاحيات كاملة)</option>
+                                </optgroup>
                             </select>
                             @error('user_type')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -98,7 +104,7 @@
             <div class="card-body">
                 <ul class="list-unstyled">
                     <li><i class="bi bi-info-circle text-info"></i> سيتم إنشاء محفظة رقمية تلقائياً للمستخدم</li>
-                    <li><i class="bi bi-key text-warning"></i> كلمة المرور الافتراضية: password</li>
+                    <li><i class="bi bi-key text-warning"></i> كلمة المرور الافتراضية: password (تأكد من تغييرها عند التسليم)</li>
                     <li><i class="bi bi-envelope text-primary"></i> البريد الإلكتروني اختياري ولكن يجب أن يكون فريد إذا تم إدخاله</li>
                     <li><i class="bi bi-calendar text-success"></i> تاريخ انتهاء الاشتراك للمشتركين فقط</li>
                 </ul>

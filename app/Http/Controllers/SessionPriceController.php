@@ -46,8 +46,10 @@ class SessionPriceController extends Controller
             
             // تحديث المدفوعة إذا كانت موجودة
             if ($session->payment) {
+                $session->load('overtimes');
                 $drinksCost = $session->drinks->sum('price');
-                $totalCost = $newCost + $drinksCost;
+                $overtimeCost = $session->calculateOvertimeCost();
+                $totalCost = $newCost + $drinksCost + $overtimeCost;
                 $totalPaid = $session->payment->amount_bank + $session->payment->amount_cash;
                 $remainingAmount = $totalCost - $totalPaid;
                 
@@ -71,6 +73,7 @@ class SessionPriceController extends Controller
                     'payment_id' => $session->payment->id,
                     'new_cost' => $newCost,
                     'drinks_cost' => $drinksCost,
+                    'overtime_cost' => $overtimeCost,
                     'total_cost' => $totalCost,
                     'remaining_amount' => $remainingAmount
                 ]);
@@ -135,8 +138,10 @@ class SessionPriceController extends Controller
 
             // تحديث المدفوعة إذا كانت موجودة
             if ($session->payment) {
+                $session->load('overtimes');
                 $drinksCost = $session->drinks->sum('price');
-                $totalCost = $customCost + $drinksCost;
+                $overtimeCost = $session->calculateOvertimeCost();
+                $totalCost = $customCost + $drinksCost + $overtimeCost;
                 $totalPaid = $session->payment->amount_bank + $session->payment->amount_cash;
                 $remainingAmount = $totalCost - $totalPaid;
                 
@@ -160,6 +165,7 @@ class SessionPriceController extends Controller
                     'payment_id' => $session->payment->id,
                     'custom_cost' => $customCost,
                     'drinks_cost' => $drinksCost,
+                    'overtime_cost' => $overtimeCost,
                     'total_cost' => $totalCost,
                     'remaining_amount' => $remainingAmount
                 ]);
@@ -222,9 +228,11 @@ class SessionPriceController extends Controller
     public function getSessionPricing(Session $session): JsonResponse
     {
         try {
+            $session->load('overtimes');
             $internetCost = $session->calculateInternetCost();
             $drinksCost = $session->drinks->sum('price');
-            $totalCost = $internetCost + $drinksCost;
+            $overtimeCost = $session->calculateOvertimeCost();
+            $totalCost = $internetCost + $drinksCost + $overtimeCost;
             
             // معلومات الدفع
             $payment = $session->payment;
@@ -245,6 +253,7 @@ class SessionPriceController extends Controller
                 'pricing' => [
                     'internet_cost' => number_format($internetCost, 2),
                     'drinks_cost' => number_format($drinksCost, 2),
+                    'overtime_cost' => number_format($overtimeCost, 2),
                     'total_cost' => number_format($totalCost, 2),
                     'paid_amount' => number_format($paidAmount, 2),
                     'remaining_amount' => number_format($remainingAmount, 2)
@@ -293,8 +302,10 @@ class SessionPriceController extends Controller
                     
                     // تحديث المدفوعة إذا كانت موجودة
                     if ($session->payment) {
+                        $session->load('overtimes');
                         $drinksCost = $session->drinks->sum('price');
-                        $totalCost = $newCost + $drinksCost;
+                        $overtimeCost = $session->calculateOvertimeCost();
+                        $totalCost = $newCost + $drinksCost + $overtimeCost;
                         $totalPaid = $session->payment->amount_bank + $session->payment->amount_cash;
                         $remainingAmount = $totalCost - $totalPaid;
                         
@@ -376,7 +387,9 @@ class SessionPriceController extends Controller
                 if ($session->payment) {
                     $stats['total_revenue'] += $session->payment->total_price;
                 } else {
-                    $stats['total_revenue'] += $internetCost + $drinksCost;
+                    $session->load('overtimes');
+                    $overtimeCost = $session->calculateOvertimeCost();
+                    $stats['total_revenue'] += $internetCost + $drinksCost + $overtimeCost;
                 }
                 
                 $duration = $session->start_at->diffInMinutes(now());
@@ -410,9 +423,11 @@ class SessionPriceController extends Controller
      */
     private function calculateTotalSessionCost(Session $session): float
     {
+        $session->load('overtimes');
         $internetCost = $session->calculateInternetCost();
         $drinksCost = $session->drinks->sum('price');
-        return $internetCost + $drinksCost;
+        $overtimeCost = $session->calculateOvertimeCost();
+        return $internetCost + $drinksCost + $overtimeCost;
     }
 
     /**
