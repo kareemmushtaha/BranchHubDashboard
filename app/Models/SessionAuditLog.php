@@ -114,9 +114,17 @@ class SessionAuditLog extends Model
 
         $changes = [];
         
-        if ($this->old_values && $this->new_values) {
-            foreach ($this->new_values as $key => $newValue) {
-                $oldValue = $this->old_values[$key] ?? null;
+        // Ensure old_values and new_values are arrays
+        $oldValues = is_string($this->old_values) ? json_decode($this->old_values, true) : $this->old_values;
+        $newValues = is_string($this->new_values) ? json_decode($this->new_values, true) : $this->new_values;
+        
+        // Ensure they are arrays (not null or other types)
+        $oldValues = is_array($oldValues) ? $oldValues : [];
+        $newValues = is_array($newValues) ? $newValues : [];
+        
+        if (!empty($oldValues) && !empty($newValues)) {
+            foreach ($newValues as $key => $newValue) {
+                $oldValue = $oldValues[$key] ?? null;
                 if ($oldValue !== $newValue) {
                     $changes[] = "تغيير $key من '$oldValue' إلى '$newValue'";
                 }

@@ -202,8 +202,28 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ route('employee-salaries.index') }}">
+                            <i class="bi bi-wallet2"></i> إدارة رواتب الموظفين
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ route('electricity-meter-readings.index') }}">
+                            <i class="bi bi-lightning-charge"></i> قراءات عداد الكهرباء
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link text-white" href="{{ route('booking-requests.index') }}">
                             <i class="bi bi-calendar-check"></i> طلبات الحجز
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ route('calendar-notes.index') }}">
+                            <i class="bi bi-calendar-event"></i> تقويم الملاحظات
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ route('employee-notes.index') }}">
+                            <i class="bi bi-person-badge"></i> ملاحظات الموظفين
                         </a>
                     </li>
                     <li class="nav-item">
@@ -242,5 +262,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     @yield('scripts')
+    @stack('scripts')
 </body>
 </html>

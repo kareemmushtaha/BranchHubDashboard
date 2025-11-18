@@ -284,6 +284,15 @@
 @endpush
 
 @section('content')
+@php
+    $userTypeBadges = [
+        'hourly' => ['label' => 'ساعي', 'class' => 'bg-info'],
+        'subscription' => ['label' => 'اشتراك', 'class' => 'bg-success'],
+        'prepaid' => ['label' => 'مدفوع مسبقاً', 'class' => 'bg-primary'],
+        'manager' => ['label' => 'مدير إداري', 'class' => 'bg-warning text-dark'],
+        'admin' => ['label' => 'مدير النظام', 'class' => 'bg-danger'],
+    ];
+@endphp
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
     <div class="d-flex align-items-center">
         <div class="user-avatar me-3">
@@ -339,11 +348,10 @@
                 <div class="info-item">
                     <span class="info-label">نوع المستخدم</span>
                     <span class="info-value">
-                        @if($user->user_type == 'hourly')
-                            <span class="badge bg-info badge-custom">ساعي</span>
-                        @else
-                            <span class="badge bg-success badge-custom">اشتراك</span>
-                        @endif
+                        @php
+                            $typeInfo = $userTypeBadges[$user->user_type] ?? ['label' => 'غير معروف', 'class' => 'bg-secondary'];
+                        @endphp
+                        <span class="badge {{ $typeInfo['class'] }} badge-custom">{{ $typeInfo['label'] }}</span>
                     </span>
                 </div>
                 
@@ -683,6 +691,12 @@
                     <div class="text-center py-5">
                         <i class="bi bi-clock-history text-muted" style="font-size: 3rem;"></i>
                         <p class="text-muted mt-3">لا توجد جلسات سابقة</p>
+                        <form id="createSessionForm" action="{{ route('users.create-session', $user) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="button" onclick="confirmCreateSession()" class="btn btn-primary btn-custom mt-3">
+                                <i class="bi bi-plus-circle me-1"></i> إضافة جلسة جديدة
+                            </button>
+                        </form>
                     </div>
                 @endif
             </div>
@@ -962,3 +976,26 @@
 @endif
 
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function confirmCreateSession() {
+    Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: 'هل تريد فتح جلسة جديدة لهذا المستخدم؟',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'نعم، افتح الجلسة',
+        cancelButtonText: 'إلغاء',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('createSessionForm').submit();
+        }
+    });
+}
+</script>
+@endpush

@@ -29,7 +29,7 @@
 
 @section('content')
 @if($session->session_status == 'completed')
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
     <div class="d-flex align-items-center">
         <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
         <div>

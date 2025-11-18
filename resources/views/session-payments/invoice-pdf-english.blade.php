@@ -389,6 +389,23 @@
                 @endif
             </div>
             <div class="info-item">
+                <span class="info-label">Overtime Hours Cost:</span>
+                @if($sessionPayment->session)
+                    @php
+                        $sessionPayment->session->load('overtimes');
+                        $overtimeCost = $sessionPayment->session->calculateOvertimeCost();
+                    @endphp
+                    {{ number_format($overtimeCost, 2) }} Shekels
+                    @if($sessionPayment->session->overtimes->count() > 0)
+                        <span style="font-size: 9px; color: #718096; margin-left: 5px;">
+                            ({{ number_format($sessionPayment->session->overtimes->sum('total_hour'), 2) }} hours)
+                        </span>
+                    @endif
+                @else
+                    0.00 Shekels
+                @endif
+            </div>
+            <div class="info-item">
                 <span class="info-label">Total:</span> {{ number_format($sessionPayment->total_price, 2) }} Shekels
             </div>
         </div>
@@ -436,11 +453,6 @@
                 Pending
             @endif
         </div>
-        @if($sessionPayment->note)
-            <div class="info-item">
-                <span class="info-label">Note:</span> {{ $sessionPayment->note }}
-            </div>
-        @endif
     </div>
     </div>
     <div class="footer">

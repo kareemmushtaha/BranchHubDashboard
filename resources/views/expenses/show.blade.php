@@ -29,10 +29,28 @@
                     </div>
                     
                     <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">قيمة المبلغ:</label>
+                        <label class="form-label fw-bold">اسم البند:</label>
+                        <p class="form-control-plaintext">
+                            <strong class="fs-5">{{ $expense->item_name ?? 'غير محدد' }}</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">سعر البند:</label>
                         <p class="form-control-plaintext">
                             <span class="badge bg-danger fs-6">
                                 {{ number_format($expense->amount, 2) }} ₪
+                            </span>
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">طريقة الدفع:</label>
+                        <p class="form-control-plaintext">
+                            <span class="badge {{ $expense->payment_type === 'bank' ? 'bg-info' : 'bg-success' }} fs-6">
+                                {{ $expense->payment_type_arabic }}
                             </span>
                         </p>
                     </div>
@@ -40,22 +58,40 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">نوع الدفع:</label>
+                        <label class="form-label fw-bold">تاريخ الدفع:</label>
                         <p class="form-control-plaintext">
-                            <span class="badge {{ $expense->payment_type === 'bank' ? 'bg-info' : 'bg-success' }} fs-6">
-                                {{ $expense->payment_type_arabic }}
-                            </span>
+                            <i class="bi bi-calendar me-2"></i>
+                            {{ $expense->payment_date ? $expense->payment_date->format('Y-m-d') : $expense->created_at->format('Y-m-d') }}
                         </p>
                     </div>
                     
                     <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">المستخدم:</label>
-                        <p class="form-control-plaintext">{{ $expense->user->name }}</p>
+                        <label class="form-label fw-bold">تم الإدخال بواسطة:</label>
+                        <div class="border rounded p-3 bg-light">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person-circle me-3 text-primary fs-4"></i>
+                                <div>
+                                    <strong class="fs-5">{{ $expense->user->name }}</strong>
+                                    @if($expense->user->email)
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-envelope me-1"></i>{{ $expense->user->email }}
+                                        </small>
+                                    @endif
+                                    @if($expense->user->user_type)
+                                        <br>
+                                        <span class="badge bg-secondary mt-1">
+                                            {{ $expense->user->user_type === 'admin' ? 'مدير' : ($expense->user->user_type === 'manager' ? 'مدير فرع' : 'مستخدم') }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold">التفاصيل:</label>
+                    <label class="form-label fw-bold">وصف عن المنتج الذي تم شراؤه:</label>
                     <div class="border rounded p-3 bg-light">
                         <p class="mb-0">{{ $expense->details }}</p>
                     </div>
@@ -131,9 +167,23 @@
 
         <div class="card mt-3">
             <div class="card-header">
-                <h5 class="card-title mb-0">معلومات إضافية</h5>
+                <h5 class="card-title mb-0">معلومات الإدخال</h5>
             </div>
             <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted small">من قام بإدخال هذا البند:</label>
+                    <div class="d-flex align-items-center p-2 bg-light rounded">
+                        <i class="bi bi-person-badge me-2 text-primary fs-5"></i>
+                        <div>
+                            <strong>{{ $expense->user->name }}</strong>
+                            @if($expense->user->email)
+                                <br>
+                                <small class="text-muted">{{ $expense->user->email }}</small>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle me-2"></i>
                     <strong>نوع الدفع:</strong> {{ $expense->payment_type_arabic }}

@@ -29,7 +29,7 @@
 
 @section('content')
 @if($session->session_status == 'completed')
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
     <div class="d-flex align-items-center">
         <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
         <div>
@@ -303,13 +303,20 @@
                 </div>
                 @endif
 
-                @if($session->note)
                 <hr>
                 <div class="row">
                     <div class="col-sm-6"><strong>ملاحظات:</strong></div>
-                    <div class="col-sm-6">{{ $session->note }}</div>
+                    <div class="col-sm-6">
+                        @if($session->note)
+                            {{ $session->note }}
+                        @else
+                            <span class="text-muted">لا توجد ملاحظات</span>
+                        @endif
+                        <button type="button" class="btn btn-sm btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#editNoteModal">
+                            <i class="bi bi-pencil"></i> تعديل
+                        </button>
+                    </div>
                 </div>
-                @endif
 
                 <!-- معلومات إضافية للجلسات الاشتراكية -->
                 @if($session->isSubscription())
@@ -413,7 +420,7 @@
 
                         @if($session->session_status == 'active' || $session->session_status == 'completed')
                         <div class="mt-2">
-                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editInternetCostModal">
+                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#editInternetCostModal">
                                 <i class="bi bi-pencil"></i> تعديل التكلفة
                             </button>
                         </div>
@@ -476,6 +483,7 @@
                 @php
                     $drinksCost = $session->drinks->sum('price');
                     $internetCost = $session->calculateInternetCost();
+                    $overtimeCost = $session->calculateOvertimeCost();
                 @endphp
 
                 <div class="row">
@@ -490,8 +498,17 @@
                         <span class="text-primary fw-bold drinks-cost-display">₪{{ number_format($drinksCost, 2) }}</span>
                     </div>
                 </div>
-                <hr>
                 @endif
+                @if($overtimeCost > 0)
+                <hr>
+                <div class="row">
+                    <div class="col-sm-6"><strong>قيمة  (الساعات الإضافية):</strong></div>
+                    <div class="col-sm-6">
+                        <span class="text-primary fw-bold overtime-cost-display">₪{{ number_format($overtimeCost, 2) }}</span>
+                    </div>
+                </div>
+                @endif
+                <hr>
                 <div class="row bg-light p-3 rounded border">
                     <div class="col-sm-6"><strong> اجمالي المبلغ المستحق:</strong></div>
                     <div class="col-sm-6">
@@ -704,6 +721,85 @@
 </div>
 @endif
 
+@if( $session->user->user_type == 'subscription')
+<!-- ساعات العمل الإضافية -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">ساعات العمل الإضافية</h5>
+                @if($session->session_status == 'active' || $session->session_status == 'completed')
+                <div>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addOvertimeModal">
+                        <i class="bi bi-plus-circle"></i> إضافة ساعات إضافية
+                    </button>
+                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editOvertimeRateModal">
+                        <i class="bi bi-pencil"></i> ضبط السعر
+                    </button>
+                </div>
+                @endif
+            </div>
+            <div class="card-body">
+                @if($session->overtimes && $session->overtimes->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>من</th>
+                                <th>إلى</th>
+                                <th>عدد الساعات</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($session->overtimes as $overtime)
+                            <tr>
+                                <td>{{ $overtime->start_at->format('Y-m-d H:i') }}</td>
+                                <td>{{ $overtime->end_at->format('Y-m-d H:i') }}</td>
+                                <td>{{ number_format($overtime->total_hour, 2) }} ساعة</td>
+                                <td>
+                                    @if($session->session_status == 'active' || $session->session_status == 'completed')
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editOvertimeModal{{ $overtime->id }}">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <form action="{{ route('sessions.remove-overtime', ['session' => $session, 'overtime' => $overtime]) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('هل تريد حذف هذه الساعات الإضافية؟')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                            <tr class="table-info">
+                                <td colspan="2"><strong>إجمالي الساعات:</strong></td>
+                                <td><strong>{{ number_format($session->overtimes->sum('total_hour'), 2) }} ساعة</strong></td>
+                                <td></td>
+                            </tr>
+                            <tr class="table-success">
+                                <td colspan="2"><strong>قيمة  (الساعات الإضافية):</strong></td>
+                                <td><strong class="overtime-cost-display">₪{{ number_format($session->calculateOvertimeCost(), 2) }}</strong></td>
+                                <td>
+                                    @if($session->hasCustomOvertimeRate())
+                                        <span class="badge bg-warning">سعر مخصص</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <p class="text-muted text-center">لم يتم إضافة أي ساعات إضافية بعد</p>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 <!-- Modal إضافة مشروب -->
 @if(($session->session_status == 'active' || $session->session_status == 'completed') && (!$session->user || $session->user->user_type != 'subscription'))
 <div class="modal fade" id="addDrinkModal" tabindex="-1">
@@ -989,6 +1085,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const drinksCostElements = document.querySelectorAll('.drinks-cost-display');
         drinksCostElements.forEach(element => {
             element.textContent = '₪' + data.pricing.drinks_cost;
+        });
+
+        // تحديث تكلفة الساعات الإضافية
+        const overtimeCostElements = document.querySelectorAll('.overtime-cost-display');
+        overtimeCostElements.forEach(element => {
+            element.textContent = '₪' + (data.pricing.overtime_cost || '0.00');
         });
 
         // تحديث التكلفة الإجمالية
@@ -1396,5 +1498,201 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
 });
 </script>
+
+<!-- Modal إضافة ساعات إضافية -->
+@if($session->session_status == 'active' || $session->session_status == 'completed')
+<div class="modal fade" id="addOvertimeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة ساعات عمل إضافية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('sessions.add-overtime', $session) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="overtime_start_at" class="form-label">من (تاريخ ووقت)</label>
+                        <input type="datetime-local" class="form-control" id="overtime_start_at" name="start_at" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="overtime_end_at" class="form-label">إلى (تاريخ ووقت)</label>
+                        <input type="datetime-local" class="form-control" id="overtime_end_at" name="end_at" required>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        سيتم حساب عدد الساعات تلقائياً بناءً على التاريخ والوقت المحددين.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">إضافة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal تعديل سعر الـ overtime -->
+<div class="modal fade" id="editOvertimeRateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">ضبط سعر الساعات الإضافية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('sessions.update-overtime-rate', $session) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    @php
+                        $publicPrices = \App\Models\PublicPrice::first();
+                        $defaultRate = $publicPrices->overtime_rate ?? 5.00;
+                    @endphp
+                    <div class="mb-3">
+                        <label for="custom_overtime_rate" class="form-label">السعر لكل ساعة (₪)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₪</span>
+                            <input type="number" step="0.01" min="0" class="form-control" 
+                                   id="custom_overtime_rate" name="custom_overtime_rate" 
+                                   value="{{ old('custom_overtime_rate', $session->custom_overtime_rate ?? '') }}"
+                                   placeholder="{{ number_format($defaultRate, 2) }}">
+                        </div>
+                        <small class="form-text text-muted">
+                            اترك الحقل فارغاً لاستخدام السعر الافتراضي: ₪{{ number_format($defaultRate, 2) }}/ساعة
+                        </small>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>ملاحظة:</strong> السعر المخصص سيتم تطبيقه على جميع الساعات الإضافية لهذه الجلسة.
+                    </div>
+                    @if($session->overtimes->count() > 0)
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>تنبيه:</strong> إجمالي الساعات الحالية: {{ number_format($session->overtimes->sum('total_hour'), 2) }} ساعة
+                        <br>
+                        القيمة الحالية: ₪{{ number_format($session->calculateOvertimeCost(), 2) }}
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
+<!-- Modal تعديل الملاحظة -->
+<div class="modal fade" id="editNoteModal" tabindex="-1" aria-labelledby="editNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editNoteModalLabel">تعديل ملاحظة الجلسة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('sessions.update-note', $session) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>ملاحظة:</strong> يمكنك تعديل ملاحظة الجلسة حتى لو كانت الجلسة منتهية.
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="note" class="form-label">ملاحظة الجلسة</label>
+                        <textarea class="form-control @error('note') is-invalid @enderror" 
+                                  id="note" 
+                                  name="note" 
+                                  rows="4" 
+                                  placeholder="أدخل ملاحظة الجلسة (اختياري)">{{ old('note', $session->note) }}</textarea>
+                        <small class="form-text text-muted">يمكنك ترك الحقل فارغاً لإزالة الملاحظة</small>
+                        @error('note')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">معلومات الجلسة</label>
+                        <div class="form-control-plaintext small">
+                            <strong>رقم الجلسة:</strong> #{{ $session->id }}<br>
+                            <strong>الحالة:</strong> 
+                            @if($session->session_status == 'active')
+                                <span class="badge bg-success">نشطة</span>
+                            @elseif($session->session_status == 'completed')
+                                <span class="badge bg-primary">مكتملة</span>
+                            @else
+                                <span class="badge bg-danger">ملغاة</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> حفظ التغييرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal تعديل ساعات العمل الإضافية -->
+@if($session->session_status == 'active' || $session->session_status == 'completed')
+@foreach($session->overtimes as $overtime)
+<div class="modal fade" id="editOvertimeModal{{ $overtime->id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل ساعات العمل الإضافية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('sessions.update-overtime', ['session' => $session, 'overtime' => $overtime]) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">الساعات الحالية:</label>
+                        <div class="form-control-plaintext">
+                            من: {{ $overtime->start_at->format('Y-m-d H:i') }}<br>
+                            إلى: {{ $overtime->end_at->format('Y-m-d H:i') }}<br>
+                            المدة: {{ number_format($overtime->total_hour, 2) }} ساعة
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="overtime_start_at_{{ $overtime->id }}" class="form-label">من (تاريخ ووقت)</label>
+                        <input type="datetime-local" class="form-control" 
+                               id="overtime_start_at_{{ $overtime->id }}" 
+                               name="start_at" 
+                               value="{{ $overtime->start_at->format('Y-m-d\TH:i') }}" 
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="overtime_end_at_{{ $overtime->id }}" class="form-label">إلى (تاريخ ووقت)</label>
+                        <input type="datetime-local" class="form-control" 
+                               id="overtime_end_at_{{ $overtime->id }}" 
+                               name="end_at" 
+                               value="{{ $overtime->end_at->format('Y-m-d\TH:i') }}" 
+                               required>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        سيتم إعادة حساب عدد الساعات تلقائياً بناءً على التاريخ والوقت المحددين.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+@endif
 
 @endsection

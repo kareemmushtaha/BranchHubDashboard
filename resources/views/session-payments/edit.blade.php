@@ -176,12 +176,20 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="total_price" class="form-label">السعر الإجمالي <span class="text-danger">*</span></label>
+                    @php
+                        $totalPriceValue = old('total_price');
+                        if ($totalPriceValue === null) {
+                            $totalPriceValue = $sessionPayment->total_price !== null
+                                ? number_format((float) $sessionPayment->total_price, 2, '.', '')
+                                : '';
+                        }
+                    @endphp
                     <div class="input-group">
                         <span class="input-group-text">$</span>
-                        <input type="number" step="0.01" min="0"
+                        <input type="text" step="0.01" min="0"
                                class="form-control @error('total_price') is-invalid @enderror"
                                id="total_price" name="total_price"
-                               value="{{ old('total_price', $sessionPayment->total_price) }}" required>
+                               value="{{ $totalPriceValue }}" required>
                         @error('total_price')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -288,11 +296,16 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-4 d-flex align-items-center justify-content-end">
-                                    <button type="button" class="btn btn-outline-primary"
+                                <div class="col-md-4 d-flex flex-column align-items-end gap-2 justify-content-center">
+                                    <button type="button" class="btn btn-outline-primary w-100"
                                             onclick="setSuggestedTotal({{ $suggestedTotal }})">
                                         <i class="bi bi-check-circle me-1"></i>
-                                        استخدم هذا المبلغ
+                                        استخدم الإجمالي المقترح
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary w-100"
+                                            onclick="setRemainingAsTotal({{ number_format((float) $sessionPayment->remaining_amount, 2, '.', '') }})">
+                                        <i class="bi bi-cash-coin me-1"></i>
+                                        استخدم المبلغ المتبقي
                                     </button>
                                 </div>
                             </div>
@@ -1693,6 +1706,42 @@ function setSuggestedTotal(amount) {
         console.warn('Total price element not found');
         showCopyMessage('حدث خطأ في النظام', 'danger');
     }
+}
+
+// Function to set remaining amount as total price
+function setRemainingAsTotal(presetAmount) {
+    const totalPriceElement = document.getElementById('total_price');
+    if (!totalPriceElement) {
+        console.warn('Total price element not found');
+        showCopyMessage('حدث خطأ في النظام', 'danger');
+        return;
+    }
+
+    let amount = typeof presetAmount === 'number' ? presetAmount : parseFloat(presetAmount);
+    if (isNaN(amount)) {
+        const remainingInput = document.getElementById('remaining_amount');
+        amount = remainingInput ? parseFloat(remainingInput.value) : 0;
+    }
+
+    amount = isNaN(amount) ? 0 : amount;
+    totalPriceElement.value = amount.toFixed(2);
+
+    const amountBankElement = document.getElementById('amount_bank');
+    const amountCashElement = document.getElementById('amount_cash');
+    if (amountBankElement) amountBankElement.value = '';
+    if (amountCashElement) amountCashElement.value = '';
+
+    setTimeout(function() {
+        try {
+            if (typeof calculateAmounts === 'function') {
+                calculateAmounts();
+            }
+        } catch (error) {
+            console.error('Error in setRemainingAsTotal calculation:', error);
+        }
+    }, 10);
+
+    showCopyMessage('تم تعيين المبلغ المتبقي كإجمالي الفاتورة');
 }
 
 // Function to copy total price to bank amount

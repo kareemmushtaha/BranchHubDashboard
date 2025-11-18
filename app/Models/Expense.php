@@ -8,14 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Expense extends Model
 {
     protected $fillable = [
+        'item_name',
         'amount',
         'payment_type',
+        'payment_date',
         'details',
         'user_id'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'payment_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

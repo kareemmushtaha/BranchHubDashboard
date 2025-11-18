@@ -21,7 +21,8 @@ class Session extends Model
         'user_id',
         'note',
         'session_owner',
-        'custom_internet_cost'
+        'custom_internet_cost',
+        'custom_overtime_rate'
     ];
 
     protected $casts = [
@@ -43,6 +44,11 @@ class Session extends Model
     public function drinks()
     {
         return $this->hasMany(SessionDrink::class);
+    }
+
+    public function overtimes()
+    {
+        return $this->hasMany(SessionOvertime::class);
     }
 
     public function auditLogs()
@@ -215,8 +221,10 @@ class Session extends Model
             
             // تحديث تكلفة الإنترنت في الدفعة المرتبطة
             if ($this->payment) {
+                $this->load('overtimes');
                 $drinksCost = $this->drinks->sum('price');
-                $totalCost = $newInternetCost + $drinksCost;
+                $overtimeCost = $this->calculateOvertimeCost();
+                $totalCost = $newInternetCost + $drinksCost + $overtimeCost;
                 $totalPaid = $this->payment->amount_bank + $this->payment->amount_cash;
                 $remainingAmount = $totalCost - $totalPaid;
                 
@@ -250,9 +258,11 @@ class Session extends Model
         try {
             $this->auditLogs()->create([
                 'action' => 'start_time_updated',
-                'old_value' => $oldStartTime ? $oldStartTime->format('Y-m-d H:i:s') : null,
-                'new_value' => $newStartTime->format('Y-m-d H:i:s'),
-                'description' => 'تم تحديث تاريخ بداية الجلسة'
+                'action_type' => 'session',
+                'old_values' => ['start_at' => $oldStartTime ? $oldStartTime->format('Y-m-d H:i:s') : null],
+                'new_values' => ['start_at' => $newStartTime->format('Y-m-d H:i:s')],
+                'description' => 'تم تحديث تاريخ بداية الجلسة',
+                'user_id' => auth()->id()
             ]);
             
             \Log::info('Created audit log successfully', [
@@ -407,9 +417,11 @@ class Session extends Model
         try {
             $this->auditLogs()->create([
                 'action' => 'expected_end_date_updated',
-                'old_value' => $oldExpectedEndDate ? $oldExpectedEndDate->format('Y-m-d H:i:s') : null,
-                'new_value' => $expectedEndDate->format('Y-m-d H:i:s'),
-                'description' => 'تم تحديث التاريخ المتوقع لانتهاء الجلسة'
+                'action_type' => 'session',
+                'old_values' => ['expected_end_date' => $oldExpectedEndDate ? $oldExpectedEndDate->format('Y-m-d H:i:s') : null],
+                'new_values' => ['expected_end_date' => $expectedEndDate->format('Y-m-d H:i:s')],
+                'description' => 'تم تحديث التاريخ المتوقع لانتهاء الجلسة',
+                'user_id' => auth()->id()
             ]);
         } catch (\Exception $e) {
             \Log::error('Error creating audit log for expected end date update', [
@@ -458,9 +470,11 @@ class Session extends Model
         try {
             $this->auditLogs()->create([
                 'action' => 'session_ended_manually',
-                'old_value' => $oldEndTime ? $oldEndTime->format('Y-m-d H:i:s') : null,
-                'new_value' => $endTime->format('Y-m-d H:i:s'),
-                'description' => 'تم إنهاء الجلسة يدوياً'
+                'action_type' => 'session',
+                'old_values' => ['end_at' => $oldEndTime ? $oldEndTime->format('Y-m-d H:i:s') : null],
+                'new_values' => ['end_at' => $endTime->format('Y-m-d H:i:s')],
+                'description' => 'تم إنهاء الجلسة يدوياً',
+                'user_id' => auth()->id()
             ]);
         } catch (\Exception $e) {
             \Log::error('Error creating audit log for manual session end', [
@@ -499,5 +513,36 @@ class Session extends Model
         $diffInDays = $now->diffInDays($expectedEndDate, false);
         
         return max(0, $diffInDays);
+    }
+
+    /**
+     * حساب تكلفة ساعات العمل الإضافية
+     */
+    public function calculateOvertimeCost()
+    {
+        $totalHours = $this->overtimes->sum('total_hour');
+        
+        if ($totalHours <= 0) {
+            return 0;
+        }
+
+        // استخدام السعر المخصص إذا كان موجوداً
+        if ($this->custom_overtime_rate !== null) {
+            return round($totalHours * $this->custom_overtime_rate, 2);
+        }
+
+        // استخدام السعر الافتراضي من PublicPrice
+        $publicPrices = \App\Models\PublicPrice::first();
+        $defaultRate = $publicPrices->overtime_rate ?? 5.00; // سعر افتراضي
+        
+        return round($totalHours * $defaultRate, 2);
+    }
+
+    /**
+     * التحقق من وجود سعر مخصص للـ overtime
+     */
+    public function hasCustomOvertimeRate()
+    {
+        return $this->custom_overtime_rate !== null;
     }
 }

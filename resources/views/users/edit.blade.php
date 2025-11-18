@@ -58,9 +58,15 @@
                             <select class="form-select @error('user_type') is-invalid @enderror" 
                                     id="user_type" name="user_type" required>
                                 <option value="">اختر نوع المستخدم</option>
-                                <option value="hourly" {{ old('user_type', $user->user_type) == 'hourly' ? 'selected' : '' }}>ساعي</option>
+                                <optgroup label="عملاء">
+                                    <option value="hourly" {{ old('user_type', $user->user_type) == 'hourly' ? 'selected' : '' }}>ساعي</option>
 
-                                <option value="subscription" {{ old('user_type', $user->user_type) == 'subscription' ? 'selected' : '' }}>اشتراك</option>
+                                    <option value="subscription" {{ old('user_type', $user->user_type) == 'subscription' ? 'selected' : '' }}>اشتراك</option>
+                                </optgroup>
+                                <optgroup label="إدارة النظام">
+                                    <option value="manager" {{ old('user_type', $user->user_type) == 'manager' ? 'selected' : '' }}>مدير إداري</option>
+                                    <option value="admin" {{ old('user_type', $user->user_type) == 'admin' ? 'selected' : '' }}>مدير النظام (صلاحيات كاملة)</option>
+                                </optgroup>
                             </select>
                             @error('user_type')
                                 <div class="invalid-feedback">{{ $message }}</div>
