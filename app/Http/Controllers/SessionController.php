@@ -224,6 +224,102 @@ class SessionController extends Controller
     }
 
     /**
+     * Display all overdue sessions (sessions that should have ended but haven't been completed)
+     */
+    public function overdue(Request $request)
+    {
+        $query = Session::with(['user', 'payment'])
+            ->where('session_status', 'active') // Only active sessions can be overdue
+            ->whereNull('end_at'); // Not completed yet
+
+        // Filter by session category
+        if ($request->has('session_category') && $request->session_category !== '') {
+            $query->where('session_category', $request->session_category);
+        }
+
+        // Search by user name or session owner name
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereHas('user', function ($userQuery) use ($searchTerm) {
+                    $userQuery->where('name', 'like', '%' . $searchTerm . '%')
+                              ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                              ->orWhere('phone', 'like', '%' . $searchTerm . '%');
+                })
+                ->orWhere('session_owner', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
+        // Get all sessions first, then filter by overdue status
+        $allSessions = $query->get();
+        
+        // Filter sessions that are actually overdue
+        $overdueSessions = $allSessions->filter(function($session) {
+            return $session->isOverdue();
+        });
+
+        // Paginate the results
+        $perPage = 20;
+        $currentPage = $request->get('page', 1);
+        $items = $overdueSessions->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $sessions = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $overdueSessions->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // Calculate stats
+        $totalOverdue = Session::where('session_status', 'active')
+            ->whereNull('end_at')
+            ->get()
+            ->filter(function($session) {
+                return $session->isOverdue();
+            })
+            ->count();
+
+        $stats = [
+            'total_overdue' => $totalOverdue,
+            'overdue_by_category' => [
+                'hourly' => Session::where('session_status', 'active')
+                    ->whereNull('end_at')
+                    ->where('session_category', 'hourly')
+                    ->get()
+                    ->filter(function($session) {
+                        return $session->isOverdue();
+                    })
+                    ->count(),
+                'subscription' => Session::where('session_status', 'active')
+                    ->whereNull('end_at')
+                    ->where('session_category', 'subscription')
+                    ->get()
+                    ->filter(function($session) {
+                        return $session->isOverdue();
+                    })
+                    ->count(),
+                'overtime' => Session::where('session_status', 'active')
+                    ->whereNull('end_at')
+                    ->where('session_category', 'overtime')
+                    ->get()
+                    ->filter(function($session) {
+                        return $session->isOverdue();
+                    })
+                    ->count(),
+            ]
+        ];
+
+        // Available categories for filter dropdown
+        $categories = [
+            'hourly' => 'ساعي',
+            'subscription' => 'شهري (اشتراك)',
+            'overtime' => 'إضافي'
+        ];
+
+        return view('sessions.overdue', compact('sessions', 'stats', 'categories'));
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()

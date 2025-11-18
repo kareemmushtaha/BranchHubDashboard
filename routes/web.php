@@ -110,6 +110,7 @@ Route::get('drink-invoices/{drinkInvoice}/invoice/show', [DrinkInvoiceController
 
 // Sessions Routes
 Route::resource('sessions', SessionController::class);
+Route::get('sessions-overdue', [SessionController::class, 'overdue'])->name('sessions.overdue');
 Route::post('users/{user}/create-session', [SessionController::class, 'createForUser'])->name('users.create-session');
 Route::post('sessions/{session}/end', [SessionController::class, 'endSession'])->name('sessions.end');
 Route::post('sessions/{session}/cancel', [SessionController::class, 'cancelSession'])->name('sessions.cancel');

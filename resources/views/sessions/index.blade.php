@@ -6,15 +6,17 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">إدارة الجلسات</h1>
     <div>
-        <a href="{{ route('sessions.trashed') }}" class="btn btn-outline-danger me-2">
+        <a href="{{ route('sessions.overdue') }}" class="btn btn-outline-danger me-2">
+            <i class="bi bi-exclamation-triangle"></i> الجلسات المتأخرة
+        </a>
+        <a href="{{ route('sessions.trashed') }}" class="btn btn-outline-secondary me-2">
             <i class="bi bi-trash"></i> الجلسات المحذوفة
         </a>
         <a href="{{ route('sessions.create') }}" class="btn btn-primary" style="padding-left: 35px; padding-right: 35px;">
             <i class="bi bi-plus-circle"></i> بدء جلسة جديدة
         </a>
-    </div></thinking>
-
- </div>
+    </div>
+</div>
 
 <!-- رسالة تأكيد الفلتر -->
 @if(request('session_status'))
