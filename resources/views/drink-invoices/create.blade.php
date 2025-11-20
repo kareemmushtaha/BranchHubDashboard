@@ -44,6 +44,18 @@
                         @enderror
                     </div>
                     <div class="mb-3">
+                        <label for="created_at" class="form-label">تاريخ الفاتورة</label>
+                        <input type="datetime-local"
+                               class="form-control @error('created_at') is-invalid @enderror"
+                               id="created_at"
+                               name="created_at"
+                               value="{{ old('created_at', now()->format('Y-m-d\TH:i')) }}">
+                        <div class="form-text">اترك الحقل فارغًا لاستخدام التاريخ الحالي تلقائيًا.</div>
+                        @error('created_at')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
                         <label for="note" class="form-label">ملاحظات</label>
                         <textarea class="form-control" id="note" name="note" rows="3">{{ old('note') }}</textarea>
                     </div>

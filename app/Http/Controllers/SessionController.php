@@ -31,13 +31,15 @@ class SessionController extends Controller
         }
 
         // Filter by session status
+        // إذا كان الخيار "all" أو فارغ، لا تطبق فلتر (عرض كل الحالات)
         // إذا لم يكن هناك حالة محددة في الطلب، استخدم "active" كقيمة افتراضية
-        if ($request->has('session_status') && $request->session_status !== '') {
+        if ($request->has('session_status') && $request->session_status !== '' && $request->session_status !== 'all') {
             $query->where('session_status', $request->session_status);
-        } else {
+        } elseif (!$request->has('session_status') || $request->session_status === '') {
             // إذا لم يكن هناك حالة محددة في الطلب، استخدم "active" تلقائياً
             $query->where('session_status', 'active');
         }
+        // إذا كان session_status === 'all'، لا تطبق فلتر (عرض كل الحالات)
 
         // Search by user name or session owner name
         if ($request->filled('search')) {
@@ -120,12 +122,15 @@ class SessionController extends Controller
         }
 
         // Apply same session status filter to stats
-        if ($request->has('session_status') && $request->session_status !== '') {
+        // إذا كان الخيار "all" أو فارغ، لا تطبق فلتر (عرض كل الحالات)
+        // إذا لم يكن هناك حالة محددة في الطلب، استخدم "active" كقيمة افتراضية
+        if ($request->has('session_status') && $request->session_status !== '' && $request->session_status !== 'all') {
             $statsQuery->where('session_status', $request->session_status);
-        } else {
+        } elseif (!$request->has('session_status') || $request->session_status === '') {
             // إذا لم يكن هناك حالة محددة في الطلب، استخدم "active" تلقائياً
             $statsQuery->where('session_status', 'active');
         }
+        // إذا كان session_status === 'all'، لا تطبق فلتر (عرض كل الحالات)
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
@@ -503,7 +508,7 @@ class SessionController extends Controller
         // حساب التكلفة
         $this->calculateSessionCost($session);
 
-        return redirect()->route('sessions.show', $session)
+        return redirect()->back()
             ->with('success', 'تم إنهاء الجلسة وحساب التكلفة');
     }
 

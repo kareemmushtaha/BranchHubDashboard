@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Drink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DrinkInvoiceController extends Controller
 {
@@ -47,12 +48,32 @@ class DrinkInvoiceController extends Controller
     }
 
     /**
+     * Check if user can create a new invoice
+     */
+    private function canCreateInvoice($userId)
+    {
+        // التحقق من وجود فواتير غير مدفوعة أو مدفوعة جزئياً
+        $unpaidInvoices = DrinkInvoice::where('user_id', $userId)
+            ->whereIn('payment_status', ['pending', 'partial'])
+            ->exists();
+        
+        return !$unpaidInvoices;
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create(Request $request)
     {
         $userId = $request->get('user_id');
         $user = $userId ? User::find($userId) : null;
+        
+        // التحقق من إمكانية إنشاء فاتورة جديدة
+        if ($user && !$this->canCreateInvoice($user->id)) {
+            return redirect()->back()
+                ->with('error', 'لا يمكن إنشاء فاتورة جديدة. يجب أن تكون جميع الفواتير السابقة مدفوعة بالكامل أولاً.');
+        }
+        
         $drinks = Drink::where('status', 'available')->get();
 
         return view('drink-invoices.create', compact('user', 'drinks'));
@@ -65,7 +86,15 @@ class DrinkInvoiceController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
+            'created_at' => 'nullable|date_format:Y-m-d\TH:i',
         ]);
+
+        // التحقق من إمكانية إنشاء فاتورة جديدة
+        if (!$this->canCreateInvoice($request->user_id)) {
+            return redirect()->back()
+                ->with('error', 'لا يمكن إنشاء فاتورة جديدة. يجب أن تكون جميع الفواتير السابقة مدفوعة بالكامل أولاً.')
+                ->withInput();
+        }
 
         $invoice = DrinkInvoice::create([
             'user_id' => $request->user_id,
@@ -76,6 +105,13 @@ class DrinkInvoiceController extends Controller
             'remaining_amount' => 0,
             'note' => $request->note
         ]);
+
+        if ($request->filled('created_at')) {
+            $customCreatedAt = Carbon::createFromFormat('Y-m-d\TH:i', $request->created_at);
+            $invoice->created_at = $customCreatedAt;
+            $invoice->updated_at = $customCreatedAt;
+            $invoice->save();
+        }
 
         return redirect()->route('drink-invoices.show', $invoice)
             ->with('success', 'تم إنشاء فاتورة المشروبات بنجاح');
@@ -145,9 +181,15 @@ class DrinkInvoiceController extends Controller
      */
     public function addDrink(Request $request, DrinkInvoice $drinkInvoice)
     {
+        // منع إضافة مشروبات للفاتورة المدفوعة بالكامل
+        if ($drinkInvoice->payment_status == 'paid') {
+            return redirect()->back()->with('error', 'لا يمكن إضافة مشروبات للفاتورة المدفوعة بالكامل');
+        }
+
         $request->validate([
             'drink_id' => 'required|exists:drinks,id',
             'quantity' => 'required|integer|min:1',
+            'created_at' => 'nullable|date_format:Y-m-d\TH:i',
             'note' => 'nullable|string'
         ]);
 
@@ -156,7 +198,7 @@ class DrinkInvoiceController extends Controller
         $unitPrice = $drink->price; // حفظ سعر الوحدة في وقت الإضافة
         $totalPrice = $unitPrice * $quantity;
 
-        DrinkInvoiceItem::create([
+        $itemData = [
             'drink_invoice_id' => $drinkInvoice->id,
             'drink_id' => $request->drink_id,
             'unit_price' => $unitPrice, // حفظ سعر الوحدة
@@ -164,7 +206,20 @@ class DrinkInvoiceController extends Controller
             'price' => $totalPrice,
             'status' => 'ordered',
             'note' => $request->note
-        ]);
+        ];
+
+        $item = DrinkInvoiceItem::create($itemData);
+
+        // تحديث تاريخ الإنشاء إذا تم تحديده
+        if ($request->filled('created_at')) {
+            $customCreatedAt = Carbon::createFromFormat('Y-m-d\TH:i', $request->created_at);
+            DB::table('drink_invoice_items')
+                ->where('id', $item->id)
+                ->update([
+                    'created_at' => $customCreatedAt,
+                    'updated_at' => $customCreatedAt
+                ]);
+        }
 
         $drinkInvoice->updateTotal();
 
@@ -176,6 +231,11 @@ class DrinkInvoiceController extends Controller
      */
     public function removeDrink(DrinkInvoice $drinkInvoice, DrinkInvoiceItem $item)
     {
+        // منع حذف المشروبات من الفاتورة المدفوعة بالكامل
+        if ($drinkInvoice->payment_status == 'paid') {
+            return redirect()->back()->with('error', 'لا يمكن حذف مشروبات من الفاتورة المدفوعة بالكامل');
+        }
+
         if ($item->drink_invoice_id !== $drinkInvoice->id) {
             return redirect()->back()->with('error', 'المشروب لا ينتمي لهذه الفاتورة');
         }
@@ -191,6 +251,11 @@ class DrinkInvoiceController extends Controller
      */
     public function updateDrinkDate(Request $request, DrinkInvoice $drinkInvoice, DrinkInvoiceItem $item)
     {
+        // منع تعديل المشروبات في الفاتورة المدفوعة بالكامل
+        if ($drinkInvoice->payment_status == 'paid') {
+            return redirect()->back()->with('error', 'لا يمكن تعديل مشروبات الفاتورة المدفوعة بالكامل');
+        }
+
         if ($item->drink_invoice_id !== $drinkInvoice->id) {
             return redirect()->back()->with('error', 'المشروب لا ينتمي لهذه الفاتورة');
         }
@@ -219,6 +284,11 @@ class DrinkInvoiceController extends Controller
      */
     public function updateDrinkPrice(Request $request, DrinkInvoice $drinkInvoice, DrinkInvoiceItem $item)
     {
+        // منع تعديل المشروبات في الفاتورة المدفوعة بالكامل
+        if ($drinkInvoice->payment_status == 'paid') {
+            return redirect()->back()->with('error', 'لا يمكن تعديل مشروبات الفاتورة المدفوعة بالكامل');
+        }
+
         if ($item->drink_invoice_id !== $drinkInvoice->id) {
             return redirect()->back()->with('error', 'المشروب لا ينتمي لهذه الفاتورة');
         }
