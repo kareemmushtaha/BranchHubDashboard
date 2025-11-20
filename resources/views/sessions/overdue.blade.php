@@ -294,7 +294,7 @@
                             @endif
                         </td>
                         <td>
-                            <div class="btn-group" role="group">
+                            <div class="d-flex gap-1">
                                 <a href="{{ route('sessions.show', $session) }}" class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
                                     <i class="bi bi-eye"></i>
                                 </a>

@@ -29,6 +29,7 @@ class UserController extends Controller
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%");
             });
@@ -84,6 +85,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'name_ar' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users',
             'phone' => 'nullable|string|max:20',
             'user_type' => 'required|in:hourly,subscription,admin,manager',
@@ -92,6 +94,7 @@ class UserController extends Controller
 
         $user = User::create([
             'name' => $request->name,
+            'name_ar' => $request->name_ar,
             'email' => $request->email,
             'password' => Hash::make('password'), // كلمة مرور افتراضية
             'phone' => $request->phone,
@@ -137,6 +140,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'name_ar' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
             'user_type' => 'required|in:hourly,subscription,admin,manager',
@@ -144,7 +148,7 @@ class UserController extends Controller
         ]);
 
         $user->update($request->only([
-            'name', 'email', 'phone', 'user_type', 'status'
+            'name', 'name_ar', 'email', 'phone', 'user_type', 'status'
         ]));
 
         return redirect()->route('users.index')
@@ -180,6 +184,7 @@ class UserController extends Controller
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%");
             });

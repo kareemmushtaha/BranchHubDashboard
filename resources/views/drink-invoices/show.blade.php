@@ -21,6 +21,17 @@
     </div>
 </div>
 
+@if($drinkInvoice->payment_status == 'paid')
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border-left: 6px solid #155724; box-shadow: 0 4px 10px rgba(0,0,0,0.2); padding: 16px 32px; border-radius: 8px;">
+            <i class="bi bi-shield-check text-white me-3" style="font-size: 1.5rem;"></i>
+            <span class="text-white fw-bold" style="font-size: 1.25rem;">✓ هذه الفاتورة مدفوعة بالكامل</span>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="row">
     <!-- معلومات الفاتورة -->
     <div class="col-md-6 mb-4">
@@ -53,13 +64,26 @@
                     <div class="col-sm-6"><strong>حالة الدفع:</strong></div>
                     <div class="col-sm-6">
                         @if($drinkInvoice->payment_status == 'pending')
-                            <span class="badge bg-warning">قيد الانتظار</span>
+                            <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded" style="background-color: #fff3cd; border: 2px solid #ffc107;">
+                                <i class="bi bi-clock-history text-warning" style="font-size: 1.2rem;"></i>
+                                <span class="fw-bold text-dark">قيد الانتظار</span>
+                            </div>
                         @elseif($drinkInvoice->payment_status == 'paid')
-                            <span class="badge bg-success">مدفوع</span>
+                            <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded" style="background-color: #d1e7dd; border: 2px solid #198754;">
+                                <i class="bi bi-check-circle-fill text-success" style="font-size: 1.2rem;"></i>
+                                <span class="fw-bold text-dark">مدفوع بالكامل</span>
+                            </div>
                         @elseif($drinkInvoice->payment_status == 'partial')
-                            <span class="badge bg-info">مدفوع جزئياً</span>
+                            <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded" style="background-color: #cff4fc; border: 2px solid #0dcaf0;">
+                                <i class="bi bi-pause-circle-fill text-info" style="font-size: 1.2rem;"></i>
+                                <span class="fw-bold text-dark">مدفوع جزئياً</span>
+                                <small class="text-muted">(متبقي: ₪{{ number_format($drinkInvoice->remaining_amount, 2) }})</small>
+                            </div>
                         @else
-                            <span class="badge bg-danger">ملغي</span>
+                            <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded" style="background-color: #f8d7da; border: 2px solid #dc3545;">
+                                <i class="bi bi-x-circle-fill text-danger" style="font-size: 1.2rem;"></i>
+                                <span class="fw-bold text-dark">ملغي</span>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -113,11 +137,35 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">المشروبات المطلوبة</h5>
+                @if($drinkInvoice->payment_status != 'paid')
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addDrinkModal">
                     <i class="bi bi-plus-circle"></i> إضافة مشروب
                 </button>
+                @else
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted small me-2">
+                        <i class="bi bi-info-circle"></i> لا يمكن إضافة مشروبات للفاتورة المدفوعة بالكامل
+                    </span>
+                    <a href="{{ route('drink-invoices.create') }}?user_id={{ $drinkInvoice->user_id }}" class="btn btn-success btn-sm">
+                        <i class="bi bi-file-earmark-plus"></i> فاتورة جديدة
+                    </a>
+                    <a href="{{ route('drink-invoices.edit', $drinkInvoice) }}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i> تغيير الحالة
+                    </a>
+                </div>
+                @endif
             </div>
             <div class="card-body">
+                @if($drinkInvoice->payment_status == 'paid')
+                <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                    <div>
+                        <strong>تنبيه:</strong> لا يمكن إضافة مشروبات لأن الفاتورة مدفوعة بالكامل. 
+                        يمكنك <a href="{{ route('drink-invoices.create') }}?user_id={{ $drinkInvoice->user_id }}" class="alert-link">فتح فاتورة جديدة</a> 
+                        أو <a href="{{ route('drink-invoices.edit', $drinkInvoice) }}" class="alert-link">تغيير حالة الفاتورة</a> إلى غير مدفوعة بالكامل.
+                    </div>
+                </div>
+                @endif
                 @if($drinkInvoice->items && $drinkInvoice->items->count() > 0)
                 <div class="table-responsive">
                     <table class="table table-sm">
@@ -201,9 +249,15 @@
             <form action="{{ route('drink-invoices.add-drink', $drinkInvoice) }}" method="POST">
                 @csrf
                 <div class="modal-body">
+                    @if($drinkInvoice->payment_status == 'paid')
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>تنبيه:</strong> لا يمكن إضافة مشروبات للفاتورة المدفوعة بالكامل.
+                    </div>
+                    @endif
                     <div class="mb-3">
                         <label for="drink_id" class="form-label">المشروب</label>
-                        <select class="form-select" id="drink_id" name="drink_id" required>
+                        <select class="form-select" id="drink_id" name="drink_id" {{ $drinkInvoice->payment_status == 'paid' ? 'disabled' : 'required' }}>
                             <option value="">اختر المشروب</option>
                             @foreach($drinks as $drink)
                             <option value="{{ $drink->id }}" data-price="{{ $drink->price }}">
@@ -215,21 +269,26 @@
                     <div class="mb-3">
                         <label for="quantity" class="form-label">عدد المشروبات</label>
                         <input type="number" class="form-control" id="quantity" name="quantity" 
-                               min="1" value="1" required>
+                               min="1" value="1" {{ $drinkInvoice->payment_status == 'paid' ? 'disabled' : 'required' }}>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">السعر الإجمالي</label>
                         <div class="form-control-plaintext" id="total_price_display">₪0.00</div>
                     </div>
                     <div class="mb-3">
+                        <label for="drink_date" class="form-label">تاريخ إضافة المشروب</label>
+                        <input type="datetime-local" class="form-control" id="drink_date" name="created_at" 
+                               value="{{ date('Y-m-d\TH:i') }}" {{ $drinkInvoice->payment_status == 'paid' ? 'disabled' : 'required' }}>
+                    </div>
+                    <div class="mb-3">
                         <label for="drink_note" class="form-label">ملاحظات</label>
                         <input type="text" class="form-control" id="drink_note" name="note" 
-                               placeholder="ملاحظات إضافية (اختياري)">
+                               placeholder="ملاحظات إضافية (اختياري)" {{ $drinkInvoice->payment_status == 'paid' ? 'disabled' : '' }}>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-primary">إضافة المشروب</button>
+                    <button type="submit" class="btn btn-primary" {{ $drinkInvoice->payment_status == 'paid' ? 'disabled' : '' }}>إضافة المشروب</button>
                 </div>
             </form>
         </div>

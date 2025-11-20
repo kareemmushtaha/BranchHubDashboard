@@ -152,7 +152,7 @@
                                     <i class="bi bi-search"></i>
                                 </span>
                             </div>
-                            <small class="text-muted">البحث تلقائي أثناء الكتابة</small>
+                            <small class="text-muted">البحث بعد الانتهاء من الكتابة</small>
                         </div>
                         
                         <!-- فلترة نوع المستخدم -->
@@ -194,7 +194,7 @@
                         </div>
                         
                         <!-- اتجاه الترتيب -->
-                        <div class="col-md-1">
+                        <div class="col-md-2">
                             <label class="form-label">الاتجاه</label>
                             <select name="sort_direction" class="form-select">
                                 <option value="desc" {{ request('sort_direction') == 'desc' ? 'selected' : '' }}>↓</option>
@@ -206,7 +206,7 @@
                         <!-- أزرار -->
                         <div class="col-md-2">
                             <div class="d-flex gap-1">
-                                <a href="{{ route('users.index') }}" class="btn btn-outline-secondary btn-sm">
+                                <a href="{{ route('users.index') }}" class="btn btn-warning btn-sm">
                                     <i class="bi bi-x-circle"></i> مسح الفلاتر
                                 </a>
                             </div>
@@ -488,12 +488,36 @@ document.addEventListener('DOMContentLoaded', function() {
             // إظهار مؤشر التحميل
             showLoading();
             filterForm.submit();
-        }, 500); // تأخير 500 مللي ثانية
+        }, 1500); // تأخير 1.5 ثانية بعد الانتهاء من الكتابة
     }
     
     // مراقبة التغييرات في حقول الفلترة
     if (searchInput) {
+        // البحث مع تأخير أثناء الكتابة
         searchInput.addEventListener('input', applyFiltersWithDelay);
+        
+        // البحث فوراً عند الضغط على Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // إلغاء التأخير والبحث فوراً
+                if (searchTimeout) {
+                    clearTimeout(searchTimeout);
+                }
+                showLoading();
+                filterForm.submit();
+            }
+        });
+        
+        // البحث فوراً عند فقدان التركيز (blur)
+        searchInput.addEventListener('blur', function() {
+            // إلغاء التأخير والبحث فوراً
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            showLoading();
+            filterForm.submit();
+        });
     }
     
     if (userTypeSelect) {
@@ -514,15 +538,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (perPageSelect) {
         perPageSelect.addEventListener('change', applyFilters);
-    }
-    
-    // منع إرسال الفورم عند الضغط على Enter في حقل البحث
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-            }
-        });
     }
     
     // عناصر العمليات الجماعية

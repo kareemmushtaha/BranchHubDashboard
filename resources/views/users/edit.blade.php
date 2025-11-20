@@ -27,13 +27,24 @@
                     @method('PUT')
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label">الاسم</label>
+                            <label for="name" class="form-label">الاسم بالانجليزي</label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" 
                                    id="name" name="name" value="{{ old('name', $user->name) }}" required>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="name_ar" class="form-label">الاسم بالعربي <small class="text-muted">(اختياري)</small></label>
+                            <input type="text" class="form-control @error('name_ar') is-invalid @enderror" 
+                                   id="name_ar" name="name_ar" value="{{ old('name_ar', $user->name_ar) }}">
+                            @error('name_ar')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="email" class="form-label">البريد الإلكتروني <small class="text-muted">(اختياري)</small></label>
                             <input type="email" class="form-control @error('email') is-invalid @enderror" 

@@ -295,8 +295,8 @@
                             حالة الجلسة
                         </label>
                         <select name="session_status" id="session_status" class="form-select">
-                            <option value="">جميع الحالات</option>
-                            <option value="active" {{ (request('session_status') === null ? 'active' : request('session_status')) == 'active' ? 'selected' : '' }}>نشط</option>
+                            <option value="all" {{ request('session_status') == 'all' ? 'selected' : '' }}>كل الحالات</option>
+                            <option value="active" {{ (request('session_status') === null || request('session_status') === '') ? 'selected' : (request('session_status') == 'active' ? 'selected' : '') }}>نشط</option>
                             <option value="completed" {{ request('session_status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
                             <option value="cancelled" {{ request('session_status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
                         </select>
