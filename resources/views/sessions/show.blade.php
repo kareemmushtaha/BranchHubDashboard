@@ -224,7 +224,7 @@
                 </div>
                 <hr>
                 <div class="row">
-                    <div class="col-sm-6"><strong>المدة:</strong></div>
+                    <div class="col-sm-6"><strong> المنقضيةالمدة:</strong></div>
                     <div class="col-sm-6">
                         @if($session->start_at->isFuture())
                             <span class="text-info">
@@ -242,6 +242,45 @@
                         @endif
                     </div>
                 </div>
+
+                <!-- المدة المتبقية -->
+                @php
+                    $expectedEndDate = $session->getExpectedEndDate();
+                @endphp
+                @if($expectedEndDate && !$session->end_at && $expectedEndDate->isFuture())
+                <hr>
+                <div class="row">
+                    <div class="col-sm-6"><strong>المدة المتبقية:</strong></div>
+                    <div class="col-sm-6">
+                        @php
+                            $now = now();
+                            $remainingDuration = $now->diff($expectedEndDate);
+                            $remainingParts = [];
+                            
+                            if ($remainingDuration->days > 0) {
+                                $remainingParts[] = $remainingDuration->days . ' يوم';
+                            }
+                            if ($remainingDuration->h > 0) {
+                                $remainingParts[] = $remainingDuration->h . ' ساعة';
+                            }
+                            if ($remainingDuration->i > 0) {
+                                $remainingParts[] = $remainingDuration->i . ' دقيقة';
+                            }
+                            if (empty($remainingParts)) {
+                                $remainingParts[] = 'أقل من دقيقة';
+                            }
+                        @endphp
+                        <span class="text-warning">
+                            <i class="bi bi-hourglass-split"></i>
+                            {{ implode(' و ', $remainingParts) }}
+                        </span>
+                        <br>
+                        <small class="text-muted">
+                            حتى {{ $expectedEndDate->format('Y-m-d H:i') }}
+                        </small>
+                    </div>
+                </div>
+                @endif
 
                 <!-- التاريخ المتوقع للانتهاء -->
                 @php
@@ -528,7 +567,9 @@
                 <hr>
                 <div class="row">
                     <div class="col-sm-6"><strong>المتبقي:</strong></div>
-                    <div class="col-sm-6 remaining-amount-display {{ $session->payment->remaining_amount > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}">₪{{ number_format($session->payment->remaining_amount, 2) }}</div>
+                    <div class="col-sm-6 remaining-amount-display {{ max(0, $session->payment->remaining_amount) > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}">
+                        ₪{{ number_format(max(0, $session->payment->remaining_amount), 2) }}
+                    </div>
                 </div>
                 <hr>
                 <div class="row">
@@ -536,19 +577,14 @@
                     <div class="col-sm-6">
                         @php
                             $totalPaid = $session->payment->amount_bank + $session->payment->amount_cash;
-                            $refundAmount = $totalPaid - $session->payment->total_price;
+                            // المبلغ المرتجع هو فقط المبلغ الزائد عن الفاتورة (يجب أن يكون موجباً)
+                            $refundAmount = max(0, $totalPaid - $session->payment->total_price);
                         @endphp
                         @if($refundAmount > 0)
                             <span class="text-success fw-bold">
                                 <i class="bi bi-arrow-down-circle"></i>
                                 ₪{{ number_format($refundAmount, 2) }}
                                 <small class="d-block text-muted">يجب إرجاعه للزبون</small>
-                            </span>
-                        @elseif($refundAmount < 0)
-                            <span class="text-danger fw-bold">
-                                <i class="bi bi-arrow-up-circle"></i>
-                                ₪{{ number_format(abs($refundAmount), 2) }}
-                                <small class="d-block text-muted">متبقي للدفع</small>
                             </span>
                         @else
                             <span class="text-muted">
@@ -1107,9 +1143,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // تحديث المبلغ المتبقي
         const remainingElements = document.querySelectorAll('.remaining-amount-display');
+        const remainingAmount = Math.max(0, parseFloat(data.pricing.remaining_amount) || 0);
+        
         remainingElements.forEach(element => {
-            element.textContent = '₪' + data.pricing.remaining_amount;
-            if (parseFloat(data.pricing.remaining_amount) > 0) {
+            element.textContent = '₪' + remainingAmount.toFixed(2);
+            if (remainingAmount > 0) {
                 element.className = 'remaining-amount-display text-danger fw-bold';
             } else {
                 element.className = 'remaining-amount-display text-success fw-bold';
@@ -1519,6 +1557,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label for="overtime_end_at" class="form-label">إلى (تاريخ ووقت)</label>
                         <input type="datetime-local" class="form-control" id="overtime_end_at" name="end_at" required>
                     </div>
+                    <div class="mb-3">
+                        <label for="overtime_notes" class="form-label">ملاحظات <small class="text-muted">(اختياري)</small></label>
+                        <textarea class="form-control" id="overtime_notes" name="notes" rows="3" placeholder="أدخل أي ملاحظات إضافية..."></textarea>
+                    </div>
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
                         سيتم حساب عدد الساعات تلقائياً بناءً على التاريخ والوقت المحددين.
@@ -1678,6 +1720,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                name="end_at" 
                                value="{{ $overtime->end_at->format('Y-m-d\TH:i') }}" 
                                required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="overtime_notes_{{ $overtime->id }}" class="form-label">ملاحظات <small class="text-muted">(اختياري)</small></label>
+                        <textarea class="form-control" id="overtime_notes_{{ $overtime->id }}" name="notes" rows="3" placeholder="أدخل أي ملاحظات إضافية...">{{ old('notes', $overtime->notes) }}</textarea>
                     </div>
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>

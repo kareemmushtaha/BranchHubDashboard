@@ -51,7 +51,7 @@ class SessionPriceController extends Controller
                 $overtimeCost = $session->calculateOvertimeCost();
                 $totalCost = $newCost + $drinksCost + $overtimeCost;
                 $totalPaid = $session->payment->amount_bank + $session->payment->amount_cash;
-                $remainingAmount = $totalCost - $totalPaid;
+                $remainingAmount = max(0, $totalCost - $totalPaid);
                 
                 // تحديث حالة الدفع بناءً على المبالغ المدفوعة
                 $paymentStatus = 'pending';
@@ -143,7 +143,7 @@ class SessionPriceController extends Controller
                 $overtimeCost = $session->calculateOvertimeCost();
                 $totalCost = $customCost + $drinksCost + $overtimeCost;
                 $totalPaid = $session->payment->amount_bank + $session->payment->amount_cash;
-                $remainingAmount = $totalCost - $totalPaid;
+                $remainingAmount = max(0, $totalCost - $totalPaid);
                 
                 // تحديث حالة الدفع بناءً على المبالغ المدفوعة
                 $paymentStatus = 'pending';
@@ -307,7 +307,7 @@ class SessionPriceController extends Controller
                         $overtimeCost = $session->calculateOvertimeCost();
                         $totalCost = $newCost + $drinksCost + $overtimeCost;
                         $totalPaid = $session->payment->amount_bank + $session->payment->amount_cash;
-                        $remainingAmount = $totalCost - $totalPaid;
+                        $remainingAmount = max(0, $totalCost - $totalPaid);
                         
                         // تحديث حالة الدفع بناءً على المبالغ المدفوعة
                         $paymentStatus = 'pending';

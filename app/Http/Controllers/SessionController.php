@@ -757,7 +757,8 @@ class SessionController extends Controller
 
         $request->validate([
             'start_at' => 'required|date',
-            'end_at' => 'required|date|after:start_at'
+            'end_at' => 'required|date|after:start_at',
+            'notes' => 'nullable|string|max:1000'
         ]);
 
         $startAt = \Carbon\Carbon::parse($request->start_at);
@@ -766,7 +767,8 @@ class SessionController extends Controller
         $overtime = \App\Models\SessionOvertime::create([
             'session_id' => $session->id,
             'start_at' => $startAt,
-            'end_at' => $endAt
+            'end_at' => $endAt,
+            'notes' => $request->notes
         ]);
 
         // تسجيل audit log
@@ -849,7 +851,8 @@ class SessionController extends Controller
 
         $request->validate([
             'start_at' => 'required|date',
-            'end_at' => 'required|date|after:start_at'
+            'end_at' => 'required|date|after:start_at',
+            'notes' => 'nullable|string|max:1000'
         ]);
 
         $oldStartAt = $overtime->start_at;
@@ -862,7 +865,8 @@ class SessionController extends Controller
         // تحديث الـ overtime
         $overtime->update([
             'start_at' => $startAt,
-            'end_at' => $endAt
+            'end_at' => $endAt,
+            'notes' => $request->notes
         ]);
 
         // إعادة تحميل للحصول على total_hour المحسوب تلقائياً
@@ -963,7 +967,7 @@ class SessionController extends Controller
         
         $totalCost = $sessionCost + $drinksCost + $overtimeCost;
         $totalPaid = $payment->amount_bank + $payment->amount_cash;
-        $remainingAmount = $totalCost - $totalPaid;
+        $remainingAmount = max(0, $totalCost - $totalPaid);
         
         // تحديث حالة الدفع بناءً على المبالغ المدفوعة
         $paymentStatus = 'pending';
