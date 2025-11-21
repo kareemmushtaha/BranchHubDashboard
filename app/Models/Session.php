@@ -226,7 +226,7 @@ class Session extends Model
                 $overtimeCost = $this->calculateOvertimeCost();
                 $totalCost = $newInternetCost + $drinksCost + $overtimeCost;
                 $totalPaid = $this->payment->amount_bank + $this->payment->amount_cash;
-                $remainingAmount = $totalCost - $totalPaid;
+                $remainingAmount = max(0, $totalCost - $totalPaid);
                 
                 // تحديث حالة الدفع بناءً على المبالغ المدفوعة
                 $paymentStatus = 'pending';
