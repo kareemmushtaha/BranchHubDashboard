@@ -13,7 +13,8 @@ class SessionOvertime extends Model
         'session_id',
         'start_at',
         'end_at',
-        'total_hour'
+        'total_hour',
+        'notes'
     ];
 
     protected $casts = [
