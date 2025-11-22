@@ -30,7 +30,7 @@ class AuthController extends Controller
             // تحديث وقت آخر تسجيل دخول
             Auth::user()->update(['last_login_at' => now()]);
             
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended('/calendar-notes');
         }
 
         return back()->withErrors([

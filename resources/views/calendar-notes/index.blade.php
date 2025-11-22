@@ -161,14 +161,22 @@
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h6 class="mb-1">{{ $note->title ?? 'ملاحظة بدون عنوان' }}</h6>
+                                <div class="flex-grow-1">
+                                <div class="mt-2">
+                                        @php
+                                            $statusBadgeClass = ($note->status ?? 'pending') === 'completed' ? 'bg-success' : 'bg-danger';
+                                            $statusText = ($note->status ?? 'pending') === 'completed' ? 'تم تنفيذها' : 'لم يتم تنفيذها';
+                                        @endphp
+                                     </div>
+                        
+                                    <h6 class="mb-1"> العنوان: {{ $note->title ?? 'ملاحظة بدون عنوان' }}</h6>
                                     <small class="text-muted">
                                         {{ $note->created_at->format('H:i') }}
                                         @if($note->user?->name)
                                             • {{ $note->user->name }}
                                         @endif
                                     </small>
+                                   
                                 </div>
                                 @if ($canModifyNote)
                                     <div class="ms-2">
@@ -184,6 +192,25 @@
                                 @endif
                             </div>
                             <p class="mt-3 mb-0 text-secondary">{{ $note->content }}</p>
+                            <br>
+                            <span class="badge {{ $statusBadgeClass }}">حالة الملاحظة:{{ $statusText }}</span>
+
+                            @if ($canModifyNote)
+                                <div class="mt-2">
+                                    <form action="{{ route('calendar-notes.update', $note) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="note_date" value="{{ $note->note_date->toDateString() }}">
+                                        <input type="hidden" name="title" value="{{ $note->title }}">
+                                        <input type="hidden" name="content" value="{{ $note->content }}">
+                                        <input type="hidden" name="status" value="{{ ($note->status ?? 'pending') === 'completed' ? 'pending' : 'completed' }}">
+                                        <button type="submit" class="btn btn-sm {{ ($note->status ?? 'pending') === 'completed' ? 'btn-warning' : 'btn-success' }}">
+                                            {{ ($note->status ?? 'pending') === 'completed' ? 'تعديل الملاحظة إلى: لم يتم تنفيذها' : 'تعديل الملاحظة إلى: تم تنفيذها' }}
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
+                            
                             @if ($canModifyNote)
                                 <div class="collapse mt-3" id="edit-note-{{ $note->id }}">
                                     <form action="{{ route('calendar-notes.update', $note) }}" method="POST">
@@ -200,6 +227,13 @@
                                         <div class="mb-2">
                                             <label class="form-label small">المحتوى</label>
                                             <textarea name="content" rows="2" class="form-control" required>{{ $note->content }}</textarea>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label small">الحالة</label>
+                                            <select name="status" class="form-select" required>
+                                                <option value="pending" {{ ($note->status ?? 'pending') === 'pending' ? 'selected' : '' }}>لم يتم تنفيذها</option>
+                                                <option value="completed" {{ ($note->status ?? 'pending') === 'completed' ? 'selected' : '' }}>تم تنفيذها</option>
+                                            </select>
                                         </div>
                                         <button type="submit" class="btn btn-sm btn-success w-100">حفظ التعديلات</button>
                                     </form>

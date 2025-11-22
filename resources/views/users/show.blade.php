@@ -330,10 +330,26 @@
         <div>
             <h4 class="h3 mb-1"> بروفايل المستخدم
             </h4>
-            <p class="text-muted mb-0">
-                <i class="bi bi-person-circle me-1"></i>
-                {{ $user->name }}   
-            </p>
+            <div class="text-muted mb-0" style="font-size: 0.9rem; line-height: 1.6;">
+                @if($user->name_ar)
+                    <span class="d-inline-block me-2">
+                        <i class="bi bi-translate me-1"></i>
+                        <strong>ع:</strong> {{ $user->name_ar }}
+                    </span>
+                @endif
+                @if($user->name)
+                    <span class="d-inline-block me-2">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <strong>En:</strong> {{ $user->name }}
+                    </span>
+                @endif
+                @if($user->phone)
+                    <span class="d-inline-block">
+                        <i class="bi bi-telephone me-1"></i>
+                        <strong>جوال:</strong> {{ $user->phone }}
+                    </span>
+                @endif
+            </div>
         </div>
     </div>
     <div class="btn-group">
