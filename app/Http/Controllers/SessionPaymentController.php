@@ -275,14 +275,17 @@ class SessionPaymentController extends Controller
     /**
      * Generate PDF invoice for the session payment.
      */
-    public function generateInvoice(SessionPayment $sessionPayment)
+    public function generateInvoice(Request $request, SessionPayment $sessionPayment)
     {
         try {
             // Load the session payment with relationships
             $sessionPayment->load(['session.user', 'session.drinks.drink', 'session.overtimes']);
             
+            // Get invoice date from request, default to current date
+            $invoiceDate = $request->get('invoice_date', now()->format('Y-m-d'));
+            
             // Use DOMPDF with HTML entities for Arabic support
-            return $this->generateDOMPDF($sessionPayment);
+            return $this->generateDOMPDF($sessionPayment, $invoiceDate);
             
         } catch (\Exception $e) {
             \Log::error('Error generating invoice PDF', [
@@ -300,9 +303,12 @@ class SessionPaymentController extends Controller
     /**
      * Generate PDF using DOMPDF with English content
      */
-    private function generateDOMPDF(SessionPayment $sessionPayment)
+    private function generateDOMPDF(SessionPayment $sessionPayment, $invoiceDate = null)
     {
-        $pdf = \PDF::loadView('session-payments.invoice-pdf-english', compact('sessionPayment'));
+        // Use provided invoice date or default to current date
+        $invoiceDate = $invoiceDate ? \Carbon\Carbon::parse($invoiceDate) : now();
+        
+        $pdf = \PDF::loadView('session-payments.invoice-pdf-english', compact('sessionPayment', 'invoiceDate'));
         
         // Set basic PDF options
         $pdf->setPaper('A4', 'portrait');
