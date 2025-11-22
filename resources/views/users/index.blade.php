@@ -296,7 +296,7 @@
                             </div>
                         </td>
                         <td>{{ $user->name }}</td>
-                        <td>{{ $user->email }}</td>
+                        <td>{{ $user->name_ar ?? '-' }}</td>
                         <td>
                             @php
                                 $typeInfo = $userTypeBadges[$user->user_type] ?? ['label' => 'غير معروف', 'class' => 'bg-secondary'];

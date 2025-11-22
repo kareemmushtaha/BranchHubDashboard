@@ -297,11 +297,7 @@
                 Pending
             @endif
         </div>
-        @if($drinkInvoice->note)
-            <div class="info-item">
-                <span class="info-label">Note:</span> {{ $drinkInvoice->note }}
-            </div>
-        @endif
+       
     </div>
 
     <div class="footer">

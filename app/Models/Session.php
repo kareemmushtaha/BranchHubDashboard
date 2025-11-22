@@ -19,7 +19,9 @@ class Session extends Model
         'session_status',
         'session_category',
         'user_id',
+        'created_by',
         'note',
+        'note_updated_by',
         'session_owner',
         'custom_internet_cost',
         'custom_overtime_rate'
@@ -34,6 +36,16 @@ class Session extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function noteUpdater()
+    {
+        return $this->belongsTo(User::class, 'note_updated_by');
     }
 
     public function payment()
@@ -520,22 +532,30 @@ class Session extends Model
      */
     public function calculateOvertimeCost()
     {
-        $totalHours = $this->overtimes->sum('total_hour');
+        // استخدام cost من كل overtime إذا كان محسوباً
+        $totalCost = $this->overtimes->sum('cost');
         
-        if ($totalHours <= 0) {
-            return 0;
-        }
-
-        // استخدام السعر المخصص إذا كان موجوداً
-        if ($this->custom_overtime_rate !== null) {
-            return round($totalHours * $this->custom_overtime_rate, 2);
-        }
-
-        // استخدام السعر الافتراضي من PublicPrice
-        $publicPrices = \App\Models\PublicPrice::first();
-        $defaultRate = $publicPrices->overtime_rate ?? 5.00; // سعر افتراضي
+        // إذا كان هناك overtimes بدون cost (بيانات قديمة)، احسبها بالطريقة القديمة
+        $overtimesWithoutCost = $this->overtimes->filter(function ($overtime) {
+            return $overtime->cost == 0 && $overtime->total_hour > 0;
+        });
         
-        return round($totalHours * $defaultRate, 2);
+        if ($overtimesWithoutCost->count() > 0) {
+            // حساب التكلفة للبيانات القديمة
+            $totalHours = $overtimesWithoutCost->sum('total_hour');
+            
+            // استخدام السعر المخصص إذا كان موجوداً
+            if ($this->custom_overtime_rate !== null) {
+                $totalCost += round($totalHours * $this->custom_overtime_rate, 2);
+            } else {
+                // استخدام السعر الافتراضي من PublicPrice
+                $publicPrices = \App\Models\PublicPrice::first();
+                $defaultRate = $publicPrices->overtime_rate ?? 5.00;
+                $totalCost += round($totalHours * $defaultRate, 2);
+            }
+        }
+        
+        return round($totalCost, 2);
     }
 
     /**

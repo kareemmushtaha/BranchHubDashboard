@@ -330,7 +330,7 @@
         <div>
             <h4 class="h3 mb-1"> بروفايل المستخدم
             </h4>
-            <div class="text-muted mb-0" style="font-size: 0.9rem; line-height: 1.6;">
+            <div class="text-muted mb-0" style="font-size: 1.15rem; line-height: 1.8;">
                 @if($user->name_ar)
                     <span class="d-inline-block me-2">
                         <i class="bi bi-translate me-1"></i>

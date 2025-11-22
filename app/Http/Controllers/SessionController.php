@@ -19,7 +19,7 @@ class SessionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Session::with(['user', 'payment']);
+        $query = Session::with(['user', 'creator', 'payment']);
 
         // Filter by session category
         // إذا لم يكن هناك نوع محدد في الطلب، استخدم "hourly" كقيمة افتراضية
@@ -360,7 +360,9 @@ class SessionController extends Controller
             'session_category' => $request->session_category,
             'session_status' => 'active',
             'note' => $request->note,
-            'session_owner' => $request->session_owner
+            'session_owner' => $request->session_owner,
+            'created_by' => auth()->id(),
+            'note_updated_by' => $request->note ? auth()->id() : null
         ]);
 
         // إنشاء سجل دفع فارغ
@@ -402,6 +404,7 @@ class SessionController extends Controller
             'user_id' => $user->id,
             'session_category' => $sessionCategory,
             'session_status' => 'active',
+            'created_by' => auth()->id()
         ]);
 
         // إنشاء سجل دفع فارغ
@@ -420,7 +423,7 @@ class SessionController extends Controller
      */
     public function show(Session $session)
     {
-        $session->load(['user', 'payment', 'drinks.drink', 'overtimes']);
+        $session->load(['user', 'creator', 'noteUpdater', 'payment', 'drinks.drink', 'overtimes']);
         $drinks = Drink::where('status', 'available')->get();
         
         return view('sessions.show', compact('session', 'drinks'));
@@ -454,13 +457,21 @@ class SessionController extends Controller
         // حفظ القيمة القديمة للتكلفة المخصصة
         $oldCustomCost = $session->custom_internet_cost;
 
-        $session->update([
+        // تحديث note_updated_by إذا تم تغيير الملاحظة
+        $updateData = [
             'user_id' => $request->user_id,
             'session_category' => $request->session_category,
             'note' => $request->note,
             'session_owner' => $request->session_owner,
             'custom_internet_cost' => $request->custom_internet_cost
-        ]);
+        ];
+
+        // إذا تم تغيير الملاحظة، احفظ المستخدم الذي قام بالتحديث
+        if ($session->note !== $request->note) {
+            $updateData['note_updated_by'] = auth()->id();
+        }
+
+        $session->update($updateData);
 
         // إعادة تحميل الجلسة
         $session->refresh();
@@ -758,16 +769,23 @@ class SessionController extends Controller
         $request->validate([
             'start_at' => 'required|date',
             'end_at' => 'required|date|after:start_at',
+            'hourly_rate' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000'
         ]);
 
         $startAt = \Carbon\Carbon::parse($request->start_at);
         $endAt = \Carbon\Carbon::parse($request->end_at);
 
+        // تحديد السعر: إما المحدد أو null (سيتم حسابه تلقائياً في boot method)
+        $hourlyRate = $request->hourly_rate !== null && $request->hourly_rate !== '' 
+            ? $request->hourly_rate 
+            : null;
+
         $overtime = \App\Models\SessionOvertime::create([
             'session_id' => $session->id,
             'start_at' => $startAt,
             'end_at' => $endAt,
+            'hourly_rate' => $hourlyRate,
             'notes' => $request->notes
         ]);
 
@@ -852,20 +870,29 @@ class SessionController extends Controller
         $request->validate([
             'start_at' => 'required|date',
             'end_at' => 'required|date|after:start_at',
+            'hourly_rate' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000'
         ]);
 
         $oldStartAt = $overtime->start_at;
         $oldEndAt = $overtime->end_at;
         $oldTotalHour = $overtime->total_hour;
+        $oldHourlyRate = $overtime->hourly_rate;
+        $oldCost = $overtime->cost;
 
         $startAt = \Carbon\Carbon::parse($request->start_at);
         $endAt = \Carbon\Carbon::parse($request->end_at);
+
+        // تحديد السعر: إما المحدد أو null (سيتم حسابه تلقائياً في boot method)
+        $hourlyRate = $request->hourly_rate !== null && $request->hourly_rate !== '' 
+            ? $request->hourly_rate 
+            : null;
 
         // تحديث الـ overtime
         $overtime->update([
             'start_at' => $startAt,
             'end_at' => $endAt,
+            'hourly_rate' => $hourlyRate,
             'notes' => $request->notes
         ]);
 
@@ -880,12 +907,16 @@ class SessionController extends Controller
             'old_values' => [
                 'start_at' => $oldStartAt->format('Y-m-d H:i:s'),
                 'end_at' => $oldEndAt->format('Y-m-d H:i:s'),
-                'total_hour' => $oldTotalHour
+                'total_hour' => $oldTotalHour,
+                'hourly_rate' => $oldHourlyRate,
+                'cost' => $oldCost
             ],
             'new_values' => [
                 'start_at' => $startAt->format('Y-m-d H:i:s'),
                 'end_at' => $endAt->format('Y-m-d H:i:s'),
-                'total_hour' => $overtime->total_hour
+                'total_hour' => $overtime->total_hour,
+                'hourly_rate' => $overtime->hourly_rate,
+                'cost' => $overtime->cost
             ],
             'user_id' => auth()->id()
         ]);
@@ -1433,7 +1464,8 @@ class SessionController extends Controller
 
         $oldNote = $session->note;
         $session->update([
-            'note' => $request->note
+            'note' => $request->note,
+            'note_updated_by' => auth()->id()
         ]);
 
         // تسجيل audit log
