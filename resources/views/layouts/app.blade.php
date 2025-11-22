@@ -96,6 +96,19 @@
         .nav-link {
             font-weight: 400;
             font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link.active {
+            background-color: #0d6efd !important;
+            color: #fff !important;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        
+        .nav-link:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
         }
         
         .card-title {
@@ -166,79 +179,89 @@
                 </div>
                 <ul class="nav nav-pills flex-column">
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('dashboard') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                             <i class="bi bi-house"></i> الرئيسية
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('dashboard.real-time') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('dashboard.real-time') ? 'active' : '' }}" href="{{ route('dashboard.real-time') }}">
                             <i class="bi bi-speedometer2"></i> لوحة التحكم المباشرة
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('users.index') }}">
-                            <i class="bi bi-people"></i> المستخدمون
+                        <a class="nav-link text-white {{ request()->routeIs('users.index') && !request()->routeIs('users.monthly') && !request()->routeIs('users.hourly') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                            <i class="bi bi-people"></i> جميع المستخدمين
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('sessions.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('users.monthly') ? 'active' : '' }}" href="{{ route('users.monthly') }}">
+                            <i class="bi bi-calendar-month"></i> المستخدمين الشهري
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('users.hourly') ? 'active' : '' }}" href="{{ route('users.hourly') }}">
+                            <i class="bi bi-clock-history"></i> المستخدمين الساعات
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('sessions.index') ? 'active' : '' }}" href="{{ route('sessions.index') }}">
                             <i class="bi bi-clock"></i> الجلسات
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('sessions.trashed') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('sessions.trashed') ? 'active' : '' }}" href="{{ route('sessions.trashed') }}">
                             <i class="bi bi-trash text-danger"></i> الجلسات المحذوفة
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('session-payments.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('session-payments.*') ? 'active' : '' }}" href="{{ route('session-payments.index') }}">
                             <i class="bi bi-cash-coin"></i> مدفوعات الجلسات
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('expenses.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('expenses.*') ? 'active' : '' }}" href="{{ route('expenses.index') }}">
                             <i class="bi bi-receipt"></i> المصروفات المالية
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('employee-salaries.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('employee-salaries.*') ? 'active' : '' }}" href="{{ route('employee-salaries.index') }}">
                             <i class="bi bi-wallet2"></i> إدارة رواتب الموظفين
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('electricity-meter-readings.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('electricity-meter-readings.*') ? 'active' : '' }}" href="{{ route('electricity-meter-readings.index') }}">
                             <i class="bi bi-lightning-charge"></i> قراءات عداد الكهرباء
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('booking-requests.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('booking-requests.*') ? 'active' : '' }}" href="{{ route('booking-requests.index') }}">
                             <i class="bi bi-calendar-check"></i> طلبات الحجز
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('calendar-notes.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('calendar-notes.*') ? 'active' : '' }}" href="{{ route('calendar-notes.index') }}">
                             <i class="bi bi-calendar-event"></i> تقويم الملاحظات
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('employee-notes.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('employee-notes.*') ? 'active' : '' }}" href="{{ route('employee-notes.index') }}">
                             <i class="bi bi-person-badge"></i> ملاحظات الموظفين
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('drinks.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('drinks.*') ? 'active' : '' }}" href="{{ route('drinks.index') }}">
                             <i class="bi bi-cup"></i> المشروبات
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('reports.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
                             <i class="bi bi-graph-up"></i> التقارير
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('audit.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('audit.*') ? 'active' : '' }}" href="{{ route('audit.index') }}">
                             <i class="bi bi-clock-history"></i> سجلات التدقيق
                         </a>
                     </li>

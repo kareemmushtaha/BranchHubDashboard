@@ -15,6 +15,7 @@ class CalendarNote extends Model
         'title',
         'content',
         'user_id',
+        'status',
     ];
 
     protected $casts = [

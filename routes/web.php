@@ -86,6 +86,8 @@ Route::get('/dashboard/real-time', function() {
 
 // Users Routes
 Route::resource('users', UserController::class);
+Route::get('users-monthly', [UserController::class, 'monthly'])->name('users.monthly');
+Route::get('users-hourly', [UserController::class, 'hourly'])->name('users.hourly');
 Route::post('users/{user}/charge-wallet', [UserController::class, 'chargeWallet'])->name('users.charge-wallet');
 Route::get('users/{user}/wallet-history', [UserController::class, 'walletHistory'])->name('users.wallet-history');
 
