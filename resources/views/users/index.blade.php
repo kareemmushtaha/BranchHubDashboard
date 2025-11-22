@@ -14,7 +14,7 @@
 @endphp
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">إدارة المستخدمين</h1>
+    <h1 class="h2">{{ $pageTitle ?? 'إدارة المستخدمين' }}</h1>
     <div>
         <a href="{{ route('users.trashed') }}" class="btn btn-outline-danger me-2">
             <i class="bi bi-trash"></i> المستخدمين المحذوفين
@@ -138,7 +138,7 @@
                 </h6>
             </div>
             <div class="card-body">
-                <form method="GET" action="{{ route('users.index') }}" id="filterForm" autocomplete="off">
+                <form method="GET" action="{{ $userTypeFilter == 'subscription' ? route('users.monthly') : ($userTypeFilter == 'hourly' ? route('users.hourly') : route('users.index')) }}" id="filterForm" autocomplete="off">
                     <div class="row g-3 align-items-end">
                         <!-- البحث -->
                         <div class="col-md-3">
@@ -156,6 +156,7 @@
                         </div>
                         
                         <!-- فلترة نوع المستخدم -->
+                        @if(!isset($userTypeFilter))
                         <div class="col-md-2">
                             <label class="form-label">نوع المستخدم</label>
                             <select name="user_type" class="form-select">
@@ -167,6 +168,9 @@
                             </select>
                             <small class="text-muted">فلترة فورية</small>
                         </div>
+                        @else
+                        <input type="hidden" name="user_type" value="{{ $userTypeFilter }}">
+                        @endif
                         
                         <!-- فلترة الحالة -->
                         <div class="col-md-2">
@@ -206,7 +210,7 @@
                         <!-- أزرار -->
                         <div class="col-md-2">
                             <div class="d-flex gap-1">
-                                <a href="{{ route('users.index') }}" class="btn btn-warning btn-sm">
+                                <a href="{{ $userTypeFilter == 'subscription' ? route('users.monthly') : ($userTypeFilter == 'hourly' ? route('users.hourly') : route('users.index')) }}" class="btn btn-warning btn-sm">
                                     <i class="bi bi-x-circle"></i> مسح الفلاتر
                                 </a>
                             </div>
@@ -273,8 +277,8 @@
                                 </label>
                             </div>
                         </th>
-                        <th>الاسم</th>
-                        <th>البريد الإلكتروني</th>
+                        <th>الاسم بالانجليزي</th>
+                        <th>الاسم بالعربي</th>
                         <th>نوع المستخدم</th>
                         <th>الحالة</th>
                         <th>تاريخ التسجيل</th>

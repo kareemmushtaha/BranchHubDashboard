@@ -553,7 +553,12 @@
                                        id="session_{{ $session->id }}">
                             </div>
                         </td>
-                        <td>#{{ $session->id }}</td>
+                        <td>
+                            <a href="{{ route('sessions.show', $session) }}" class="text-decoration-none text-primary fw-medium session-link" 
+                               title="انقر لعرض تفاصيل الجلسة">
+                                #{{ $session->id }}
+                            </a>
+                        </td>
                         <td>
                             @if($session->user)
                                 <a href="{{ route('users.show', $session->user) }}" class="text-decoration-none">
@@ -562,6 +567,12 @@
                                 </a>
                             @else
                                 <span class="text-muted">غير محدد</span>
+                            @endif
+                            @if($session->note)
+                                <br>
+                                <small class="text-muted d-block mt-1" style="font-size: 0.85rem;">
+                                    <i class="bi bi-sticky"></i> {{ Str::limit($session->note, 50) }}
+                                </small>
                             @endif
                         </td>
                         <td>
@@ -665,18 +676,18 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group">
-                                <a href="{{ route('sessions.show', $session) }}" class="btn btn-sm btn-outline-primary">
+                                <a href="{{ route('sessions.show', $session) }}" class="btn btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 @if($session->session_status == 'active')
-                                <a href="{{ route('sessions.edit', $session) }}" class="btn btn-sm btn-outline-warning">
+                                <a href="{{ route('sessions.edit', $session) }}" class="btn btn-outline-warning">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 @endif
                                 @if($session->session_status == 'completed')
                                 <form action="{{ route('sessions.cancel', $session) }}" method="POST" class="d-inline session-cancel-form">
                                     @csrf
-                                    <button type="submit" class="btn btn-sm btn-outline-danger session-cancel-btn" 
+                                    <button type="submit" class="btn btn-outline-danger session-cancel-btn" 
                                             data-session-id="{{ $session->id }}"
                                             onclick="return confirmSessionCancellation({{ $session->id }})">
                                         <i class="bi bi-x-circle"></i>
@@ -687,7 +698,7 @@
                                 <form action="{{ route('sessions.destroy', $session) }}" method="POST" class="d-inline session-delete-form">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger session-delete-btn" 
+                                    <button type="submit" class="btn btn-outline-danger session-delete-btn" 
                                             data-session-id="{{ $session->id }}"
                                             data-session-status="{{ $session->session_status }}"
                                             onclick="return confirmSessionDeletion(this, {{ $session->id }}, '{{ $session->session_status }}')">

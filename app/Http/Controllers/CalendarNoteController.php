@@ -76,9 +76,13 @@ class CalendarNoteController extends Controller
             'note_date' => ['required', 'date'],
             'title' => ['nullable', 'string', 'max:255'],
             'content' => ['required', 'string', 'max:5000'],
+            'status' => ['nullable', 'in:pending,completed'],
         ]);
 
-        CalendarNote::create($data + ['user_id' => Auth::id()]);
+        CalendarNote::create($data + [
+            'user_id' => Auth::id(),
+            'status' => $data['status'] ?? 'pending',
+        ]);
 
         return redirect()
             ->route('calendar-notes.index', [
@@ -99,6 +103,7 @@ class CalendarNoteController extends Controller
             'note_date' => ['required', 'date'],
             'title' => ['nullable', 'string', 'max:255'],
             'content' => ['required', 'string', 'max:5000'],
+            'status' => ['required', 'in:pending,completed'],
         ]);
 
         $calendarNote->update($data);
