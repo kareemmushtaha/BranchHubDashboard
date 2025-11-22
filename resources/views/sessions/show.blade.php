@@ -157,6 +157,30 @@
                 <hr>
                 @endif
                 <div class="row">
+                    <div class="col-sm-6"><strong>أنشأها:</strong></div>
+                    <div class="col-sm-6">
+                        @if($session->creator)
+                            <span class="text-info fw-bold">
+                                <i class="bi bi-person-plus"></i>
+                                {{ $session->creator->name }}
+                            </span>
+                            @if($session->created_at)
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i>
+                                    {{ $session->created_at->format('Y-m-d H:i:s') }}
+                                </small>
+                            @endif
+                        @else
+                            <span class="text-muted">
+                                <i class="bi bi-question-circle"></i>
+                                غير محدد (جلسة قديمة)
+                            </span>
+                        @endif
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
                     <div class="col-sm-6"><strong>الحالة:</strong></div>
                     <div class="col-sm-6">
                         @if($session->session_status == 'active')
@@ -347,7 +371,18 @@
                     <div class="col-sm-6"><strong>ملاحظات:</strong></div>
                     <div class="col-sm-6">
                         @if($session->note)
-                            {{ $session->note }}
+                            <div class="mb-2">
+                                {{ $session->note }}
+                            </div>
+                            @if($session->noteUpdater)
+                                <small class="text-muted d-block mb-2">
+                                    <i class="bi bi-person-pencil"></i>
+                                    كتبها: <span class="text-info fw-bold">{{ $session->noteUpdater->name }}</span>
+                                    @if($session->updated_at)
+                                        - {{ $session->updated_at->format('Y-m-d H:i:s') }}
+                                    @endif
+                                </small>
+                            @endif
                         @else
                             <span class="text-muted">لا توجد ملاحظات</span>
                         @endif
@@ -769,9 +804,9 @@
                     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addOvertimeModal">
                         <i class="bi bi-plus-circle"></i> إضافة ساعات إضافية
                     </button>
-                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editOvertimeRateModal">
+                    <!-- <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editOvertimeRateModal">
                         <i class="bi bi-pencil"></i> ضبط السعر
-                    </button>
+                    </button> -->
                 </div>
                 @endif
             </div>
@@ -784,15 +819,30 @@
                                 <th>من</th>
                                 <th>إلى</th>
                                 <th>عدد الساعات</th>
+                                <th>سعر الساعة</th>
+                                <th>التكلفة</th>
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($session->overtimes as $overtime)
+                            @php
+                                $defaultRate = $overtime->getDefaultHourlyRate();
+                                $displayRate = $overtime->hourly_rate ?? $defaultRate;
+                                $displayCost = $overtime->cost > 0 ? $overtime->cost : ($overtime->total_hour * $displayRate);
+                            @endphp
                             <tr>
                                 <td>{{ $overtime->start_at->format('Y-m-d H:i') }}</td>
                                 <td>{{ $overtime->end_at->format('Y-m-d H:i') }}</td>
                                 <td>{{ number_format($overtime->total_hour, 2) }} ساعة</td>
+                                <td>
+                                    @if($overtime->hourly_rate)
+                                        ₪{{ number_format($overtime->hourly_rate, 2) }}
+                                    @else
+                                        <span class="text-muted">₪{{ number_format($defaultRate, 2) }} <small>(افتراضي)</small></span>
+                                    @endif
+                                </td>
+                                <td><strong>₪{{ number_format($displayCost, 2) }}</strong></td>
                                 <td>
                                     @if($session->session_status == 'active' || $session->session_status == 'completed')
                                     <div class="btn-group" role="group">
@@ -812,18 +862,12 @@
                             </tr>
                             @endforeach
                             <tr class="table-info">
-                                <td colspan="2"><strong>إجمالي الساعات:</strong></td>
-                                <td><strong>{{ number_format($session->overtimes->sum('total_hour'), 2) }} ساعة</strong></td>
-                                <td></td>
+                                <td colspan="3"><strong>إجمالي الساعات:</strong></td>
+                                <td colspan="3"><strong>{{ number_format($session->overtimes->sum('total_hour'), 2) }} ساعة</strong></td>
                             </tr>
                             <tr class="table-success">
-                                <td colspan="2"><strong>قيمة  (الساعات الإضافية):</strong></td>
-                                <td><strong class="overtime-cost-display">₪{{ number_format($session->calculateOvertimeCost(), 2) }}</strong></td>
-                                <td>
-                                    @if($session->hasCustomOvertimeRate())
-                                        <span class="badge bg-warning">سعر مخصص</span>
-                                    @endif
-                                </td>
+                                <td colspan="3"><strong>إجمالي قيمة الساعات الإضافية:</strong></td>
+                                <td colspan="3"><strong class="overtime-cost-display">₪{{ number_format($session->calculateOvertimeCost(), 2) }}</strong></td>
                             </tr>
                         </tbody>
                     </table>
@@ -1557,13 +1601,29 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label for="overtime_end_at" class="form-label">إلى (تاريخ ووقت)</label>
                         <input type="datetime-local" class="form-control" id="overtime_end_at" name="end_at" required>
                     </div>
+                    @php
+                        $publicPrices = \App\Models\PublicPrice::first();
+                        $defaultOvertimeRate = $session->custom_overtime_rate ?? ($publicPrices->overtime_rate ?? 5.00);
+                    @endphp
+                    <div class="mb-3">
+                        <label for="overtime_hourly_rate" class="form-label">سعر الساعة (₪) <small class="text-muted">(اختياري)</small></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₪</span>
+                            <input type="number" step="0.01" min="0" class="form-control" 
+                                   id="overtime_hourly_rate" name="hourly_rate" 
+                                   placeholder="{{ number_format($defaultOvertimeRate, 2) }}">
+                        </div>
+                        <small class="form-text text-muted">
+                            اترك الحقل فارغاً لاستخدام السعر التلقائي: ₪{{ number_format($defaultOvertimeRate, 2) }}/ساعة
+                        </small>
+                    </div>
                     <div class="mb-3">
                         <label for="overtime_notes" class="form-label">ملاحظات <small class="text-muted">(اختياري)</small></label>
                         <textarea class="form-control" id="overtime_notes" name="notes" rows="3" placeholder="أدخل أي ملاحظات إضافية..."></textarea>
                     </div>
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
-                        سيتم حساب عدد الساعات تلقائياً بناءً على التاريخ والوقت المحددين.
+                        سيتم حساب عدد الساعات والتكلفة تلقائياً بناءً على التاريخ والوقت المحددين.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1716,10 +1776,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="mb-3">
                         <label for="overtime_end_at_{{ $overtime->id }}" class="form-label">إلى (تاريخ ووقت)</label>
                         <input type="datetime-local" class="form-control" 
-                               id="overtime_end_at_{{ $overtime->id }}" 
+                               id="overtime_end_at_{{ $overtime->id }}"
                                name="end_at" 
                                value="{{ $overtime->end_at->format('Y-m-d\TH:i') }}" 
                                required>
+                    </div>
+                    @php
+                        $defaultOvertimeRate = $overtime->getDefaultHourlyRate();
+                    @endphp
+                    <div class="mb-3">
+                        <label for="overtime_hourly_rate_{{ $overtime->id }}" class="form-label">سعر الساعة (₪) <small class="text-muted">(اختياري)</small></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₪</span>
+                            <input type="number" step="0.01" min="0" class="form-control" 
+                                   id="overtime_hourly_rate_{{ $overtime->id }}" 
+                                   name="hourly_rate" 
+                                   value="{{ old('hourly_rate', $overtime->hourly_rate ?? '') }}"
+                                   placeholder="{{ number_format($defaultOvertimeRate, 2) }}">
+                        </div>
+                        <small class="form-text text-muted">
+                            اترك الحقل فارغاً لاستخدام السعر التلقائي: ₪{{ number_format($defaultOvertimeRate, 2) }}/ساعة
+                        </small>
+                        @if($overtime->hourly_rate)
+                        <div class="mt-2">
+                            <small class="text-info">
+                                <i class="bi bi-info-circle"></i> السعر الحالي: ₪{{ number_format($overtime->hourly_rate, 2) }}/ساعة
+                            </small>
+                        </div>
+                        @endif
                     </div>
                     <div class="mb-3">
                         <label for="overtime_notes_{{ $overtime->id }}" class="form-label">ملاحظات <small class="text-muted">(اختياري)</small></label>
@@ -1727,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
-                        سيتم إعادة حساب عدد الساعات تلقائياً بناءً على التاريخ والوقت المحددين.
+                        سيتم إعادة حساب عدد الساعات والتكلفة تلقائياً بناءً على التاريخ والوقت المحددين.
                     </div>
                 </div>
                 <div class="modal-footer">
