@@ -301,7 +301,7 @@
         This invoice contains subscription details including internet usage, and payment information
     </div>
     <div class="invoice-number">Invoice #: {{ $sessionPayment->session->id ?? 'N/A' }}</div>
-    <div class="invoice-date">Date: {{ now()->format('Y-m-d H:i:s') }}</div>
+    <div class="invoice-date">Issue Date: {{ isset($invoiceDate) ? $invoiceDate->format('Y-m-d') : now()->format('Y-m-d') }}</div>
 
     <div style="margin-bottom: 10px;">
         <div class="section-title">Customer Information</div>

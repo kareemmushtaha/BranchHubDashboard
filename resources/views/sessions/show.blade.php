@@ -88,9 +88,9 @@
                         @endif
         <!-- زر تصدير PDF - متاح لجميع الجلسات التي لديها مدفوعة -->
         @if($session->payment)
-            <a href="{{ route('session-payments.invoice', $session->payment->id) }}" class="btn btn-danger">
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#invoiceDateModal">
                 <i class="bi bi-file-pdf"></i> تصدير PDF
-            </a>
+            </button>
             <a href="{{ route('session-payments.invoice.show', $session->payment->id) }}" target="_blank" class="btn btn-info">
                 <i class="bi bi-printer"></i> عرض للطباعة
             </a>
@@ -669,9 +669,9 @@
                         </a>
 
                         <!-- أزرار PDF والطباعة - متاحة لجميع الجلسات التي لديها مدفوعة -->
-                        <a href="{{ route('session-payments.invoice', $session->payment->id) }}" class="btn btn-danger btn-sm">
+                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#invoiceDateModal">
                             <i class="bi bi-file-pdf"></i> تصدير PDF
-                        </a>
+                        </button>
                         <a href="{{ route('session-payments.invoice.show', $session->payment->id) }}" target="_blank" class="btn btn-info btn-sm">
                             <i class="bi bi-printer"></i> عرض للطباعة
                         </a>
@@ -1823,6 +1823,46 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 @endforeach
+@endif
+
+<!-- Modal لاختيار تاريخ إصدار الفاتورة -->
+@if($session->payment)
+<div class="modal fade" id="invoiceDateModal" tabindex="-1" aria-labelledby="invoiceDateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="invoiceDateModalLabel">
+                    <i class="bi bi-calendar-event"></i> اختيار تاريخ إصدار الفاتورة
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('session-payments.invoice', $session->payment->id) }}" method="GET" id="invoiceDateForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="invoice_date" class="form-label">
+                            <strong>تاريخ إصدار الفاتورة:</strong>
+                        </label>
+                        <input type="date" 
+                               class="form-control" 
+                               id="invoice_date" 
+                               name="invoice_date" 
+                               value="{{ date('Y-m-d') }}" 
+                               required>
+                        <small class="form-text text-muted">
+                            سيظهر هذا التاريخ في الفاتورة كتاريخ الإصدار
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-file-pdf"></i> تصدير PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endif
 
 @endsection
