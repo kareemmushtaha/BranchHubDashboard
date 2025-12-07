@@ -60,7 +60,7 @@ class UserController extends Controller
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
-            'hourly_users' => User::where('user_type', 'hourly')->count(),
+            'hourly_users' => User::whereIn('user_type', ['hourly', 'prepaid'])->count(),
             'subscription_users' => User::where('user_type', 'subscription')->count(),
             'admin_users' => User::where('user_type', 'admin')->count(),
             'manager_users' => User::where('user_type', 'manager')->count(),
@@ -118,7 +118,7 @@ class UserController extends Controller
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
-            'hourly_users' => User::where('user_type', 'hourly')->count(),
+            'hourly_users' => User::whereIn('user_type', ['hourly', 'prepaid'])->count(),
             'subscription_users' => User::where('user_type', 'subscription')->count(),
             'admin_users' => User::where('user_type', 'admin')->count(),
             'manager_users' => User::where('user_type', 'manager')->count(),
@@ -142,8 +142,8 @@ class UserController extends Controller
             $perPage = 15;
         }
 
-        // بناء query المستخدمين الساعات فقط
-        $query = User::with('wallet')->where('user_type', 'hourly');
+        // بناء query المستخدمين الساعات ومسبق الدفع فقط
+        $query = User::with('wallet')->whereIn('user_type', ['hourly', 'prepaid']);
 
         // البحث
         if ($request->filled('search')) {
@@ -176,7 +176,7 @@ class UserController extends Controller
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
-            'hourly_users' => User::where('user_type', 'hourly')->count(),
+            'hourly_users' => User::whereIn('user_type', ['hourly', 'prepaid'])->count(),
             'subscription_users' => User::where('user_type', 'subscription')->count(),
             'admin_users' => User::where('user_type', 'admin')->count(),
             'manager_users' => User::where('user_type', 'manager')->count(),
@@ -207,7 +207,7 @@ class UserController extends Controller
             'name_ar' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users',
             'phone' => 'nullable|string|max:20',
-            'user_type' => 'required|in:hourly,subscription,admin,manager',
+            'user_type' => 'required|in:hourly,prepaid,subscription,admin,manager',
             'status' => 'required|in:active,inactive,suspended'
         ]);
 
@@ -262,7 +262,7 @@ class UserController extends Controller
             'name_ar' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
-            'user_type' => 'required|in:hourly,subscription,admin,manager',
+            'user_type' => 'required|in:hourly,prepaid,subscription,admin,manager',
             'status' => 'required|in:active,inactive,suspended'
         ]);
 

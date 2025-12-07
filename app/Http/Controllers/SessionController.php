@@ -332,7 +332,7 @@ class SessionController extends Controller
         // جلب جميع المستخدمين المؤهلين لبدء جلسة جديدة
         // يجب أن لا يكون لديهم جلسة نشطة حالياً
         $users = User::where('status', 'active')
-            ->whereIn('user_type', ['hourly', 'subscription'])
+            ->whereIn('user_type', ['hourly', 'prepaid', 'subscription'])
             ->whereDoesntHave('sessions', function($query) {
                 $query->where('session_status', 'active');
             })
@@ -395,8 +395,8 @@ class SessionController extends Controller
         }
 
         // تحديد نوع الجلسة بناءً على نوع المستخدم
-        $sessionCategory = in_array($user->user_type, ['hourly', 'subscription']) 
-            ? $user->user_type 
+        $sessionCategory = in_array($user->user_type, ['hourly', 'prepaid', 'subscription']) 
+            ? ($user->user_type == 'prepaid' ? 'hourly' : $user->user_type) 
             : 'hourly';
 
         $session = Session::create([

@@ -62,7 +62,7 @@
                                 <option value="">اختر نوع المستخدم</option>
                                 <optgroup label="عملاء">
                                     <option value="hourly" {{ old('user_type') == 'hourly' ? 'selected' : '' }}>ساعي</option>
-
+                                    <option value="prepaid" {{ old('user_type') == 'prepaid' ? 'selected' : '' }}>مسبق الدفع</option>
                                     <option value="subscription" {{ old('user_type') == 'subscription' ? 'selected' : '' }}>اشتراك</option>
                                 </optgroup>
                                 <optgroup label="إدارة النظام">

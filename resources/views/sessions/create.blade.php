@@ -50,8 +50,8 @@
                                             data-user-type="{{ $user->user_type }}"
                                             {{ old('user_id') == $user->id ? 'selected' : '' }}>
                                         {{ $user->name }} - {{ $user->email }}
-                                        <span class="badge bg-{{ $user->user_type == 'hourly' ? 'info' : 'success' }} ms-2">
-                                            {{ $user->user_type == 'hourly' ? 'ساعي' : 'اشتراك' }}
+                                        <span class="badge bg-{{ in_array($user->user_type, ['hourly', 'prepaid']) ? 'info' : 'success' }} ms-2">
+                                            {{ $user->user_type == 'hourly' ? 'ساعي' : ($user->user_type == 'prepaid' ? 'مسبق الدفع' : 'اشتراك') }}
                                         </span>
                                     </option>
                                     @endforeach
@@ -328,14 +328,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let filteredCount = 0;
 
         if (selectedCategory === 'hourly') {
-            // إضافة المستخدمين من نوع ساعي فقط
+            // إضافة المستخدمين من نوع ساعي ومسبق الدفع فقط
             allOriginalOptions.forEach(function(option) {
-                if (option.userType === 'hourly') {
+                if (option.userType === 'hourly' || option.userType === 'prepaid') {
                     userSelect.append(`<option value="${option.value}" data-user-type="${option.userType}">${option.text}</option>`);
                     filteredCount++;
                 }
             });
-            console.log('المستخدمين من نوع ساعي:', filteredCount);
+            console.log('المستخدمين من نوع ساعي ومسبق الدفع:', filteredCount);
         } else if (selectedCategory === 'subscription' || selectedCategory === 'overtime') {
             // إضافة المستخدمين من نوع اشتراك فقط
             allOriginalOptions.forEach(function(option) {
@@ -400,9 +400,9 @@ document.addEventListener('DOMContentLoaded', function() {
             userCountInfo.show();
 
             // معلومات التصحيح
-            const hourlyCount = allOriginalOptions.filter(opt => opt.userType === 'hourly').length;
+            const hourlyCount = allOriginalOptions.filter(opt => opt.userType === 'hourly' || opt.userType === 'prepaid').length;
             const subscriptionCount = allOriginalOptions.filter(opt => opt.userType === 'subscription').length;
-            debugText.text(`الفئة: ${selectedCategory}, المستخدمين: ${visibleOptions}, القيمة المختارة: ${currentValue || 'لا شيء'} | إجمالي ساعي: ${hourlyCount}, إجمالي اشتراك: ${subscriptionCount}`);
+            debugText.text(`الفئة: ${selectedCategory}, المستخدمين: ${visibleOptions}, القيمة المختارة: ${currentValue || 'لا شيء'} | إجمالي ساعي ومسبق الدفع: ${hourlyCount}, إجمالي اشتراك: ${subscriptionCount}`);
             debugInfo.show();
         } else {
             userCountInfo.hide();

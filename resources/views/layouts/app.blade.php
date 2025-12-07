@@ -195,7 +195,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('users.monthly') ? 'active' : '' }}" href="{{ route('users.monthly') }}">
-                            <i class="bi bi-calendar-month"></i> المستخدمين الشهري
+                            <i class="bi bi-calendar-month"></i> مستخدمين دائمين
                         </a>
                     </li>
                     <li class="nav-item">
