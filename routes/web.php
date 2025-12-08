@@ -88,6 +88,7 @@ Route::get('/dashboard/real-time', function() {
 Route::resource('users', UserController::class);
 Route::get('users-monthly', [UserController::class, 'monthly'])->name('users.monthly');
 Route::get('users-hourly', [UserController::class, 'hourly'])->name('users.hourly');
+Route::get('users-prepaid', [UserController::class, 'prepaid'])->name('users.prepaid');
 Route::post('users/{user}/charge-wallet', [UserController::class, 'chargeWallet'])->name('users.charge-wallet');
 Route::get('users/{user}/wallet-history', [UserController::class, 'walletHistory'])->name('users.wallet-history');
 
@@ -116,6 +117,7 @@ Route::get('sessions-overdue', [SessionController::class, 'overdue'])->name('ses
 Route::post('users/{user}/create-session', [SessionController::class, 'createForUser'])->name('users.create-session');
 Route::post('sessions/{session}/end', [SessionController::class, 'endSession'])->name('sessions.end');
 Route::post('sessions/{session}/cancel', [SessionController::class, 'cancelSession'])->name('sessions.cancel');
+Route::post('sessions/{session}/complete-and-deduct', [SessionController::class, 'completeAndDeduct'])->name('sessions.complete-and-deduct');
 Route::post('sessions/{session}/add-drink', [SessionController::class, 'addDrink'])->name('sessions.add-drink');
 Route::put('sessions/{session}/drinks/{sessionDrink}/update-date', [SessionController::class, 'updateDrinkDate'])->name('sessions.update-drink-date');
 Route::put('sessions/{session}/drinks/{sessionDrink}/update-price', [SessionController::class, 'updateDrinkPrice'])->name('sessions.update-drink-price');

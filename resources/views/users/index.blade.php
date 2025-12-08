@@ -138,7 +138,7 @@
                 </h6>
             </div>
             <div class="card-body">
-                <form method="GET" action="{{ $userTypeFilter == 'subscription' ? route('users.monthly') : ($userTypeFilter == 'hourly' ? route('users.hourly') : route('users.index')) }}" id="filterForm" autocomplete="off">
+                <form method="GET" action="{{ $userTypeFilter == 'subscription' ? route('users.monthly') : ($userTypeFilter == 'hourly' ? route('users.hourly') : ($userTypeFilter == 'prepaid' ? route('users.prepaid') : route('users.index'))) }}" id="filterForm" autocomplete="off">
                     <div class="row g-3 align-items-end">
                         <!-- البحث -->
                         <div class="col-md-3">
@@ -211,7 +211,7 @@
                         <!-- أزرار -->
                         <div class="col-md-2">
                             <div class="d-flex gap-1">
-                                <a href="{{ $userTypeFilter == 'subscription' ? route('users.monthly') : ($userTypeFilter == 'hourly' ? route('users.hourly') : route('users.index')) }}" class="btn btn-warning btn-sm">
+                                <a href="{{ $userTypeFilter == 'subscription' ? route('users.monthly') : ($userTypeFilter == 'hourly' ? route('users.hourly') : ($userTypeFilter == 'prepaid' ? route('users.prepaid') : route('users.index'))) }}" class="btn btn-warning btn-sm">
                                     <i class="bi bi-x-circle"></i> مسح الفلاتر
                                 </a>
                             </div>

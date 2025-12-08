@@ -242,26 +242,6 @@
     box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
 }
 
-.floating-action-btn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-    z-index: 1000;
-}
-
-.floating-action-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-    color: white;
-}
 
 .collapse-icon {
     transition: transform 0.3s ease;
@@ -297,18 +277,12 @@
     .stats-card {
         margin-bottom: 20px;
     }
-    
+
     .table-responsive {
         border-radius: 15px;
         overflow: hidden;
     }
-    
-    .floating-action-btn {
-        bottom: 20px;
-        right: 20px;
-        width: 50px;
-        height: 50px;
-    }
+
 }
 </style>
 @endpush
@@ -357,6 +331,9 @@
             $hasUnpaidInvoices = $drinkInvoices && $drinkInvoices->whereIn('payment_status', ['pending', 'partial'])->count() > 0;
             $unpaidInvoicesList = $drinkInvoices ? $drinkInvoices->whereIn('payment_status', ['pending', 'partial']) : collect();
         @endphp
+        <button type="button" class="btn btn-success btn-custom me-2" data-bs-toggle="modal" data-bs-target="#chargeWalletModal" title="شحن المحفظة">
+            <i class="bi bi-wallet2 me-1"></i> شحن المحفظة
+        </button>
         @if($hasUnpaidInvoices)
         <button type="button" class="btn btn-secondary btn-custom me-2" onclick="showInvoiceAlert()" title="انقر لعرض التفاصيل">
             <i class="bi bi-cup-hot me-1"></i> فاتورة مشروبات
@@ -382,14 +359,14 @@
         @php
             $totalRemainingAmount = 0;
             $totalRefund = 0;
-            
+
             foreach($user->sessions as $session) {
                 if($session->payment) {
                     // إذا كانت هناك مدفوعة، استخدم القيمة المخزنة في قاعدة البيانات
                     $paidAmount = $session->payment->amount_bank + $session->payment->amount_cash;
                     $remainingAmount = max(0, $session->payment->total_price - $paidAmount);
                     $totalPrice = $session->payment->total_price;
-                    
+
                     $totalRemainingAmount += $remainingAmount;
                     $totalRefund += max(0, $paidAmount - $totalPrice);
                 } else {
@@ -397,19 +374,19 @@
                     $internetCost = $session->calculateInternetCost();
                     $drinksCost = $session->drinks->sum('price');
                     $sessionTotal = $internetCost + $drinksCost;
-                    
+
                     $totalRemainingAmount += $sessionTotal;
                 }
             }
         @endphp
-        
+
         <div class="card financial-summary-card">
             <div class="card-body">
                 <h5 class="card-title mb-4">
                     <i class="bi bi-cash-coin me-2"></i>
                     ملخص المستحقات المالية
                 </h5>
-                
+
                 <div class="text-center mb-4">
                     @if($totalRemainingAmount > 0)
                         <div class="amount-display amount-negative">
@@ -423,7 +400,7 @@
                         <small class="text-muted">لا توجد مبالغ متبقية</small>
                     @endif
                 </div>
-                
+
                 @if($totalRefund > 0)
                     <div class="text-center">
                         <div class="amount-display amount-positive">
@@ -440,13 +417,13 @@
             $userSessions = $user->sessions()->with('payment')->get();
             $totalSessionsWithPayments = 0;
             $sessionsWithRemainingAmount = 0;
-            
+
             foreach($userSessions as $userSession) {
                 if($userSession->payment) {
                     $paidAmount = $userSession->payment->amount_bank + $userSession->payment->amount_cash;
                     $remainingAmount = max(0, $userSession->payment->total_price - $paidAmount);
                     $totalSessionsWithPayments++;
-                    
+
                     if($remainingAmount > 0) {
                         $sessionsWithRemainingAmount++;
                     }
@@ -458,7 +435,7 @@
                 }
             }
         @endphp
-        
+
         <div class="card stats-card mb-4">
             <div class="card-body">
                 <h6 class="card-title mb-3">
@@ -475,7 +452,7 @@
                             <strong class="text-primary">{{ $totalSessionsWithPayments }}/{{ $userSessions->count() }}</strong>
                         </div>
                     </div>
-                    
+
                     <div class="col-12 mb-2">
                         <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded">
                             <div class="d-flex align-items-center">
@@ -485,7 +462,7 @@
                             <strong class="text-warning">{{ $sessionsWithRemainingAmount }}</strong>
                         </div>
                     </div>
-                    
+
                     <div class="col-12">
                         <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded">
                             <div class="d-flex align-items-center">
@@ -499,7 +476,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- المحتوى الرئيسي -->
     <div class="col-lg-8">
         <!-- الجلسات الأخيرة -->
@@ -525,22 +502,22 @@
                             <span class="badge bg-success text-white me-2">أخضر</span> = جلسة يستحق عليها الزبون إرجاع مبلغ
                         </div>
                     </div>
-                    
+
                     <div class="table-responsive">
                         <table class="table table-custom">
                             <thead>
                                 <tr>
                                     <th>الجلسة</th>
                                     <th>نهاية الجلسة</th>
-                                    <th>الحالة</th>
-                                    <th>المبلغ</th>
+                                    <th>حالة الجلسة</th>
                                     <th>حالة الدفع</th>
+                                    <th>المبلغ الكلي</th>
                                     <th>المبلغ المتبقي</th>
                                     <th>المبلغ المستحق للزبون</th>
-                                </tr>
+                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($user->sessions->take(10) as $session)
+                            @foreach($user->sessions->take(10) as $session)
                                 @php
                                     if ($session->payment) {
                                         // إذا كانت هناك مدفوعة، استخدم القيم المخزنة في قاعدة البيانات
@@ -553,13 +530,13 @@
                                         $internetCost = $session->calculateInternetCost();
                                         $drinksCost = $session->drinks->sum('price');
                                         $sessionTotal = $internetCost + $drinksCost;
-                                        
+
                                         $paidAmount = 0;
                                         $totalPrice = $sessionTotal;
                                         $remainingAmount = $sessionTotal;
                                         $refundAmount = 0;
                                     }
-                                    
+
                                     // تحديد لون الصف
                                     $rowClass = '';
                                     if ($remainingAmount > 0) {
@@ -570,9 +547,9 @@
                                 @endphp
                                 <tr class="session-row {{ $rowClass }}">
                                     <td>
-                                        <a href="{{ route('sessions.show', $session) }}" class="text-decoration-none text-primary fw-medium session-link" 
+                                        <a href="{{ route('sessions.show', $session) }}" class="text-decoration-none text-primary fw-medium session-link"
                                            title="انقر لعرض تفاصيل الجلسة">
-                                            #{{ $session->id }}
+                                            #{{ $session->id }} عرض الجلسة
                                         </a>
                                         <br>
                                         <small class="text-muted">{{ $session->start_at->format('Y-m-d H:i') }}</small>
@@ -585,19 +562,6 @@
                                             <span class="badge bg-primary badge-custom">مكتمل</span>
                                         @else
                                             <span class="badge bg-danger badge-custom">ملغي</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($session->payment)
-                                            <span class="fw-bold">₪{{ number_format($session->payment->total_price, 2) }}</span>
-                                        @else
-                                            @php
-                                                // حساب تكلفة الجلسة بنفس طريقة صفحة عرض تفاصيل الجلسة
-                                                $internetCost = $session->calculateInternetCost();
-                                                $drinksCost = $session->drinks->sum('price');
-                                                $sessionTotal = $internetCost + $drinksCost;
-                                            @endphp
-                                            <span class="fw-bold">₪{{ number_format($sessionTotal, 2) }}</span>
                                         @endif
                                     </td>
                                     <td>
@@ -617,6 +581,20 @@
                                             <span class="badge bg-light text-dark badge-custom">لا يوجد دفع</span>
                                         @endif
                                     </td>
+                                    <td>
+                                        @if($session->payment)
+                                            <span class="fw-bold">₪{{ number_format($session->payment->total_price, 2) }}</span>
+                                        @else
+                                            @php
+                                                // حساب تكلفة الجلسة بنفس طريقة صفحة عرض تفاصيل الجلسة
+                                                $internetCost = $session->calculateInternetCost();
+                                                $drinksCost = $session->drinks->sum('price');
+                                                $sessionTotal = $internetCost + $drinksCost;
+                                            @endphp
+                                            <span class="fw-bold">₪{{ number_format($sessionTotal, 2) }}</span>
+                                        @endif
+                                    </td>
+
                                     <td>
                                         @if($remainingAmount > 0)
                                             <span class="text-danger fw-bold">
@@ -659,7 +637,7 @@
                                         @endif
                                     </td>
                                 </tr>
-                                @endforeach
+                            @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -680,28 +658,28 @@
 
         <!-- فواتير المشروبات -->
         @if($user->user_type == 'subscription')
-        <div class="card sessions-card mb-4">
-            <div class="card-header bg-transparent border-0">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-cup-hot me-2"></i>
-                        فواتير المشروبات
-                    </h5>
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="badge bg-primary badge-custom">
-                            {{ $drinkInvoices->count() }} فاتورة
+            <div class="card sessions-card mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-cup-hot me-2"></i>
+                            فواتير المشروبات
+                        </h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="badge bg-primary badge-custom">
+                                {{ $drinkInvoices->count() }} فاتورة
+                            </div>
+                            <a href="{{ route('drink-invoices.create', ['user_id' => $user->id]) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-circle"></i> فاتورة جديدة
+                            </a>
                         </div>
-                        <a href="{{ route('drink-invoices.create', ['user_id' => $user->id]) }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-plus-circle"></i> فاتورة جديدة
-                        </a>
                     </div>
                 </div>
-            </div>
-            <div class="card-body">
-                @if($drinkInvoices && $drinkInvoices->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-custom">
-                            <thead>
+                <div class="card-body">
+                    @if($drinkInvoices && $drinkInvoices->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead>
                                 <tr>
                                     <th>رقم الفاتورة</th>
                                     <th>عدد المشروبات</th>
@@ -711,94 +689,94 @@
                                     <th>تاريخ الإنشاء</th>
                                     <th>الإجراءات</th>
                                 </tr>
-                            </thead>
-                            <tbody>
+                                </thead>
+                                <tbody>
                                 @foreach($drinkInvoices as $invoice)
-                                <tr>
-                                    <td>
-                                        <a href="{{ route('drink-invoices.show', $invoice) }}" class="text-decoration-none session-link">
-                                            #{{ $invoice->id }}
-                                        </a>
-                                    </td>
-                                    <td>{{ $invoice->items->sum('quantity') }}</td>
-                                    <td>₪{{ number_format($invoice->total_price, 2) }}</td>
-                                    <td>
-                                        @if($invoice->payment_status == 'pending')
-                                            <span class="badge bg-warning">قيد الانتظار</span>
-                                        @elseif($invoice->payment_status == 'paid')
-                                            <span class="badge bg-success">مدفوع</span>
-                                        @elseif($invoice->payment_status == 'partial')
-                                            <span class="badge bg-info">مدفوع جزئياً</span>
-                                        @else
-                                            <span class="badge bg-danger">ملغي</span>
-                                        @endif
-                                    </td>
-                                    <td class="{{ $invoice->remaining_amount > 0 ? 'text-danger fw-bold' : 'text-success' }}">
-                                        ₪{{ number_format($invoice->remaining_amount, 2) }}
-                                    </td>
-                                    <td>{{ $invoice->created_at->format('Y-m-d H:i') }}</td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('drink-invoices.show', $invoice) }}" class="btn btn-sm btn-primary" title="عرض">
-                                                <i class="bi bi-eye"></i>
+                                    <tr>
+                                        <td>
+                                            <a href="{{ route('drink-invoices.show', $invoice) }}" class="text-decoration-none session-link">
+                                                #{{ $invoice->id }}
                                             </a>
-                                            <a href="{{ route('drink-invoices.edit', $invoice) }}" class="btn btn-sm btn-warning" title="تعديل">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                        <td>{{ $invoice->items->sum('quantity') }}</td>
+                                        <td>₪{{ number_format($invoice->total_price, 2) }}</td>
+                                        <td>
+                                            @if($invoice->payment_status == 'pending')
+                                                <span class="badge bg-warning">قيد الانتظار</span>
+                                            @elseif($invoice->payment_status == 'paid')
+                                                <span class="badge bg-success">مدفوع</span>
+                                            @elseif($invoice->payment_status == 'partial')
+                                                <span class="badge bg-info">مدفوع جزئياً</span>
+                                            @else
+                                                <span class="badge bg-danger">ملغي</span>
+                                            @endif
+                                        </td>
+                                        <td class="{{ $invoice->remaining_amount > 0 ? 'text-danger fw-bold' : 'text-success' }}">
+                                            ₪{{ number_format($invoice->remaining_amount, 2) }}
+                                        </td>
+                                        <td>{{ $invoice->created_at->format('Y-m-d H:i') }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ route('drink-invoices.show', $invoice) }}" class="btn btn-sm btn-primary" title="عرض">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ route('drink-invoices.edit', $invoice) }}" class="btn btn-sm btn-warning" title="تعديل">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="text-center py-4">
-                        <i class="bi bi-cup-hot display-4 text-muted mb-3"></i>
-                        <p class="text-muted">لا توجد فواتير مشروبات لهذا المستخدم</p>
-                        <a href="{{ route('drink-invoices.create', ['user_id' => $user->id]) }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> إنشاء فاتورة جديدة
-                        </a>
-                    </div>
-                @endif
-                @php
-                    $hasUnpaidInvoices = $drinkInvoices && $drinkInvoices->whereIn('payment_status', ['pending', 'partial'])->count() > 0;
-                @endphp
-                @if($hasUnpaidInvoices && $drinkInvoices->count() > 0)
-                <div class="alert alert-warning mt-3" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>تنبيه:</strong> لا يمكن إنشاء فاتورة جديدة. يجب أن تكون جميع الفواتير السابقة مدفوعة بالكامل أولاً.
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center py-4">
+                            <i class="bi bi-cup-hot display-4 text-muted mb-3"></i>
+                            <p class="text-muted">لا توجد فواتير مشروبات لهذا المستخدم</p>
+                            <a href="{{ route('drink-invoices.create', ['user_id' => $user->id]) }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> إنشاء فاتورة جديدة
+                            </a>
+                        </div>
+                    @endif
+                    @php
+                        $hasUnpaidInvoices = $drinkInvoices && $drinkInvoices->whereIn('payment_status', ['pending', 'partial'])->count() > 0;
+                    @endphp
+                    @if($hasUnpaidInvoices && $drinkInvoices->count() > 0)
+                        <div class="alert alert-warning mt-3" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>تنبيه:</strong> لا يمكن إنشاء فاتورة جديدة. يجب أن تكون جميع الفواتير السابقة مدفوعة بالكامل أولاً.
+                        </div>
+                    @endif
                 </div>
-                @endif
             </div>
-        </div>
         @endif
 
         <!-- تفاصيل الجلسات المتبقية -->
         @if($sessionsWithRemainingAmount > 0)
-        <div class="card sessions-card mb-4">
-            <div class="card-header bg-transparent border-0 p-0">
-                <button class="btn btn-link text-decoration-none w-100 text-start p-3 d-flex justify-content-between align-items-center collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#remainingSessionsCollapse" aria-expanded="false" aria-controls="remainingSessionsCollapse">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>
-                        الجلسات بمبالغ متبقية
-                    </h5>
-                    <i class="bi bi-chevron-down collapse-icon"></i>
-                </button>
-            </div>
-            <div id="remainingSessionsCollapse" class="collapse" aria-labelledby="remainingSessionsCollapse">
-                <div class="card-body">
-                    <div class="alert alert-warning alert-custom mb-4">
-                        <h6><i class="bi bi-exclamation-triangle me-2"></i> تنبيه:</h6>
-                        <p class="mb-0">
-                            لدى المستخدم <strong>{{ $sessionsWithRemainingAmount }}</strong> جلسة/جلسات بمبالغ متبقية تبلغ إجماليها 
-                            <strong class="text-danger">₪{{ number_format($totalRemainingAmount, 2) }}</strong>
-                        </p>
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-custom">
-                            <thead>
+            <div class="card sessions-card mb-4">
+                <div class="card-header bg-transparent border-0 p-0">
+                    <button class="btn btn-link text-decoration-none w-100 text-start p-3 d-flex justify-content-between align-items-center collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#remainingSessionsCollapse" aria-expanded="false" aria-controls="remainingSessionsCollapse">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                            الجلسات بمبالغ متبقية
+                        </h5>
+                        <i class="bi bi-chevron-down collapse-icon"></i>
+                    </button>
+                </div>
+                <div id="remainingSessionsCollapse" class="collapse" aria-labelledby="remainingSessionsCollapse">
+                    <div class="card-body">
+                        <div class="alert alert-warning alert-custom mb-4">
+                            <h6><i class="bi bi-exclamation-triangle me-2"></i> تنبيه:</h6>
+                            <p class="mb-0">
+                                لدى المستخدم <strong>{{ $sessionsWithRemainingAmount }}</strong> جلسة/جلسات بمبالغ متبقية تبلغ إجماليها
+                                <strong class="text-danger">₪{{ number_format($totalRemainingAmount, 2) }}</strong>
+                            </p>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead>
                                 <tr>
                                     <th>رقم الجلسة</th>
                                     <th>تاريخ الجلسة</th>
@@ -807,9 +785,10 @@
                                     <th>المتبقي</th>
                                     <th>حالة الدفع</th>
                                     <th>الإجراءات</th>
+
                                 </tr>
-                            </thead>
-                            <tbody>
+                                </thead>
+                                <tbody>
                                 @foreach($userSessions as $userSession)
                                     @php
                                         if($userSession->payment) {
@@ -826,72 +805,72 @@
                                         }
                                     @endphp
                                     @if($remainingAmount > 0)
-                                    <tr class="session-row">
-                                        <td>
-                                            <a href="{{ route('sessions.show', $userSession) }}" class="text-decoration-none text-primary fw-medium session-link">
-                                                #{{ $userSession->id }}
-                                            </a>
-                                        </td>
-                                        <td>{{ $userSession->start_at->format('Y-m-d H:i') }}</td>
-                                        <td class="fw-bold">
-                                            @if($userSession->payment)
-                                                ₪{{ number_format($userSession->payment->total_price, 2) }}
-                                            @else
-                                                ₪{{ number_format($sessionTotal, 2) }}
-                                            @endif
-                                        </td>
-                                        <td class="text-success">
-                                            @if($userSession->payment)
-                                                ₪{{ number_format($userSession->payment->amount_bank + $userSession->payment->amount_cash, 2) }}
-                                            @else
-                                                ₪0.00
-                                            @endif
-                                        </td>
-                                        <td class="text-danger fw-bold">₪{{ number_format($remainingAmount, 2) }}</td>
-                                        <td>
-                                            @if($userSession->payment)
-                                                @if($userSession->payment->payment_status == 'partial')
-                                                    <span class="badge bg-warning badge-custom">مدفوع جزئياً</span>
-                                                @elseif($userSession->payment->payment_status == 'pending')
-                                                    <span class="badge bg-secondary badge-custom">معلق</span>
+                                        <tr class="session-row">
+                                            <td>
+                                                <a href="{{ route('sessions.show', $userSession) }}" class="text-decoration-none text-primary fw-medium session-link">
+                                                    #{{ $userSession->id }}
+                                                </a>
+                                            </td>
+                                            <td>{{ $userSession->start_at->format('Y-m-d H:i') }}</td>
+                                            <td class="fw-bold">
+                                                @if($userSession->payment)
+                                                    ₪{{ number_format($userSession->payment->total_price, 2) }}
                                                 @else
-                                                    <span class="badge bg-danger badge-custom">غير مدفوع</span>
+                                                    ₪{{ number_format($sessionTotal, 2) }}
                                                 @endif
-                                            @else
-                                                <span class="badge bg-danger badge-custom">لا توجد مدفوعة</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($userSession->payment)
-                                                <a href="{{ route('session-payments.show', $userSession->payment->id) }}" class="btn btn-sm btn-outline-primary btn-custom">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                @if($userSession->session_status == 'completed')
-                                                <a href="{{ route('session-payments.edit', $userSession->payment->id) }}" class="btn btn-sm btn-outline-warning btn-custom">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
+                                            </td>
+                                            <td class="text-success">
+                                                @if($userSession->payment)
+                                                    ₪{{ number_format($userSession->payment->amount_bank + $userSession->payment->amount_cash, 2) }}
+                                                @else
+                                                    ₪0.00
                                                 @endif
-                                            @else
-                                                <span class="text-muted">لا توجد مدفوعة</span>
-                                            @endif
-                                        </td>
-                                    </tr>
+                                            </td>
+                                            <td class="text-danger fw-bold">₪{{ number_format($remainingAmount, 2) }}</td>
+                                            <td>
+                                                @if($userSession->payment)
+                                                    @if($userSession->payment->payment_status == 'partial')
+                                                        <span class="badge bg-warning badge-custom">مدفوع جزئياً</span>
+                                                    @elseif($userSession->payment->payment_status == 'pending')
+                                                        <span class="badge bg-secondary badge-custom">معلق</span>
+                                                    @else
+                                                        <span class="badge bg-danger badge-custom">غير مدفوع</span>
+                                                    @endif
+                                                @else
+                                                    <span class="badge bg-danger badge-custom">لا توجد مدفوعة</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($userSession->payment)
+                                                    <a href="{{ route('session-payments.show', $userSession->payment->id) }}" class="btn btn-sm btn-outline-primary btn-custom">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    @if($userSession->session_status == 'completed')
+                                                        <a href="{{ route('session-payments.edit', $userSession->payment->id) }}" class="btn btn-sm btn-outline-warning btn-custom">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted">لا توجد مدفوعة</span>
+                                                @endif
+                                            </td>
+                                        </tr>
                                     @endif
                                 @endforeach
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         @else
-        <div class="card sessions-card mb-4">
-            <div class="card-body text-center py-5">
-                <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
-                <h5 class="text-success mt-3">ممتاز!</h5>
-                <p class="text-muted">جميع مدفوعات المستخدم مكتملة ولا توجد مبالغ متبقية.</p>
+            <div class="card sessions-card mb-4">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                    <h5 class="text-success mt-3">ممتاز!</h5>
+                    <p class="text-muted">جميع مدفوعات المستخدم مكتملة ولا توجد مبالغ متبقية.</p>
+                </div>
             </div>
-        </div>
         @endif
     </div>
 </div>
@@ -922,22 +901,22 @@
                             <span class="input-group-text bg-success text-white">
                                 <i class="bi bi-wallet2"></i>
                             </span>
-                            <input type="text" class="form-control fw-bold text-success" 
+                            <input type="text" class="form-control fw-bold text-success"
                                    value="₪{{ number_format($user->wallet->balance ?? 0, 2) }}" readonly>
                         </div>
                     </div>
-                    
+
                     <div class="mb-4">
                         <label for="amount" class="form-label fw-bold">مبلغ الشحن</label>
                         <div class="input-group">
                             <span class="input-group-text">
                                 <i class="bi bi-currency-dollar"></i>
                             </span>
-                            <input type="number" step="0.01" class="form-control" id="amount" name="amount" 
+                            <input type="number" step="0.01" class="form-control" id="amount" name="amount"
                                    placeholder="0.00" required>
                         </div>
                     </div>
-                    
+
                     <div class="mb-4">
                         <label for="payment_method" class="form-label fw-bold">طريقة الدفع</label>
                         <select class="form-select" id="payment_method" name="payment_method" required>
@@ -946,10 +925,10 @@
                             <option value="bank_transfer">🏦 حوالة بنكية</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-4">
                         <label for="notes" class="form-label fw-bold">ملاحظات <small class="text-muted">(اختياري)</small></label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3" 
+                        <textarea class="form-control" id="notes" name="notes" rows="3"
                                   placeholder="أضف ملاحظة حول هذه العملية..."></textarea>
                     </div>
                 </div>
@@ -969,55 +948,55 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-function confirmCreateSession() {
-    Swal.fire({
-        title: 'هل أنت متأكد؟',
-        text: 'هل تريد فتح جلسة جديدة لهذا المستخدم؟',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'نعم، افتح الجلسة',
-        cancelButtonText: 'إلغاء',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('createSessionForm').submit();
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmCreateSession() {
+            Swal.fire({
+                title: 'هل أنت متأكد؟',
+                text: 'هل تريد فتح جلسة جديدة لهذا المستخدم؟',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'نعم، افتح الجلسة',
+                cancelButtonText: 'إلغاء',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('createSessionForm').submit();
+                }
+            });
         }
-    });
-}
 
-function showInvoiceAlert() {
-    @if($hasUnpaidInvoices && $unpaidInvoicesList->count() > 0)
-    const unpaidInvoices = [
-        @foreach($unpaidInvoicesList as $invoice)
-        {
-            id: {{ $invoice->id }},
-            status: '{{ $invoice->payment_status == "pending" ? "قيد الانتظار" : "مدفوع جزئياً" }}',
-            total: {{ $invoice->total_price }},
-            remaining: {{ $invoice->remaining_amount }},
-            url: '{{ route("drink-invoices.show", $invoice) }}'
-        }@if(!$loop->last),@endif
-        @endforeach
-    ];
-    
-    let invoiceList = '<div class="text-start mt-3"><strong>الفواتير غير المدفوعة:</strong><ul class="mt-2 mb-0">';
-    unpaidInvoices.forEach(function(invoice) {
-        invoiceList += `<li class="mb-2">
+        function showInvoiceAlert() {
+            @if($hasUnpaidInvoices && $unpaidInvoicesList->count() > 0)
+            const unpaidInvoices = [
+                    @foreach($unpaidInvoicesList as $invoice)
+                {
+                    id: {{ $invoice->id }},
+                    status: '{{ $invoice->payment_status == "pending" ? "قيد الانتظار" : "مدفوع جزئياً" }}',
+                    total: {{ $invoice->total_price }},
+                    remaining: {{ $invoice->remaining_amount }},
+                    url: '{{ route("drink-invoices.show", $invoice) }}'
+                }@if(!$loop->last),@endif
+                @endforeach
+            ];
+
+            let invoiceList = '<div class="text-start mt-3"><strong>الفواتير غير المدفوعة:</strong><ul class="mt-2 mb-0">';
+            unpaidInvoices.forEach(function(invoice) {
+                invoiceList += `<li class="mb-2">
             <a href="${invoice.url}" target="_blank" class="text-decoration-none">
                 فاتورة #${invoice.id}
-            </a> - 
-            <span class="badge ${invoice.status === 'قيد الانتظار' ? 'bg-warning' : 'bg-info'}">${invoice.status}</span> - 
+            </a> -
+            <span class="badge ${invoice.status === 'قيد الانتظار' ? 'bg-warning' : 'bg-info'}">${invoice.status}</span> -
             المتبقي: <strong>₪${parseFloat(invoice.remaining).toFixed(2)}</strong>
         </li>`;
-    });
-    invoiceList += '</ul></div>';
-    
-    Swal.fire({
-        title: 'لا يمكن إنشاء فاتورة جديدة',
-        html: `
+            });
+            invoiceList += '</ul></div>';
+
+            Swal.fire({
+                title: 'لا يمكن إنشاء فاتورة جديدة',
+                html: `
             <div class="text-start">
                 <p class="mb-3">
                     <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
@@ -1026,32 +1005,32 @@ function showInvoiceAlert() {
                 ${invoiceList}
             </div>
         `,
-        icon: 'warning',
-        confirmButtonText: 'حسناً',
-        confirmButtonColor: '#3085d6',
-        width: '600px'
-    });
-    @endif
-}
+                icon: 'warning',
+                confirmButtonText: 'حسناً',
+                confirmButtonColor: '#3085d6',
+                width: '600px'
+            });
+            @endif
+        }
 
-// التأكد من عمل collapse للجلسات المتبقية
-document.addEventListener('DOMContentLoaded', function() {
-    const collapseElement = document.getElementById('remainingSessionsCollapse');
-    const collapseButton = document.querySelector('[data-bs-target="#remainingSessionsCollapse"]');
-    
-    if (collapseElement && collapseButton) {
-        // تحديث حالة الأيقونة عند الفتح
-        collapseElement.addEventListener('show.bs.collapse', function () {
-            collapseButton.classList.remove('collapsed');
-            collapseButton.setAttribute('aria-expanded', 'true');
+        // التأكد من عمل collapse للجلسات المتبقية
+        document.addEventListener('DOMContentLoaded', function() {
+            const collapseElement = document.getElementById('remainingSessionsCollapse');
+            const collapseButton = document.querySelector('[data-bs-target="#remainingSessionsCollapse"]');
+
+            if (collapseElement && collapseButton) {
+                // تحديث حالة الأيقونة عند الفتح
+                collapseElement.addEventListener('show.bs.collapse', function () {
+                    collapseButton.classList.remove('collapsed');
+                    collapseButton.setAttribute('aria-expanded', 'true');
+                });
+
+                // تحديث حالة الأيقونة عند الإغلاق
+                collapseElement.addEventListener('hide.bs.collapse', function () {
+                    collapseButton.classList.add('collapsed');
+                    collapseButton.setAttribute('aria-expanded', 'false');
+                });
+            }
         });
-        
-        // تحديث حالة الأيقونة عند الإغلاق
-        collapseElement.addEventListener('hide.bs.collapse', function () {
-            collapseButton.classList.add('collapsed');
-            collapseButton.setAttribute('aria-expanded', 'false');
-        });
-    }
-});
-</script>
+    </script>
 @endpush
