@@ -60,7 +60,7 @@ class UserController extends Controller
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
-            'hourly_users' => User::where('user_type', 'hourly')->count(),
+            'hourly_users' => User::whereIn('user_type', ['hourly', 'prepaid'])->count(),
             'subscription_users' => User::where('user_type', 'subscription')->count(),
             'admin_users' => User::where('user_type', 'admin')->count(),
             'manager_users' => User::where('user_type', 'manager')->count(),
@@ -118,7 +118,7 @@ class UserController extends Controller
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
-            'hourly_users' => User::where('user_type', 'hourly')->count(),
+            'hourly_users' => User::whereIn('user_type', ['hourly', 'prepaid'])->count(),
             'subscription_users' => User::where('user_type', 'subscription')->count(),
             'admin_users' => User::where('user_type', 'admin')->count(),
             'manager_users' => User::where('user_type', 'manager')->count(),
@@ -142,8 +142,8 @@ class UserController extends Controller
             $perPage = 15;
         }
 
-        // بناء query المستخدمين الساعات فقط
-        $query = User::with('wallet')->where('user_type', 'hourly');
+        // بناء query المستخدمين الساعات ومسبق الدفع فقط
+        $query = User::with('wallet')->whereIn('user_type', ['hourly', 'prepaid']);
 
         // البحث
         if ($request->filled('search')) {
@@ -176,7 +176,7 @@ class UserController extends Controller
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
-            'hourly_users' => User::where('user_type', 'hourly')->count(),
+            'hourly_users' => User::whereIn('user_type', ['hourly', 'prepaid'])->count(),
             'subscription_users' => User::where('user_type', 'subscription')->count(),
             'admin_users' => User::where('user_type', 'admin')->count(),
             'manager_users' => User::where('user_type', 'manager')->count(),
@@ -185,6 +185,64 @@ class UserController extends Controller
 
         $pageTitle = 'المستخدمين الساعات';
         $userTypeFilter = 'hourly';
+
+        return view('users.index', compact('users', 'stats', 'pageTitle', 'userTypeFilter'));
+    }
+
+    /**
+     * Display prepaid users.
+     */
+    public function prepaid(Request $request)
+    {
+        // تحديد عدد العناصر في الصفحة (افتراضي 15)
+        $perPage = $request->get('per_page', 15);
+        if (!in_array($perPage, [10, 15, 25, 50, 100])) {
+            $perPage = 15;
+        }
+
+        // بناء query المستخدمين مسبقين الدفع فقط
+        $query = User::with('wallet')->where('user_type', 'prepaid');
+
+        // البحث
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('name_ar', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        // فلترة حسب الحالة
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+
+        // ترتيب النتائج
+        $sortBy = $request->get('sort_by', 'id');
+        $sortDirection = $request->get('sort_direction', 'asc');
+        
+        if (in_array($sortBy, ['name', 'email', 'created_at', 'user_type', 'status', 'id'])) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('id', 'asc');
+        }
+
+        $users = $query->paginate($perPage)->appends($request->query());
+        
+        $stats = [
+            'total_users' => User::count(),
+            'active_users' => User::where('status', 'active')->count(),
+            'hourly_users' => User::whereIn('user_type', ['hourly', 'prepaid'])->count(),
+            'subscription_users' => User::where('user_type', 'subscription')->count(),
+            'admin_users' => User::where('user_type', 'admin')->count(),
+            'manager_users' => User::where('user_type', 'manager')->count(),
+            'filtered_count' => $users->total(),
+        ];
+
+        $pageTitle = 'المستخدمين مسبقين الدفع';
+        $userTypeFilter = 'prepaid';
 
         return view('users.index', compact('users', 'stats', 'pageTitle', 'userTypeFilter'));
     }
@@ -207,7 +265,7 @@ class UserController extends Controller
             'name_ar' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users',
             'phone' => 'nullable|string|max:20',
-            'user_type' => 'required|in:hourly,subscription,admin,manager',
+            'user_type' => 'required|in:hourly,prepaid,subscription,admin,manager',
             'status' => 'required|in:active,inactive,suspended'
         ]);
 
@@ -262,7 +320,7 @@ class UserController extends Controller
             'name_ar' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
-            'user_type' => 'required|in:hourly,subscription,admin,manager',
+            'user_type' => 'required|in:hourly,prepaid,subscription,admin,manager',
             'status' => 'required|in:active,inactive,suspended'
         ]);
 

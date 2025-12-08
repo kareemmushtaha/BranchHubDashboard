@@ -189,18 +189,23 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white {{ request()->routeIs('users.index') && !request()->routeIs('users.monthly') && !request()->routeIs('users.hourly') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                        <a class="nav-link text-white {{ request()->routeIs('users.index') && !request()->routeIs('users.monthly') && !request()->routeIs('users.hourly') && !request()->routeIs('users.prepaid') ? 'active' : '' }}" href="{{ route('users.index') }}">
                             <i class="bi bi-people"></i> جميع المستخدمين
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('users.monthly') ? 'active' : '' }}" href="{{ route('users.monthly') }}">
-                            <i class="bi bi-calendar-month"></i> المستخدمين الشهري
+                            <i class="bi bi-calendar-month"></i> مستخدمين دائمين
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('users.hourly') ? 'active' : '' }}" href="{{ route('users.hourly') }}">
                             <i class="bi bi-clock-history"></i> المستخدمين الساعات
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('users.prepaid') ? 'active' : '' }}" href="{{ route('users.prepaid') }}">
+                            <i class="bi bi-wallet2"></i> المستخدمين مسبقين الدفع
                         </a>
                     </li>
                     <li class="nav-item">

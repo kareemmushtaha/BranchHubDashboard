@@ -6,8 +6,8 @@
 @php
     $userTypeBadges = [
         'hourly' => ['label' => 'ساعي', 'class' => 'bg-info'],
+        'prepaid' => ['label' => 'مسبق الدفع', 'class' => 'bg-primary'],
         'subscription' => ['label' => 'اشتراك', 'class' => 'bg-success'],
-        'prepaid' => ['label' => 'مدفوع مسبقاً', 'class' => 'bg-primary'],
         'manager' => ['label' => 'مدير إداري', 'class' => 'bg-warning text-dark'],
         'admin' => ['label' => 'مدير النظام', 'class' => 'bg-danger'],
     ];
@@ -138,7 +138,7 @@
                 </h6>
             </div>
             <div class="card-body">
-                <form method="GET" action="{{ $userTypeFilter == 'subscription' ? route('users.monthly') : ($userTypeFilter == 'hourly' ? route('users.hourly') : route('users.index')) }}" id="filterForm" autocomplete="off">
+                <form method="GET" action="{{ $userTypeFilter == 'subscription' ? route('users.monthly') : ($userTypeFilter == 'hourly' ? route('users.hourly') : ($userTypeFilter == 'prepaid' ? route('users.prepaid') : route('users.index'))) }}" id="filterForm" autocomplete="off">
                     <div class="row g-3 align-items-end">
                         <!-- البحث -->
                         <div class="col-md-3">
@@ -162,6 +162,7 @@
                             <select name="user_type" class="form-select">
                                 <option value="">الكل</option>
                                 <option value="hourly" {{ request('user_type') == 'hourly' ? 'selected' : '' }}>ساعي</option>
+                                <option value="prepaid" {{ request('user_type') == 'prepaid' ? 'selected' : '' }}>مسبق الدفع</option>
                                 <option value="subscription" {{ request('user_type') == 'subscription' ? 'selected' : '' }}>اشتراك</option>
                                 <option value="manager" {{ request('user_type') == 'manager' ? 'selected' : '' }}>مدير إداري</option>
                                 <option value="admin" {{ request('user_type') == 'admin' ? 'selected' : '' }}>مدير النظام</option>
@@ -210,7 +211,7 @@
                         <!-- أزرار -->
                         <div class="col-md-2">
                             <div class="d-flex gap-1">
-                                <a href="{{ $userTypeFilter == 'subscription' ? route('users.monthly') : ($userTypeFilter == 'hourly' ? route('users.hourly') : route('users.index')) }}" class="btn btn-warning btn-sm">
+                                <a href="{{ $userTypeFilter == 'subscription' ? route('users.monthly') : ($userTypeFilter == 'hourly' ? route('users.hourly') : ($userTypeFilter == 'prepaid' ? route('users.prepaid') : route('users.index'))) }}" class="btn btn-warning btn-sm">
                                     <i class="bi bi-x-circle"></i> مسح الفلاتر
                                 </a>
                             </div>

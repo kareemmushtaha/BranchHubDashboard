@@ -8,6 +8,8 @@ use App\Models\SessionPayment;
 use App\Models\SessionDrink;
 use App\Models\Drink;
 use App\Models\PublicPrice;
+use App\Models\UserWallet;
+use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -90,7 +92,7 @@ class SessionController extends Controller
         // Filter by session start date
         // إذا لم يكن هناك تاريخ محدد، استخدم تاريخ اليوم الحالي
         $today = Carbon::today()->format('Y-m-d');
-        
+
         if ($request->filled('start_date_from')) {
             $query->whereDate('start_at', '>=', $request->start_date_from);
         } else {
@@ -112,7 +114,7 @@ class SessionController extends Controller
 
         // Calculate stats (apply same filters to stats)
         $statsQuery = Session::query();
-        
+
         // Apply same filters to stats
         if ($request->has('session_category') && $request->session_category !== '') {
             $statsQuery->where('session_category', $request->session_category);
@@ -257,7 +259,7 @@ class SessionController extends Controller
 
         // Get all sessions first, then filter by overdue status
         $allSessions = $query->get();
-        
+
         // Filter sessions that are actually overdue
         $overdueSessions = $allSessions->filter(function($session) {
             return $session->isOverdue();
@@ -332,13 +334,13 @@ class SessionController extends Controller
         // جلب جميع المستخدمين المؤهلين لبدء جلسة جديدة
         // يجب أن لا يكون لديهم جلسة نشطة حالياً
         $users = User::where('status', 'active')
-            ->whereIn('user_type', ['hourly', 'subscription'])
+            ->whereIn('user_type', ['hourly', 'prepaid', 'subscription'])
             ->whereDoesntHave('sessions', function($query) {
                 $query->where('session_status', 'active');
             })
             ->orderBy('id', 'asc')
             ->get();
-        
+
         return view('sessions.create', compact('users'));
     }
 
@@ -349,7 +351,7 @@ class SessionController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'session_category' => 'required|in:hourly,subscription,overtime',
+            'session_category' => 'required|in:hourly,prepaid,subscription,overtime',
             'note' => 'nullable|string',
             'session_owner' => 'nullable|string|max:255'
         ]);
@@ -395,8 +397,8 @@ class SessionController extends Controller
         }
 
         // تحديد نوع الجلسة بناءً على نوع المستخدم
-        $sessionCategory = in_array($user->user_type, ['hourly', 'subscription']) 
-            ? $user->user_type 
+        $sessionCategory = in_array($user->user_type, ['hourly', 'prepaid', 'subscription'])
+            ? ($user->user_type == 'prepaid' ? 'hourly' : $user->user_type)
             : 'hourly';
 
         $session = Session::create([
@@ -425,7 +427,7 @@ class SessionController extends Controller
     {
         $session->load(['user', 'creator', 'noteUpdater', 'payment', 'drinks.drink', 'overtimes']);
         $drinks = Drink::where('status', 'available')->get();
-        
+
         return view('sessions.show', compact('session', 'drinks'));
     }
 
@@ -437,7 +439,7 @@ class SessionController extends Controller
         $users = User::where('status', 'active')
             ->orderBy('id', 'asc')
             ->get();
-        
+
         return view('sessions.edit', compact('session', 'users'));
     }
 
@@ -448,7 +450,7 @@ class SessionController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'session_category' => 'required|in:hourly,subscription,overtime',
+            'session_category' => 'required|in:hourly,prepaid,subscription,overtime',
             'note' => 'nullable|string',
             'session_owner' => 'nullable|string|max:255',
             'custom_internet_cost' => 'nullable|numeric|min:0'
@@ -483,7 +485,7 @@ class SessionController extends Controller
                 'old_cost' => $oldCustomCost,
                 'new_cost' => $request->custom_internet_cost
             ]);
-            
+
             $this->updateSessionTotal($session);
         }
 
@@ -497,7 +499,7 @@ class SessionController extends Controller
     public function cancel(Session $session)
     {
         $session->update(['session_status' => 'cancelled']);
-        
+
         return redirect()->route('sessions.index')
             ->with('success', 'تم إلغاء الجلسة بنجاح');
     }
@@ -560,14 +562,14 @@ class SessionController extends Controller
 
         // حفظ حالة الدفع قبل التحديث
         $oldPaymentStatus = $session->payment ? $session->payment->payment_status : null;
-        
+
         // تحديث إجمالي المبلغ
         $this->updateSessionTotal($session);
-        
+
         // التحقق من تغيير حالة الدفع
         $session->refresh();
         $newPaymentStatus = $session->payment ? $session->payment->payment_status : null;
-        
+
         $message = 'تم إضافة المشروب بنجاح';
         if ($oldPaymentStatus && $newPaymentStatus && $oldPaymentStatus !== $newPaymentStatus) {
             $statusText = '';
@@ -605,7 +607,7 @@ class SessionController extends Controller
 
         // حفظ حالة الدفع قبل التحديث
         $oldPaymentStatus = $session->payment ? $session->payment->payment_status : null;
-        
+
         // تسجيل audit log قبل الحذف
         $drinkName = $sessionDrink->drink->name ?? 'غير محدد';
         $sessionDrink->logCustomAudit(
@@ -618,11 +620,11 @@ class SessionController extends Controller
 
         // تحديث إجمالي المبلغ
         $this->updateSessionTotal($session);
-        
+
         // التحقق من تغيير حالة الدفع
         $session->refresh();
         $newPaymentStatus = $session->payment ? $session->payment->payment_status : null;
-        
+
         $message = 'تم حذف المشروب بنجاح';
         if ($oldPaymentStatus && $newPaymentStatus && $oldPaymentStatus !== $newPaymentStatus) {
             $statusText = '';
@@ -673,7 +675,7 @@ class SessionController extends Controller
                 'created_at' => $newDate,
                 'updated_at' => now()
             ]);
-        
+
         // إعادة تحميل النموذج للحصول على القيم المحدثة
         $sessionDrink->refresh();
 
@@ -731,11 +733,11 @@ class SessionController extends Controller
 
         // تحديث إجمالي المبلغ
         $this->updateSessionTotal($session);
-        
+
         // التحقق من تغيير حالة الدفع
         $session->refresh();
         $newPaymentStatus = $session->payment ? $session->payment->payment_status : null;
-        
+
         $message = 'تم تحديث السعر والكمية بنجاح';
         if ($oldPaymentStatus && $newPaymentStatus && $oldPaymentStatus !== $newPaymentStatus) {
             $statusText = '';
@@ -777,8 +779,8 @@ class SessionController extends Controller
         $endAt = \Carbon\Carbon::parse($request->end_at);
 
         // تحديد السعر: إما المحدد أو null (سيتم حسابه تلقائياً في boot method)
-        $hourlyRate = $request->hourly_rate !== null && $request->hourly_rate !== '' 
-            ? $request->hourly_rate 
+        $hourlyRate = $request->hourly_rate !== null && $request->hourly_rate !== ''
+            ? $request->hourly_rate
             : null;
 
         $overtime = \App\Models\SessionOvertime::create([
@@ -824,8 +826,8 @@ class SessionController extends Controller
         ]);
 
         $oldRate = $session->custom_overtime_rate;
-        $newRate = $request->custom_overtime_rate === '' || $request->custom_overtime_rate === null 
-            ? null 
+        $newRate = $request->custom_overtime_rate === '' || $request->custom_overtime_rate === null
+            ? null
             : $request->custom_overtime_rate;
 
         $session->update(['custom_overtime_rate' => $newRate]);
@@ -834,7 +836,7 @@ class SessionController extends Controller
         $session->auditLogs()->create([
             'action' => 'update_overtime_rate',
             'action_type' => 'overtime',
-            'description' => $newRate 
+            'description' => $newRate
                 ? "تم تحديث سعر الساعات الإضافية إلى: ₪{$newRate}/ساعة"
                 : 'تم إزالة السعر المخصص للـ overtime',
             'old_values' => ['custom_overtime_rate' => $oldRate],
@@ -845,7 +847,7 @@ class SessionController extends Controller
         // تحديث إجمالي المبلغ
         $this->updateSessionTotal($session);
 
-        $message = $newRate 
+        $message = $newRate
             ? "تم تحديث سعر الساعات الإضافية إلى: ₪{$newRate}/ساعة"
             : 'تم إزالة السعر المخصص والعودة للسعر الافتراضي';
 
@@ -884,8 +886,8 @@ class SessionController extends Controller
         $endAt = \Carbon\Carbon::parse($request->end_at);
 
         // تحديد السعر: إما المحدد أو null (سيتم حسابه تلقائياً في boot method)
-        $hourlyRate = $request->hourly_rate !== null && $request->hourly_rate !== '' 
-            ? $request->hourly_rate 
+        $hourlyRate = $request->hourly_rate !== null && $request->hourly_rate !== ''
+            ? $request->hourly_rate
             : null;
 
         // تحديث الـ overtime
@@ -984,22 +986,22 @@ class SessionController extends Controller
     {
         // التأكد من وجود مدفوعة للجلسة
         $payment = $session->ensurePaymentExists();
-        
+
         $drinksCost = $session->drinks()->sum('price');
-        
+
         if ($sessionCost === null) {
             // حساب التكلفة تلقائياً بناءً على الوقت الفعلي (مع مراعاة التكلفة المخصصة)
             $sessionCost = $this->calculateInternetCostByTime($session);
         }
-        
+
         // إعادة تحميل الجلسة مع العلاقات
         $session->load('overtimes');
         $overtimeCost = $session->calculateOvertimeCost();
-        
+
         $totalCost = $sessionCost + $drinksCost + $overtimeCost;
         $totalPaid = $payment->amount_bank + $payment->amount_cash;
         $remainingAmount = max(0, $totalCost - $totalPaid);
-        
+
         // تحديث حالة الدفع بناءً على المبالغ المدفوعة
         $paymentStatus = 'pending';
         if ($totalPaid >= $totalCost) {
@@ -1008,13 +1010,13 @@ class SessionController extends Controller
         } elseif ($totalPaid > 0) {
             $paymentStatus = 'partial';
         }
-        
+
         $payment->update([
             'total_price' => $totalCost,
             'payment_status' => $paymentStatus,
             'remaining_amount' => $remainingAmount
         ]);
-        
+
         // تسجيل معلومات التحديث للتشخيص
         \Log::info('Updated session payment', [
             'session_id' => $session->id,
@@ -1029,7 +1031,7 @@ class SessionController extends Controller
             'custom_internet_cost' => $session->custom_internet_cost,
             'custom_overtime_rate' => $session->custom_overtime_rate
         ]);
-        
+
         // إعادة تحميل الجلسة والعلاقات للتأكد من التحديث
         $session->refresh();
         $session->load('payment', 'overtimes');
@@ -1044,7 +1046,7 @@ class SessionController extends Controller
         if ($session->session_status === 'active') {
             return redirect()->back()->with('error', "لا يمكن حذف الجلسة النشطة رقم #{$session->id}. يجب إنهاؤها أولاً قبل الحذف.");
         }
-        
+
         $session->delete(); // Soft delete because of SoftDeletes trait
         return redirect()->route('sessions.index')
             ->with('success', 'تم حذف الجلسة بنجاح (يمكن استرجاعها لاحقاً)');
@@ -1059,7 +1061,7 @@ class SessionController extends Controller
             ->with(['user', 'payment'])
             ->orderBy('deleted_at', 'desc')
             ->paginate(15);
-        
+
         $stats = [
             'total_deleted' => Session::onlyTrashed()->count(),
             'active_sessions' => Session::count(),
@@ -1076,7 +1078,7 @@ class SessionController extends Controller
     {
         $session = Session::onlyTrashed()->findOrFail($id);
         $session->restore();
-        
+
         return redirect()->route('sessions.trashed')
             ->with('success', 'تم استرجاع الجلسة بنجاح');
     }
@@ -1087,16 +1089,16 @@ class SessionController extends Controller
     public function forceDelete($id)
     {
         $session = Session::onlyTrashed()->findOrFail($id);
-        
+
         // حذف المدفوعات والمشروبات المرتبطة
         if ($session->payment) {
             $session->payment->delete();
         }
         $session->drinks()->delete();
-        
+
         // حذف الجلسة نهائياً
         $session->forceDelete();
-        
+
         return redirect()->route('sessions.trashed')
             ->with('success', 'تم حذف الجلسة نهائياً');
     }
@@ -1113,28 +1115,28 @@ class SessionController extends Controller
 
         $sessionIds = $request->session_ids;
         $sessions = Session::whereIn('id', $sessionIds)->get();
-        
+
         if ($sessions->isEmpty()) {
             return redirect()->back()->with('error', 'لم يتم العثور على جلسات للحذف');
         }
 
         // التحقق من أن جميع الجلسات مكتملة أو ملغاة
         $activeSessions = $sessions->where('session_status', 'active');
-        
+
         if ($activeSessions->count() > 0) {
             $activeSessionIds = $activeSessions->pluck('id')->toArray();
             $activeSessionIdsStr = implode(', ', $activeSessionIds);
-            
+
             return redirect()->back()->with('error', "لا يمكن حذف الجلسات النشطة. يجب إنهاء الجلسات التالية أولاً: {$activeSessionIdsStr}");
         }
 
         Session::whereIn('id', $sessionIds)->delete();
-        
+
         $count = count($sessionIds);
-        
+
         // Return to the same page with filters if return_to is provided
         $returnUrl = $request->input('return_to', route('sessions.index'));
-        
+
         return redirect($returnUrl)
             ->with('success', "تم حذف {$count} جلسة بنجاح (يمكن استرجاعها لاحقاً)");
     }
@@ -1151,13 +1153,13 @@ class SessionController extends Controller
 
         $sessionIds = $request->session_ids;
         $sessions = Session::onlyTrashed()->whereIn('id', $sessionIds)->get();
-        
+
         if ($sessions->isEmpty()) {
             return redirect()->back()->with('error', 'لم يتم العثور على جلسات محذوفة للاسترجاع');
         }
 
         Session::onlyTrashed()->whereIn('id', $sessionIds)->restore();
-        
+
         $count = count($sessionIds);
         return redirect()->route('sessions.trashed')
             ->with('success', "تم استرجاع {$count} جلسة بنجاح");
@@ -1175,7 +1177,7 @@ class SessionController extends Controller
 
         $sessionIds = $request->session_ids;
         $sessions = Session::onlyTrashed()->whereIn('id', $sessionIds)->get();
-        
+
         if ($sessions->isEmpty()) {
             return redirect()->back()->with('error', 'لم يتم العثور على جلسات محذوفة');
         }
@@ -1189,7 +1191,7 @@ class SessionController extends Controller
         }
 
         Session::onlyTrashed()->whereIn('id', $sessionIds)->forceDelete();
-        
+
         $count = count($sessionIds);
         return redirect()->route('sessions.trashed')
             ->with('success', "تم حذف {$count} جلسة نهائياً");
@@ -1210,19 +1212,19 @@ class SessionController extends Controller
             ]);
             return $session->custom_internet_cost;
         }
-        
+
         $publicPrices = PublicPrice::first();
         $startTime = $session->start_at;
-        
+
         // تحديد وقت الانتهاء: إما وقت الانتهاء الفعلي أو الوقت الحالي
         $endTime = $session->end_at ?? now();
-        
+
         // حساب المدة بالدقائق ثم تحويلها إلى ساعات
         $durationInMinutes = $startTime->diffInMinutes($endTime);
         $durationInHours = $durationInMinutes / 60;
-        
+
         $sessionCost = 0;
-        
+
         switch ($session->session_category) {
             case 'hourly':
                 $sessionCost = $durationInHours * ($publicPrices->hourly_rate ?? 5.00);
@@ -1240,14 +1242,14 @@ class SessionController extends Controller
             default:
                 $sessionCost = 0;
         }
-        
+
         \Log::info('Calculated internet cost by time', [
             'session_id' => $session->id,
             'session_category' => $session->session_category,
             'duration_hours' => $durationInHours,
             'calculated_cost' => $sessionCost
         ]);
-        
+
         return $sessionCost;
     }
 
@@ -1262,7 +1264,7 @@ class SessionController extends Controller
 
         // حفظ القيم القديمة
         $oldCustomCost = $session->custom_internet_cost;
-        
+
         // تحديث تكلفة الإنترنت المخصصة
         $customCost = $request->custom_internet_cost;
         if ($customCost === '' || $customCost === null) {
@@ -1295,7 +1297,7 @@ class SessionController extends Controller
 
         // تحديث إجمالي المبلغ في المدفوعة
         $this->updateSessionTotal($session);
-        
+
         // تسجيل النتيجة النهائية
         \Log::info('Internet cost update completed', [
             'session_id' => $session->id,
@@ -1337,7 +1339,7 @@ class SessionController extends Controller
             $session->load('payment');
 
             $message = 'تم تحديث تاريخ بداية الجلسة بنجاح';
-            
+
             // إذا تم إعادة حساب التكلفة، أضف رسالة إضافية
             if (!$session->hasCustomInternetCost()) {
                 $newInternetCost = $session->calculateInternetCost();
@@ -1384,7 +1386,7 @@ class SessionController extends Controller
             }
 
             $newExpectedEndDate = Carbon::createFromFormat('Y-m-d\TH:i', $request->expected_end_date);
-            
+
             // تحديث التاريخ المتوقع للانتهاء
             $session->updateExpectedEndDate($newExpectedEndDate);
 
