@@ -322,6 +322,7 @@
                                 <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-warning">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                @if($user->user_type == 'prepaid')
                                 <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#chargeWalletModal{{ $user->id }}" 
                                         title="شحن المحفظة">
                                     <i class="bi bi-wallet"></i>
@@ -330,6 +331,7 @@
                                    title="تاريخ المحفظة">
                                     <i class="bi bi-clock-history"></i>
                                 </a>
+                                @endif
                                 <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')

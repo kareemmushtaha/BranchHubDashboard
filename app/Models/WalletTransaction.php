@@ -41,6 +41,7 @@ class WalletTransaction extends Model
         return match($this->type) {
             'charge' => 'شحن',
             'deduct' => 'خصم',
+            'debt' => 'دين',
             'refund' => 'استرداد',
             default => $this->type
         };

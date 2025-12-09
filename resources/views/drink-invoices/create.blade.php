@@ -22,7 +22,7 @@
     <div class="col-md-8 mx-auto">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">معلومات الفاتورة</h5>
+                <h5 class="card-title mb-0">  معلومات الفاتورة الجديدة </h5>
             </div>
             <div class="card-body">
                 <form action="{{ route('drink-invoices.store') }}" method="POST">

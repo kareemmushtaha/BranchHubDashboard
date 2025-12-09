@@ -48,7 +48,7 @@ class UserController extends Controller
         // ترتيب النتائج
         $sortBy = $request->get('sort_by', 'id');
         $sortDirection = $request->get('sort_direction', 'asc');
-        
+
         if (in_array($sortBy, ['name', 'email', 'created_at', 'user_type', 'status', 'id'])) {
             $query->orderBy($sortBy, $sortDirection);
         } else {
@@ -56,7 +56,7 @@ class UserController extends Controller
         }
 
         $users = $query->paginate($perPage)->appends($request->query());
-        
+
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
@@ -106,7 +106,7 @@ class UserController extends Controller
         // ترتيب النتائج
         $sortBy = $request->get('sort_by', 'id');
         $sortDirection = $request->get('sort_direction', 'asc');
-        
+
         if (in_array($sortBy, ['name', 'email', 'created_at', 'user_type', 'status', 'id'])) {
             $query->orderBy($sortBy, $sortDirection);
         } else {
@@ -114,7 +114,7 @@ class UserController extends Controller
         }
 
         $users = $query->paginate($perPage)->appends($request->query());
-        
+
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
@@ -143,7 +143,7 @@ class UserController extends Controller
         }
 
         // بناء query المستخدمين الساعات ومسبق الدفع فقط
-        $query = User::with('wallet')->whereIn('user_type', ['hourly', 'prepaid']);
+        $query = User::with('wallet')->where('user_type', 'hourly');
 
         // البحث
         if ($request->filled('search')) {
@@ -164,7 +164,7 @@ class UserController extends Controller
         // ترتيب النتائج
         $sortBy = $request->get('sort_by', 'id');
         $sortDirection = $request->get('sort_direction', 'asc');
-        
+
         if (in_array($sortBy, ['name', 'email', 'created_at', 'user_type', 'status', 'id'])) {
             $query->orderBy($sortBy, $sortDirection);
         } else {
@@ -172,7 +172,7 @@ class UserController extends Controller
         }
 
         $users = $query->paginate($perPage)->appends($request->query());
-        
+
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
@@ -222,7 +222,7 @@ class UserController extends Controller
         // ترتيب النتائج
         $sortBy = $request->get('sort_by', 'id');
         $sortDirection = $request->get('sort_direction', 'asc');
-        
+
         if (in_array($sortBy, ['name', 'email', 'created_at', 'user_type', 'status', 'id'])) {
             $query->orderBy($sortBy, $sortDirection);
         } else {
@@ -230,7 +230,7 @@ class UserController extends Controller
         }
 
         $users = $query->paginate($perPage)->appends($request->query());
-        
+
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
@@ -292,14 +292,26 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show(User $user, Request $request)
     {
-        $user->load(['wallet', 'sessions.payment', 'sessions.drinks', 'overTimes']);
+        $user->load(['wallet', 'overTimes']);
+        
+        // Paginate sessions ordered by latest first
+        $perPage = $request->get('per_page', 10);
+        if (!in_array($perPage, [10, 15, 25, 50, 100])) {
+            $perPage = 10;
+        }
+        
+        $sessions = $user->sessions()
+            ->with(['payment', 'drinks'])
+            ->orderBy('start_at', 'desc')
+            ->paginate($perPage);
+        
         $drinkInvoices = \App\Models\DrinkInvoice::where('user_id', $user->id)
             ->with(['items.drink'])
             ->orderBy('created_at', 'desc')
             ->get();
-        return view('users.show', compact('user', 'drinkInvoices'));
+        return view('users.show', compact('user', 'drinkInvoices', 'sessions'));
     }
 
     /**
@@ -375,7 +387,7 @@ class UserController extends Controller
         // ترتيب النتائج
         $sortBy = $request->get('sort_by', 'deleted_at');
         $sortDirection = $request->get('sort_direction', 'desc');
-        
+
         if (in_array($sortBy, ['name', 'email', 'deleted_at', 'created_at', 'user_type'])) {
             $query->orderBy($sortBy, $sortDirection);
         } else {
@@ -383,7 +395,7 @@ class UserController extends Controller
         }
 
         $trashedUsers = $query->paginate($perPage)->appends($request->query());
-        
+
         $stats = [
             'total_deleted' => User::onlyTrashed()->count(),
             'active_users' => User::count(),
@@ -401,7 +413,7 @@ class UserController extends Controller
     {
         $user = User::onlyTrashed()->findOrFail($id);
         $user->restore();
-        
+
         return redirect()->route('users.trashed')
             ->with('success', 'تم استرجاع المستخدم بنجاح');
     }
@@ -412,15 +424,15 @@ class UserController extends Controller
     public function forceDelete($id)
     {
         $user = User::onlyTrashed()->findOrFail($id);
-        
+
         // حذف المحفظة أولاً
         if ($user->wallet) {
             $user->wallet->delete();
         }
-        
+
         // حذف المستخدم نهائياً
         $user->forceDelete();
-        
+
         return redirect()->route('users.trashed')
             ->with('success', 'تم حذف المستخدم نهائياً');
     }
@@ -437,7 +449,7 @@ class UserController extends Controller
 
         $userIds = $request->user_ids;
         $users = User::whereIn('id', $userIds)->get();
-        
+
         // تحقق من وجود المستخدمين
         if ($users->isEmpty()) {
             return redirect()->back()->with('error', 'لم يتم العثور على مستخدمين للحذف');
@@ -445,7 +457,7 @@ class UserController extends Controller
 
         // حذف المستخدمين (Soft Delete)
         User::whereIn('id', $userIds)->delete();
-        
+
         $count = count($userIds);
         return redirect()->route('users.index')
             ->with('success', "تم حذف {$count} مستخدم بنجاح (يمكن استرجاعهم لاحقاً)");
@@ -463,14 +475,14 @@ class UserController extends Controller
 
         $userIds = $request->user_ids;
         $users = User::onlyTrashed()->whereIn('id', $userIds)->get();
-        
+
         if ($users->isEmpty()) {
             return redirect()->back()->with('error', 'لم يتم العثور على مستخدمين محذوفين للاسترجاع');
         }
 
         // استرجاع المستخدمين
         User::onlyTrashed()->whereIn('id', $userIds)->restore();
-        
+
         $count = count($userIds);
         return redirect()->route('users.trashed')
             ->with('success', "تم استرجاع {$count} مستخدم بنجاح");
@@ -488,7 +500,7 @@ class UserController extends Controller
 
         $userIds = $request->user_ids;
         $users = User::onlyTrashed()->whereIn('id', $userIds)->get();
-        
+
         if ($users->isEmpty()) {
             return redirect()->back()->with('error', 'لم يتم العثور على مستخدمين محذوفين');
         }
@@ -502,7 +514,7 @@ class UserController extends Controller
 
         // حذف المستخدمين نهائياً
         User::onlyTrashed()->whereIn('id', $userIds)->forceDelete();
-        
+
         $count = count($userIds);
         return redirect()->route('users.trashed')
             ->with('success', "تم حذف {$count} مستخدم نهائياً");
@@ -523,18 +535,33 @@ class UserController extends Controller
         if (!$wallet) {
             $wallet = UserWallet::create([
                 'user_id' => $user->id,
-                'balance' => 0
+                'balance' => 0,
+                'debt' => 0
             ]);
         }
 
         $balanceBefore = $wallet->balance;
         $amount = $request->amount;
-        $balanceAfter = $balanceBefore + $amount;
+        $debtBefore = $wallet->debt ?? 0;
 
-        // تحديث رصيد المحفظة
-        $wallet->increment('balance', $amount);
+        // خصم الدين من المبلغ المشحون
+        $remainingDebt = max(0, $debtBefore - $amount);
+        $amountAfterDebt = max(0, $amount - $debtBefore);
+
+        // تحديث رصيد المحفظة (بعد خصم الدين)
+        $balanceAfter = $balanceBefore + $amountAfterDebt;
+        $wallet->update([
+            'balance' => $balanceAfter,
+            'debt' => $remainingDebt
+        ]);
 
         // حفظ سجل المعاملة
+        $notes = $request->notes;
+        if ($debtBefore > 0) {
+            $debtPaid = min($debtBefore, $amount);
+            $notes = ($notes ? $notes . ' | ' : '') . "تم خصم {$debtPaid} من الدين. الدين المتبقي: {$remainingDebt}";
+        }
+
         WalletTransaction::create([
             'user_id' => $user->id,
             'type' => 'charge',
@@ -542,13 +569,251 @@ class UserController extends Controller
             'amount' => $amount,
             'balance_before' => $balanceBefore,
             'balance_after' => $balanceAfter,
-            'notes' => $request->notes,
+            'notes' => $notes,
             'reference' => 'CHARGE-' . time(),
             'admin_name' => 'مدير النظام' // يمكن تحديثه لاحقاً للمدير الحالي
         ]);
 
+        $message = "تم شحن المحفظة بمبلغ {$amount} بنجاح";
+        if ($debtBefore > 0 && $debtPaid > 0) {
+            $message .= ". تم خصم {$debtPaid} من الدين";
+            if ($remainingDebt > 0) {
+                $message .= ". الدين المتبقي: {$remainingDebt}";
+            } else {
+                $message .= ". تم سداد الدين بالكامل";
+            }
+        }
+
         return redirect()->back()
-            ->with('success', "تم شحن المحفظة بمبلغ {$amount} بنجاح");
+            ->with('success', $message);
+    }
+
+    /**
+     * Deduct from user wallet
+     */
+    public function deductWallet(Request $request, User $user)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        $wallet = $user->wallet;
+        if (!$wallet) {
+            return redirect()->back()
+                ->with('error', 'المستخدم لا يملك محفظة');
+        }
+
+        $balanceBefore = $wallet->balance;
+        $amount = $request->amount;
+
+        // التحقق من أن الرصيد كافي
+        if ($balanceBefore < $amount) {
+            return redirect()->back()
+                ->with('error', 'الرصيد غير كافي. الرصيد الحالي: ₪' . number_format($balanceBefore, 2));
+        }
+
+        $balanceAfter = $balanceBefore - $amount;
+
+        // تحديث رصيد المحفظة
+        $wallet->decrement('balance', $amount);
+
+        // حفظ سجل المعاملة
+        WalletTransaction::create([
+            'user_id' => $user->id,
+            'type' => 'deduct',
+            'payment_method' => 'cash', // استخدام cash كقيمة افتراضية للعمليات اليدوية
+            'amount' => $amount,
+            'balance_before' => $balanceBefore,
+            'balance_after' => $balanceAfter,
+            'notes' => $request->notes,
+            'reference' => 'DEDUCT-' . time(),
+            'admin_name' => 'مدير النظام' // يمكن تحديثه لاحقاً للمدير الحالي
+        ]);
+
+        return redirect()->back()
+            ->with('success', "تم خصم مبلغ {$amount} من المحفظة بنجاح");
+    }
+
+    /**
+     * Update wallet transaction
+     */
+    public function updateTransaction(Request $request, User $user, WalletTransaction $transaction)
+    {
+        // التحقق من أن المعاملة تخص المستخدم
+        if ($transaction->user_id !== $user->id) {
+            return redirect()->back()
+                ->with('error', 'المعاملة غير موجودة');
+        }
+
+        $request->validate([
+            'transaction_date' => 'required|date',
+            'transaction_time' => 'required|date_format:H:i',
+            'payment_method' => 'required|in:cash,bank_transfer',
+            'amount' => 'nullable|numeric|min:0.01', // مطلوب لحركات الدين والخصم
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        // دمج التاريخ والوقت
+        $transactionDateTime = $request->transaction_date . ' ' . $request->transaction_time;
+
+        $updateData = [
+            'payment_method' => $request->payment_method,
+            'notes' => $request->notes,
+            'created_at' => $transactionDateTime,
+            'updated_at' => now(),
+        ];
+
+        $wallet = $user->wallet;
+        if (!$wallet) {
+            return redirect()->back()
+                ->with('error', 'المستخدم لا يملك محفظة');
+        }
+
+        $amountDifference = null;
+
+        // إذا كانت المعاملة من نوع دين وتم تعديل المبلغ
+        if ($transaction->type == 'debt' && $request->has('amount') && $request->amount != $transaction->amount) {
+            $oldAmount = $transaction->amount;
+            $newAmount = $request->amount;
+            $amountDifference = $newAmount - $oldAmount;
+
+            // تحديث مبلغ المعاملة
+            $updateData['amount'] = $newAmount;
+
+            // تحديث الدين في المحفظة
+            $currentDebt = $wallet->debt ?? 0;
+            $newDebt = $currentDebt + $amountDifference;
+
+            // التأكد من أن الدين لا يكون سالب
+            if ($newDebt < 0) {
+                return redirect()->back()
+                    ->with('error', 'لا يمكن تعديل المبلغ لأن الدين سيصبح سالباً');
+            }
+
+            $wallet->update([
+                'debt' => $newDebt
+            ]);
+        }
+
+        // إذا كانت المعاملة من نوع خصم وتم تعديل المبلغ
+        if ($transaction->type == 'deduct' && $request->has('amount') && $request->amount != $transaction->amount) {
+            $oldAmount = $transaction->amount;
+            $newAmount = $request->amount;
+            $amountDifference = $newAmount - $oldAmount;
+
+            // تحديث مبلغ المعاملة
+            $updateData['amount'] = $newAmount;
+
+            // الحالة الأولى: زيادة المبلغ (الخصم الإضافي)
+            if ($amountDifference > 0) {
+                // التحقق من أن الرصيد كافي للخصم الإضافي
+                $currentBalance = $wallet->balance;
+                if ($currentBalance < $amountDifference) {
+                    return redirect()->back()
+                        ->with('error', 'الرصيد غير كافي. الرصيد الحالي: ₪' . number_format($currentBalance, 2) . ' والمطلوب: ₪' . number_format($amountDifference, 2));
+                }
+
+                // خصم الفرق من الرصيد
+                $wallet->decrement('balance', $amountDifference);
+
+                // تحديث balance_before و balance_after في المعاملة
+                $updateData['balance_before'] = $transaction->balance_before;
+                $updateData['balance_after'] = $transaction->balance_after - $amountDifference;
+            }
+            // الحالة الثانية: تقليل المبلغ (استرداد)
+            else {
+                $refundAmount = abs($amountDifference);
+
+                // إضافة الفرق للرصيد
+                $wallet->increment('balance', $refundAmount);
+
+                // تحديث balance_before و balance_after في المعاملة
+                $updateData['balance_before'] = $transaction->balance_before;
+                $updateData['balance_after'] = $transaction->balance_after + $refundAmount;
+            }
+        }
+
+        // تحديث المعاملة
+        $transaction->update($updateData);
+
+        $message = 'تم تحديث المعاملة بنجاح';
+        if ($transaction->type == 'debt' && isset($amountDifference)) {
+            $message .= '. تم تحديث الدين في المحفظة';
+        } elseif ($transaction->type == 'deduct' && isset($amountDifference)) {
+            if ($amountDifference > 0) {
+                $message .= '. تم خصم ₪' . number_format($amountDifference, 2) . ' من الرصيد';
+            } else {
+                $message .= '. تم إضافة ₪' . number_format(abs($amountDifference), 2) . ' للرصيد';
+            }
+        }
+
+        return redirect()->back()
+            ->with('success', $message);
+    }
+
+    /**
+     * Add debt to user wallet
+     */
+    public function addDebt(Request $request, User $user)
+    {
+        $request->validate([
+            'debt_amount' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        $wallet = $user->wallet;
+        if (!$wallet) {
+            $wallet = UserWallet::create([
+                'user_id' => $user->id,
+                'balance' => 0,
+                'debt' => 0
+            ]);
+        }
+
+        $debtBefore = $wallet->debt ?? 0;
+        $debtAmount = $request->debt_amount;
+        $debtAfter = $debtBefore + $debtAmount;
+
+        // تحديث الدين
+        $wallet->update([
+            'debt' => $debtAfter
+        ]);
+
+        // حفظ سجل المعاملة للدين
+        WalletTransaction::create([
+            'user_id' => $user->id,
+            'type' => 'debt',
+            'payment_method' => 'cash',
+            'amount' => $debtAmount,
+            'balance_before' => $wallet->balance,
+            'balance_after' => $wallet->balance,
+            'notes' => ($request->notes ? $request->notes . ' | ' : '') . "تسجيل دين. إجمالي الدين: {$debtAfter}",
+            'reference' => 'DEBT-' . time(),
+            'admin_name' => 'مدير النظام'
+        ]);
+
+        return redirect()->back()
+            ->with('success', "تم تسجيل دين بمبلغ {$debtAmount}. إجمالي الدين: {$debtAfter}");
+    }
+
+    /**
+     * Delete all wallet transactions
+     */
+    public function deleteAllTransactions(User $user)
+    {
+        $transactionsCount = $user->walletTransactions()->count();
+
+        if ($transactionsCount == 0) {
+            return redirect()->back()
+                ->with('error', 'لا توجد حركات مالية للحذف');
+        }
+
+        // حذف جميع الحركات المالية
+        $user->walletTransactions()->delete();
+
+        return redirect()->back()
+            ->with('success', "تم حذف {$transactionsCount} حركة مالية بنجاح");
     }
 
     /**
@@ -558,7 +823,7 @@ class UserController extends Controller
     {
         $transactions = $user->walletTransactions()->paginate(20);
         $wallet = $user->wallet;
-        
+
         return view('users.wallet-history', compact('user', 'transactions', 'wallet'));
     }
 }

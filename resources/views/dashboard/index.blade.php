@@ -106,6 +106,172 @@
     </div>
 </div>
 
+<!-- إحصائيات الجلسات -->
+<div class="row mb-4">
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['total_sessions'] }}</h4>
+                        <p class="card-text">إجمالي الجلسات</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-clock fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['active_sessions'] }}</h4>
+                        <p class="card-text">جلسات نشطة</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-play-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['completed_sessions'] }}</h4>
+                        <p class="card-text">جلسات مكتملة</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-check-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['cancelled_sessions'] }}</h4>
+                        <p class="card-text">جلسات ملغاة</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-x-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['active_subscription_sessions'] }}</h4>
+                        <p class="card-text">اشتراكات نشطة</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-calendar-check fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['overdue_subscription_sessions'] }}</h4>
+                        <p class="card-text">اشتراكات متأخرة</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-exclamation-triangle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات المبالغ المرتجعة -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['sessions_needing_refund'] ?? 0 }}</h4>
+                        <p class="card-text">جلسات تحتاج إرجاع</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-arrow-down-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['sessions_with_remaining'] ?? 0 }}</h4>
+                        <p class="card-text">جلسات متبقية للدفع</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-arrow-up-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['fully_paid_sessions'] ?? 0 }}</h4>
+                        <p class="card-text">جلسات مكتملة الدفع</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-check-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-secondary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ $stats['total_sessions'] - ($stats['sessions_needing_refund'] ?? 0) - ($stats['sessions_with_remaining'] ?? 0) - ($stats['fully_paid_sessions'] ?? 0) }}</h4>
+                        <p class="card-text">جلسات بدون دفع</p>
+                    </div>
+                    <div>
+                        <i class="bi bi-x-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- الجلسات الحديثة -->
 <div class="row">
     <div class="col-12">
