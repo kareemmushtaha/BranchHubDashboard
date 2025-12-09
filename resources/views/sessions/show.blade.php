@@ -825,7 +825,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($session->overtimes as $overtime)
+                            @foreach($session->overtimes->sortBy('start_at') as $overtime)
                             @php
                                 $defaultRate = $overtime->getDefaultHourlyRate();
                                 $displayRate = $overtime->hourly_rate ?? $defaultRate;
