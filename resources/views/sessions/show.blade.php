@@ -56,6 +56,25 @@
         </div>
     @endif
 
+    @if($session->session_status == 'active' && $session->isPaused() && !$session->start_at->isFuture())
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-pause-circle-fill me-2 fs-4"></i>
+                <div>
+                    <strong>تنبيه!</strong> هذه الجلسة متوقفة حالياً. تم إيقاف عداد الوقت ولن يتم حساب التكلفة المالية أثناء التوقيف.
+                    <br>
+                    <small class="text-muted">
+                        متوقف منذ: <span class="fw-bold">{{ $session->paused_at->diffForHumans() }}</span>
+                        @if($session->total_paused_duration_minutes > 0)
+                            | إجمالي وقت التوقيف: <span class="fw-bold">{{ $session->total_paused_duration_minutes }} دقيقة</span>
+                        @endif
+                    </small>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">تفاصيل الجلسة #{{ $session->id }}</h1>
         <div>
@@ -65,6 +84,23 @@
                         <i class="bi bi-info-circle"></i>
                         <small>هذه الجلسة نشطة ولكن لم تبدأ بعد. يمكن تعديلها أو إلغاؤها قبل بدايتها.</small>
                     </div>
+                @else
+                    <!-- أزرار توقيف واستئناف الجلسة -->
+                    @if($session->isPaused())
+                        <form action="{{ route('sessions.resume', $session) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-play-circle"></i> استئناف الجلسة
+                            </button>
+                        </form>
+                    @else
+                        <form action="{{ route('sessions.pause', $session) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-warning" onclick="return confirm('هل تريد توقيف هذه الجلسة؟ سيتم إيقاف عداد الوقت.')">
+                                <i class="bi bi-pause-circle"></i> توقيف الجلسة
+                            </button>
+                        </form>
+                    @endif
                 @endif
 
                 @if($session->isSubscription())
@@ -192,15 +228,45 @@
                                         يبدأ {{ $session->start_at->diffForHumans() }}
                                     </small>
                                 @else
-                                    <span class="badge bg-success">نشط</span>
-                                    <br>
-                                    <small class="text-muted">
-                                        <i class="bi bi-play-circle"></i>
-                                        بدأت {{ $session->start_at->diffForHumans() }}
-                                    </small>
+                                    @if($session->isPaused())
+                                        <span class="badge bg-warning">متوقف</span>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-pause-circle"></i>
+                                            متوقف منذ {{ $session->paused_at->diffForHumans() }}
+                                        </small>
+                                        @if($session->total_paused_duration_minutes > 0)
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-hourglass-split"></i>
+                                                إجمالي وقت التوقيف: {{ $session->total_paused_duration_minutes }} دقيقة
+                                            </small>
+                                        @endif
+                                    @else
+                                        <span class="badge bg-success">نشط</span>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-play-circle"></i>
+                                            بدأت {{ $session->start_at->diffForHumans() }}
+                                        </small>
+                                        @if($session->total_paused_duration_minutes > 0)
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-hourglass-split"></i>
+                                                إجمالي وقت التوقيف: {{ $session->total_paused_duration_minutes }} دقيقة
+                                            </small>
+                                        @endif
+                                    @endif
                                 @endif
                             @elseif($session->session_status == 'completed')
                                 <span class="badge bg-primary">مكتمل</span>
+                                @if($session->total_paused_duration_minutes > 0)
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-hourglass-split"></i>
+                                        إجمالي وقت التوقيف: {{ $session->total_paused_duration_minutes }} دقيقة
+                                    </small>
+                                @endif
                             @else
                                 <span class="badge bg-danger">ملغي</span>
                             @endif
@@ -880,6 +946,256 @@
             </div>
         </div>
     @endif
+
+    <!-- سجل عمليات التوقيف والاستئناف -->
+    @php
+        $pauseResumeLogs = $session->auditLogs()
+            ->whereIn('action', ['session_paused', 'session_resumed'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    @endphp
+    
+    @if($pauseResumeLogs->count() > 0 || $session->isPaused())
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-pause-circle"></i>
+                            سجل عمليات التوقيف والاستئناف
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if($pauseResumeLogs->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>نوع العملية</th>
+                                            <th>التاريخ والوقت</th>
+                                            <th>المستخدم</th>
+                                            <th>المدة المتوقفة</th>
+                                            <th>الوصف</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $counter = 1;
+                                            $pauseResumePairs = [];
+                                            $currentPause = null;
+                                            
+                                            // تجميع عمليات التوقيف والاستئناف بشكل زوجي
+                                            foreach($pauseResumeLogs->sortBy('created_at') as $log) {
+                                                if ($log->action === 'session_paused') {
+                                                    $currentPause = $log;
+                                                } elseif ($log->action === 'session_resumed' && $currentPause) {
+                                                    $pauseResumePairs[] = [
+                                                        'pause' => $currentPause,
+                                                        'resume' => $log,
+                                                        'duration' => $currentPause->created_at->diffInMinutes($log->created_at)
+                                                    ];
+                                                    $currentPause = null;
+                                                }
+                                            }
+                                            
+                                            // إذا كان هناك توقيف بدون استئناف
+                                            if ($currentPause) {
+                                                $pauseResumePairs[] = [
+                                                    'pause' => $currentPause,
+                                                    'resume' => null,
+                                                    'duration' => null
+                                                ];
+                                            }
+                                            
+                                            // عكس الترتيب لعرض الأحدث أولاً
+                                            $pauseResumePairs = array_reverse($pauseResumePairs);
+                                        @endphp
+                                        @foreach($pauseResumePairs as $pair)
+                                            @php
+                                                $pauseLog = $pair['pause'];
+                                                $resumeLog = $pair['resume'];
+                                                $pauseDuration = $pair['duration'];
+                                            @endphp
+                                            <!-- سطر التوقيف -->
+                                            <tr class="table-warning">
+                                                <td>{{ $counter++ }}</td>
+                                                <td>
+                                                    <span class="badge bg-warning">
+                                                        <i class="bi bi-pause-circle-fill"></i> توقيف
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div>{{ $pauseLog->created_at->format('Y-m-d') }}</div>
+                                                    <small class="text-muted">{{ $pauseLog->created_at->format('H:i:s') }}</small>
+                                                </td>
+                                                <td>
+                                                    @if($pauseLog->user)
+                                                        <span class="text-primary fw-bold">{{ $pauseLog->user->name }}</span>
+                                                    @else
+                                                        <span class="text-muted">غير محدد</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <span class="text-muted">-</span>
+                                                </td>
+                                                <td>
+                                                    <small>{{ $pauseLog->description }}</small>
+                                                </td>
+                                            </tr>
+                                            <!-- سطر الاستئناف -->
+                                            @if($resumeLog)
+                                                <tr class="table-success">
+                                                    <td>{{ $counter++ }}</td>
+                                                    <td>
+                                                        <span class="badge bg-success">
+                                                            <i class="bi bi-play-circle-fill"></i> استئناف
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div>{{ $resumeLog->created_at->format('Y-m-d') }}</div>
+                                                        <small class="text-muted">{{ $resumeLog->created_at->format('H:i:s') }}</small>
+                                                    </td>
+                                                    <td>
+                                                        @if($resumeLog->user)
+                                                            <span class="text-primary fw-bold">{{ $resumeLog->user->name }}</span>
+                                                        @else
+                                                            <span class="text-muted">غير محدد</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if($pauseDuration !== null)
+                                                            @php
+                                                                $hours = floor($pauseDuration / 60);
+                                                                $minutes = $pauseDuration % 60;
+                                                                $durationParts = [];
+                                                                if ($hours > 0) {
+                                                                    $durationParts[] = $hours . ' ساعة';
+                                                                }
+                                                                if ($minutes > 0) {
+                                                                    $durationParts[] = $minutes . ' دقيقة';
+                                                                }
+                                                                if (empty($durationParts)) {
+                                                                    $durationParts[] = 'أقل من دقيقة';
+                                                                }
+                                                            @endphp
+                                                            <span class="text-info fw-bold">
+                                                                <i class="bi bi-hourglass-split"></i>
+                                                                {{ implode(' و ', $durationParts) }}
+                                                            </span>
+                                                        @else
+                                                            <span class="text-muted">-</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        <small>{{ $resumeLog->description }}</small>
+                                                    </td>
+                                                </tr>
+                                            @else
+                                                <!-- إذا كان التوقيف بدون استئناف (الجلسة متوقفة حالياً) -->
+                                                <tr class="table-warning">
+                                                    <td>{{ $counter++ }}</td>
+                                                    <td>
+                                                        <span class="badge bg-warning">
+                                                            <i class="bi bi-pause-circle-fill"></i> متوقف حالياً
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div>{{ $session->paused_at->format('Y-m-d') }}</div>
+                                                        <small class="text-muted">{{ $session->paused_at->format('H:i:s') }}</small>
+                                                    </td>
+                                                    <td>
+                                                        @if($pauseLog->user)
+                                                            <span class="text-primary fw-bold">{{ $pauseLog->user->name }}</span>
+                                                        @else
+                                                            <span class="text-muted">غير محدد</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @php
+                                                            $currentPauseDuration = $session->paused_at->diffInMinutes(now());
+                                                            $hours = floor($currentPauseDuration / 60);
+                                                            $minutes = $currentPauseDuration % 60;
+                                                            $durationParts = [];
+                                                            if ($hours > 0) {
+                                                                $durationParts[] = $hours . ' ساعة';
+                                                            }
+                                                            if ($minutes > 0) {
+                                                                $durationParts[] = $minutes . ' دقيقة';
+                                                            }
+                                                            if (empty($durationParts)) {
+                                                                $durationParts[] = 'أقل من دقيقة';
+                                                            }
+                                                        @endphp
+                                                        <span class="text-danger fw-bold">
+                                                            <i class="bi bi-hourglass-split"></i>
+                                                            {{ implode(' و ', $durationParts) }} (مستمر)
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <small class="text-muted">الجلسة متوقفة حالياً</small>
+                                                    </td>
+                                                </tr>
+                                            @endif
+                                        @endforeach
+                                        
+                                        @if(!$session->isPaused() && $pauseResumeLogs->where('action', 'session_paused')->count() > $pauseResumeLogs->where('action', 'session_resumed')->count())
+                                            <!-- حالة خاصة: إذا كانت الجلسة غير متوقفة ولكن آخر عملية كانت توقيف -->
+                                            @php
+                                                $lastPauseLog = $pauseResumeLogs->where('action', 'session_paused')->last();
+                                            @endphp
+                                            @if($lastPauseLog && $pauseResumeLogs->where('action', 'session_resumed')->last() && $lastPauseLog->created_at > $pauseResumeLogs->where('action', 'session_resumed')->last()->created_at)
+                                                <!-- لا حاجة لعرض شيء هنا -->
+                                            @endif
+                                        @endif
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-info">
+                                            <td colspan="3"><strong>إجمالي وقت التوقيف:</strong></td>
+                                            <td colspan="3">
+                                                @php
+                                                    $totalMinutes = $session->total_paused_duration_minutes;
+                                                    if ($session->isPaused()) {
+                                                        $totalMinutes += $session->paused_at->diffInMinutes(now());
+                                                    }
+                                                    $totalHours = floor($totalMinutes / 60);
+                                                    $remainingMinutes = $totalMinutes % 60;
+                                                    $totalParts = [];
+                                                    if ($totalHours > 0) {
+                                                        $totalParts[] = $totalHours . ' ساعة';
+                                                    }
+                                                    if ($remainingMinutes > 0) {
+                                                        $totalParts[] = $remainingMinutes . ' دقيقة';
+                                                    }
+                                                    if (empty($totalParts)) {
+                                                        $totalParts[] = 'أقل من دقيقة';
+                                                    }
+                                                @endphp
+                                                <strong class="text-primary">
+                                                    <i class="bi bi-clock-history"></i>
+                                                    {{ implode(' و ', $totalParts) }}
+                                                </strong>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        @else
+                            @if($session->isPaused())
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-pause-circle-fill"></i>
+                                    <strong>الجلسة متوقفة حالياً</strong>
+                                    <br>
+                                    <small>تم التوقيف في: {{ $session->paused_at->format('Y-m-d H:i:s') }}</small>
+                                </div>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Modal إضافة مشروب -->
     @if(($session->session_status == 'active' || $session->session_status == 'completed') && (!$session->user || $session->user->user_type != 'subscription'))
         <div class="modal fade" id="addDrinkModal" tabindex="-1">

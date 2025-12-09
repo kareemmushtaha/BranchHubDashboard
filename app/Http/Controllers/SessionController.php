@@ -1562,6 +1562,62 @@ class SessionController extends Controller
         }
     }
 
+    /**
+     * توقيف الجلسة
+     */
+    public function pauseSession(Request $request, Session $session)
+    {
+        try {
+            // توقيف الجلسة
+            $session->pause();
 
+            // إعادة حساب التكلفة إذا لم تكن هناك تكلفة مخصصة
+            if (!$session->hasCustomInternetCost() && $session->payment) {
+                $this->updateSessionTotal($session);
+            }
+
+            return redirect()->back()
+                ->with('success', 'تم توقيف الجلسة بنجاح. تم إيقاف عداد الوقت.');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error pausing session', [
+                'session_id' => $session->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'حدث خطأ أثناء توقيف الجلسة');
+        }
+    }
+
+    /**
+     * استئناف الجلسة
+     */
+    public function resumeSession(Request $request, Session $session)
+    {
+        try {
+            // استئناف الجلسة
+            $session->resume();
+
+            // إعادة حساب التكلفة إذا لم تكن هناك تكلفة مخصصة
+            if (!$session->hasCustomInternetCost() && $session->payment) {
+                $this->updateSessionTotal($session);
+            }
+
+            return redirect()->back()
+                ->with('success', 'تم استئناف الجلسة بنجاح. تم تفعيل عداد الوقت.');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error resuming session', [
+                'session_id' => $session->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'حدث خطأ أثناء استئناف الجلسة');
+        }
+    }
 
 }

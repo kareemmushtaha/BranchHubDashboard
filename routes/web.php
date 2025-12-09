@@ -193,6 +193,10 @@ Route::post('sessions/{session}/end-subscription', [SessionController::class, 'e
 // Session Note Update Route (available for all sessions including completed)
 Route::put('sessions/{session}/update-note', [SessionController::class, 'updateNote'])->name('sessions.update-note');
 
+// Session Pause/Resume Routes
+Route::post('sessions/{session}/pause', [SessionController::class, 'pauseSession'])->name('sessions.pause');
+Route::post('sessions/{session}/resume', [SessionController::class, 'resumeSession'])->name('sessions.resume');
+
 // Expenses Routes
 Route::resource('expenses', ExpenseController::class);
 
