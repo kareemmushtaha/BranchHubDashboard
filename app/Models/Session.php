@@ -24,13 +24,16 @@ class Session extends Model
         'note_updated_by',
         'session_owner',
         'custom_internet_cost',
-        'custom_overtime_rate'
+        'custom_overtime_rate',
+        'paused_at',
+        'total_paused_duration_minutes'
     ];
 
     protected $casts = [
         'start_at' => 'datetime',
         'end_at' => 'datetime',
         'expected_end_date' => 'datetime',
+        'paused_at' => 'datetime',
     ];
 
     public function user()
@@ -100,27 +103,30 @@ class Session extends Model
     public function formatDuration($endTime = null)
     {
         $endTime = $endTime ?? now();
-        $duration = $this->start_at->diff($endTime);
+        
+        // استخدام المدة الفعلية (بدون فترات التوقيف)
+        $activeDurationMinutes = $this->getActiveDurationInMinutes($endTime);
+        
+        // تحويل الدقائق إلى أيام وساعات ودقائق
+        $days = floor($activeDurationMinutes / (24 * 60));
+        $remainingMinutes = $activeDurationMinutes % (24 * 60);
+        $hours = floor($remainingMinutes / 60);
+        $minutes = $remainingMinutes % 60;
         
         $parts = [];
         
-        if ($duration->days > 0) {
-            $parts[] = $duration->days . ' يوم';
+        if ($days > 0) {
+            $parts[] = $days . ' يوم';
         }
         
-        if ($duration->h > 0) {
-            $parts[] = $duration->h . ' ساعة';
+        if ($hours > 0) {
+            $parts[] = $hours . ' ساعة';
         }
         
-        if ($duration->i > 0) {
-            $parts[] = $duration->i . ' دقيقة';
+        if ($minutes > 0) {
+            $parts[] = $minutes . ' دقيقة';
         }
         
-        if ($duration->s > 0 && count($parts) == 0) {
-            $parts[] = $duration->s . ' ثانية';
-        }
-        
-        // إذا لم تكن هناك أجزاء، اعرض "أقل من دقيقة"
         if (empty($parts)) {
             return 'أقل من دقيقة';
         }
@@ -138,20 +144,20 @@ class Session extends Model
             return $this->custom_internet_cost;
         }
 
-        // حساب التكلفة تلقائياً بناءً على الوقت الفعلي
+        // حساب التكلفة تلقائياً بناءً على الوقت الفعلي (بدون فترات التوقيف)
         $publicPrices = \App\Models\PublicPrice::first();
         $startTime = $this->start_at;
         
         // تحديد وقت الانتهاء: إما وقت الانتهاء الفعلي أو الوقت الحالي
         $endTime = $this->end_at ?? now();
         
-        // حساب المدة بالدقائق ثم تحويلها إلى ساعات
-        $durationInMinutes = $startTime->diffInMinutes($endTime);
-        $durationInHours = $durationInMinutes / 60;
+        // استخدام المدة الفعلية (بدون فترات التوقيف)
+        $activeDurationMinutes = $this->getActiveDurationInMinutes($endTime);
+        $durationInHours = $activeDurationMinutes / 60;
         
         // التأكد من أن المدة لا تقل عن دقيقة واحدة
-        if ($durationInMinutes < 1) {
-            $durationInMinutes = 1;
+        if ($activeDurationMinutes < 1) {
+            $activeDurationMinutes = 1;
             $durationInHours = 1/60;
         }
         
@@ -564,5 +570,138 @@ class Session extends Model
     public function hasCustomOvertimeRate()
     {
         return $this->custom_overtime_rate !== null;
+    }
+
+    /**
+     * التحقق من كون الجلسة متوقفة حالياً
+     */
+    public function isPaused()
+    {
+        return $this->paused_at !== null;
+    }
+
+    /**
+     * توقيف الجلسة
+     */
+    public function pause()
+    {
+        // إذا كانت الجلسة متوقفة بالفعل، لا تفعل شيئاً
+        if ($this->isPaused()) {
+            return $this;
+        }
+
+        // فقط الجلسات الساعية يمكن توقيفها
+        if ($this->session_category !== 'hourly') {
+            throw new \InvalidArgumentException('يمكن توقيف الجلسات الساعية فقط');
+        }
+
+        // إذا كانت الجلسة منتهية أو ملغاة، لا يمكن توقيفها
+        if ($this->session_status !== 'active') {
+            throw new \InvalidArgumentException('لا يمكن توقيف جلسة غير نشطة');
+        }
+
+        // إذا كانت الجلسة لم تبدأ بعد، لا يمكن توقيفها
+        if ($this->start_at->isFuture()) {
+            throw new \InvalidArgumentException('لا يمكن توقيف جلسة لم تبدأ بعد');
+        }
+
+        $this->paused_at = now();
+        $this->save();
+
+        // تسجيل التغيير في سجل التدقيق
+        try {
+            $this->auditLogs()->create([
+                'action' => 'session_paused',
+                'action_type' => 'session',
+                'old_values' => ['paused_at' => null],
+                'new_values' => ['paused_at' => $this->paused_at->format('Y-m-d H:i:s')],
+                'description' => 'تم توقيف الجلسة',
+                'user_id' => auth()->id()
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error creating audit log for session pause', [
+                'session_id' => $this->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * استئناف الجلسة
+     */
+    public function resume()
+    {
+        // إذا كانت الجلسة غير متوقفة، لا تفعل شيئاً
+        if (!$this->isPaused()) {
+            return $this;
+        }
+
+        // فقط الجلسات الساعية يمكن استئنافها
+        if ($this->session_category !== 'hourly') {
+            throw new \InvalidArgumentException('يمكن استئناف الجلسات الساعية فقط');
+        }
+
+        // حساب المدة المتوقفة منذ آخر توقيف
+        $pauseDuration = $this->paused_at->diffInMinutes(now());
+        
+        // إضافة المدة المتوقفة إلى الإجمالي
+        $this->total_paused_duration_minutes += $pauseDuration;
+        
+        $oldPausedAt = $this->paused_at;
+        $this->paused_at = null;
+        $this->save();
+
+        // تسجيل التغيير في سجل التدقيق
+        try {
+            $this->auditLogs()->create([
+                'action' => 'session_resumed',
+                'action_type' => 'session',
+                'old_values' => [
+                    'paused_at' => $oldPausedAt->format('Y-m-d H:i:s'),
+                    'total_paused_duration_minutes' => $this->total_paused_duration_minutes - $pauseDuration
+                ],
+                'new_values' => [
+                    'paused_at' => null,
+                    'total_paused_duration_minutes' => $this->total_paused_duration_minutes
+                ],
+                'description' => 'تم استئناف الجلسة - المدة المتوقفة: ' . $pauseDuration . ' دقيقة',
+                'user_id' => auth()->id()
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error creating audit log for session resume', [
+                'session_id' => $this->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * الحصول على المدة الفعلية للجلسة (بدون فترات التوقيف)
+     */
+    public function getActiveDurationInMinutes($endTime = null)
+    {
+        $endTime = $endTime ?? ($this->end_at ?? now());
+        
+        // حساب المدة الإجمالية
+        $totalDuration = $this->start_at->diffInMinutes($endTime);
+        
+        // حساب إجمالي المدة المتوقفة
+        $totalPausedDuration = $this->total_paused_duration_minutes;
+        
+        // إذا كانت الجلسة متوقفة حالياً، أضف المدة من آخر توقيف حتى الآن
+        if ($this->isPaused()) {
+            $currentPauseDuration = $this->paused_at->diffInMinutes(now());
+            $totalPausedDuration += $currentPauseDuration;
+        }
+        
+        // طرح المدة المتوقفة من الإجمالي
+        $activeDuration = $totalDuration - $totalPausedDuration;
+        
+        // التأكد من أن المدة لا تقل عن صفر
+        return max(0, $activeDuration);
     }
 }
