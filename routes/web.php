@@ -90,6 +90,10 @@ Route::get('users-monthly', [UserController::class, 'monthly'])->name('users.mon
 Route::get('users-hourly', [UserController::class, 'hourly'])->name('users.hourly');
 Route::get('users-prepaid', [UserController::class, 'prepaid'])->name('users.prepaid');
 Route::post('users/{user}/charge-wallet', [UserController::class, 'chargeWallet'])->name('users.charge-wallet');
+Route::post('users/{user}/deduct-wallet', [UserController::class, 'deductWallet'])->name('users.deduct-wallet');
+Route::post('users/{user}/add-debt', [UserController::class, 'addDebt'])->name('users.add-debt');
+Route::delete('users/{user}/wallet-transactions/delete-all', [UserController::class, 'deleteAllTransactions'])->name('users.wallet-transactions.delete-all');
+Route::put('users/{user}/wallet-transactions/{transaction}', [UserController::class, 'updateTransaction'])->name('users.wallet-transactions.update');
 Route::get('users/{user}/wallet-history', [UserController::class, 'walletHistory'])->name('users.wallet-history');
 
 // Soft Delete Routes for Users

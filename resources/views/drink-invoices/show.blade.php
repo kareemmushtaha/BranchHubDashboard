@@ -13,7 +13,7 @@
             <i class="bi bi-printer"></i> عرض للطباعة
         </a>
         <a href="{{ route('drink-invoices.edit', $drinkInvoice) }}" class="btn btn-warning">
-            <i class="bi bi-pencil"></i> تعديل
+            <i class="bi bi-pencil"></i> انهاء الفاتورة ودفع
         </a>
         <a href="{{ route('drink-invoices.index') }}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> العودة
@@ -61,7 +61,7 @@
                 </div>
                 <hr>
                 <div class="row">
-                    <div class="col-sm-6"><strong>حالة الدفع:</strong></div>
+                    <div class="col-sm-6"><strong>حالة الفاتورة المالية:</strong></div>
                     <div class="col-sm-6">
                         @if($drinkInvoice->payment_status == 'pending')
                             <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded" style="background-color: #fff3cd; border: 2px solid #ffc107;">
@@ -139,7 +139,7 @@
                 <h5 class="card-title mb-0">المشروبات المطلوبة</h5>
                 @if($drinkInvoice->payment_status != 'paid')
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addDrinkModal">
-                    <i class="bi bi-plus-circle"></i> إضافة مشروب
+                    <i class="bi bi-plus-circle"></i> إضافة مشروب للفاتورة
                 </button>
                 @else
                 <div class="d-flex align-items-center gap-2">
@@ -147,11 +147,9 @@
                         <i class="bi bi-info-circle"></i> لا يمكن إضافة مشروبات للفاتورة المدفوعة بالكامل
                     </span>
                     <a href="{{ route('drink-invoices.create') }}?user_id={{ $drinkInvoice->user_id }}" class="btn btn-success btn-sm">
-                        <i class="bi bi-file-earmark-plus"></i> فاتورة جديدة
+                        <i class="bi bi-file-earmark-plus"></i>فتح فاتورة جديدة 
                     </a>
-                    <a href="{{ route('drink-invoices.edit', $drinkInvoice) }}" class="btn btn-warning btn-sm">
-                        <i class="bi bi-pencil"></i> تغيير الحالة
-                    </a>
+                   
                 </div>
                 @endif
             </div>
@@ -160,8 +158,8 @@
                 <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
                     <i class="bi bi-exclamation-circle-fill me-2"></i>
                     <div>
-                        <strong>تنبيه:</strong> لا يمكن إضافة مشروبات لأن الفاتورة مدفوعة بالكامل. 
-                        يمكنك <a href="{{ route('drink-invoices.create') }}?user_id={{ $drinkInvoice->user_id }}" class="alert-link">فتح فاتورة جديدة</a> 
+                        <strong>تنبيه:</strong> لا يمكن إضافة مشروبات لأن الفاتورة مدفوعة بالكامل.
+                        يمكنك <a href="{{ route('drink-invoices.create') }}?user_id={{ $drinkInvoice->user_id }}" class="alert-link">فتح فاتورة جديدة</a>
                         أو <a href="{{ route('drink-invoices.edit', $drinkInvoice) }}" class="alert-link">تغيير حالة الفاتورة</a> إلى غير مدفوعة بالكامل.
                     </div>
                 </div>
@@ -268,7 +266,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="quantity" class="form-label">عدد المشروبات</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" 
+                        <input type="number" class="form-control" id="quantity" name="quantity"
                                min="1" value="1" {{ $drinkInvoice->payment_status == 'paid' ? 'disabled' : 'required' }}>
                     </div>
                     <div class="mb-3">
@@ -277,12 +275,12 @@
                     </div>
                     <div class="mb-3">
                         <label for="drink_date" class="form-label">تاريخ إضافة المشروب</label>
-                        <input type="datetime-local" class="form-control" id="drink_date" name="created_at" 
+                        <input type="datetime-local" class="form-control" id="drink_date" name="created_at"
                                value="{{ date('Y-m-d\TH:i') }}" {{ $drinkInvoice->payment_status == 'paid' ? 'disabled' : 'required' }}>
                     </div>
                     <div class="mb-3">
                         <label for="drink_note" class="form-label">ملاحظات</label>
-                        <input type="text" class="form-control" id="drink_note" name="note" 
+                        <input type="text" class="form-control" id="drink_note" name="note"
                                placeholder="ملاحظات إضافية (اختياري)" {{ $drinkInvoice->payment_status == 'paid' ? 'disabled' : '' }}>
                     </div>
                 </div>
@@ -314,8 +312,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="drink_date_{{ $item->id }}" class="form-label">تاريخ ووقت الطلب</label>
-                        <input type="datetime-local" class="form-control" id="drink_date_{{ $item->id }}" 
-                               name="created_at" 
+                        <input type="datetime-local" class="form-control" id="drink_date_{{ $item->id }}"
+                               name="created_at"
                                value="{{ $item->created_at->format('Y-m-d\TH:i') }}" required>
                         <div class="form-text">اختر التاريخ والوقت الجديد لطلب المشروب</div>
                     </div>
@@ -355,15 +353,15 @@
                     </div>
                     <div class="mb-3">
                         <label for="quantity_{{ $item->id }}" class="form-label">الكمية</label>
-                        <input type="number" step="1" min="1" class="form-control" id="quantity_{{ $item->id }}" 
-                               name="quantity" 
+                        <input type="number" step="1" min="1" class="form-control" id="quantity_{{ $item->id }}"
+                               name="quantity"
                                value="{{ $item->quantity ?? 1 }}" required>
                         <div class="form-text">الكمية الحالية: {{ $item->quantity ?? 1 }}</div>
                     </div>
                     <div class="mb-3">
                         <label for="unit_price_{{ $item->id }}" class="form-label">سعر الواحدة (₪)</label>
-                        <input type="number" step="0.01" min="0" class="form-control" id="unit_price_{{ $item->id }}" 
-                               name="unit_price" 
+                        <input type="number" step="0.01" min="0" class="form-control" id="unit_price_{{ $item->id }}"
+                               name="unit_price"
                                value="{{ $item->unit_price ?? $item->drink->price ?? 0 }}" required>
                         <div class="form-text">السعر الحالي: ₪{{ number_format($item->unit_price ?? $item->drink->price ?? 0, 2) }}</div>
                     </div>
@@ -392,34 +390,34 @@
 document.addEventListener('DOMContentLoaded', function() {
     const drinkSelect = document.getElementById('drink_id');
     const quantityInput = document.getElementById('quantity');
-    
+
     function updateTotalPrice() {
         const selectedOption = drinkSelect.options[drinkSelect.selectedIndex];
         const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
         const quantity = parseInt(quantityInput.value) || 1;
         const totalPrice = price * quantity;
-        
+
         const totalPriceDisplay = document.getElementById('total_price_display');
         if (totalPriceDisplay) {
             totalPriceDisplay.textContent = '₪' + totalPrice.toFixed(2);
         }
     }
-    
+
     if (drinkSelect) {
         drinkSelect.addEventListener('change', updateTotalPrice);
     }
-    
+
     if (quantityInput) {
         quantityInput.addEventListener('input', updateTotalPrice);
     }
-    
+
     // حساب السعر الإجمالي الجديد عند تعديل سعر الواحدة أو الكمية
     @foreach($drinkInvoice->items as $item)
     (function() {
         const unitPriceInput{{ $item->id }} = document.getElementById('unit_price_{{ $item->id }}');
         const quantityInput{{ $item->id }} = document.getElementById('quantity_{{ $item->id }}');
         const newTotalPriceDisplay{{ $item->id }} = document.getElementById('new_total_price_{{ $item->id }}');
-        
+
         if (unitPriceInput{{ $item->id }} && quantityInput{{ $item->id }} && newTotalPriceDisplay{{ $item->id }}) {
             function updateNewTotalPrice{{ $item->id }}() {
                 const unitPrice = parseFloat(unitPriceInput{{ $item->id }}.value) || 0;
@@ -427,7 +425,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newTotalPrice = unitPrice * quantity;
                 newTotalPriceDisplay{{ $item->id }}.textContent = '₪' + newTotalPrice.toFixed(2);
             }
-            
+
             unitPriceInput{{ $item->id }}.addEventListener('input', updateNewTotalPrice{{ $item->id }});
             unitPriceInput{{ $item->id }}.addEventListener('change', updateNewTotalPrice{{ $item->id }});
             quantityInput{{ $item->id }}.addEventListener('input', updateNewTotalPrice{{ $item->id }});

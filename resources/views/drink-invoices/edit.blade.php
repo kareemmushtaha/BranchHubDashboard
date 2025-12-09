@@ -51,15 +51,17 @@
                     </div>
                     <div class="mb-3">
                         <label for="payment_status" class="form-label">حالة الدفع</label>
-                        <select class="form-select @error('payment_status') is-invalid @enderror" id="payment_status" name="payment_status" required>
+                        <select class="form-select @error('payment_status') is-invalid @enderror" id="payment_status" name="payment_status" required disabled>
                             <option value="pending" {{ old('payment_status', $drinkInvoice->payment_status) == 'pending' ? 'selected' : '' }}>قيد الانتظار</option>
                             <option value="paid" {{ old('payment_status', $drinkInvoice->payment_status) == 'paid' ? 'selected' : '' }}>مدفوع بالكامل</option>
                             <option value="partial" {{ old('payment_status', $drinkInvoice->payment_status) == 'partial' ? 'selected' : '' }}>مدفوع جزئياً</option>
                             <option value="cancelled" {{ old('payment_status', $drinkInvoice->payment_status) == 'cancelled' ? 'selected' : '' }}>ملغي</option>
                         </select>
+                        <input type="hidden" id="payment_status_hidden" name="payment_status" value="{{ old('payment_status', $drinkInvoice->payment_status) }}">
                         @error('payment_status')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                        <small class="form-text text-muted">يتم تحديث حالة الدفع تلقائياً بناءً على المبالغ المدخلة</small>
                     </div>
                     <div class="mb-3">
                         <label for="note" class="form-label">ملاحظات</label>
@@ -111,6 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const amountBank = parseFloat(amountBankInput.value) || 0;
         const amountCash = parseFloat(amountCashInput.value) || 0;
         const totalPaid = amountBank + amountCash;
+        const paymentStatusHidden = document.getElementById('payment_status_hidden');
         
         // التحقق من المبالغ أولاً
         validateAmounts();
@@ -122,11 +125,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStatus !== 'cancelled' && totalPaid <= totalPrice) {
             if (totalPaid === 0) {
                 paymentStatusSelect.value = 'pending';
+                paymentStatusHidden.value = 'pending';
             } else if (Math.abs(totalPaid - totalPrice) < 0.01) { // استخدام tolerance للتعامل مع الأرقام العشرية
                 paymentStatusSelect.value = 'paid';
+                paymentStatusHidden.value = 'paid';
             } else if (totalPaid > 0 && totalPaid < totalPrice) {
                 paymentStatusSelect.value = 'partial';
+                paymentStatusHidden.value = 'partial';
             }
+        } else {
+            // تحديث الحقل المخفي بالقيمة الحالية
+            paymentStatusHidden.value = paymentStatusSelect.value;
         }
     }
 

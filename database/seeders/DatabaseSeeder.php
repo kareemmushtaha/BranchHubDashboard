@@ -13,11 +13,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // إنشاء مستخدم تجريبي
+        // إنشاء مستخدم إداري
         User::factory()->create([
             'name' => 'مدير النظام',
             'email' => 'admin@workspace.com',
-            'user_type' => 'hourly',
+            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+            'user_type' => 'admin',
             'phone' => '1234567890',
             'status' => 'active'
         ]);

@@ -24,11 +24,17 @@ class SessionController extends Controller
         $query = Session::with(['user', 'creator', 'payment']);
 
         // Filter by session category
-        // إذا لم يكن هناك نوع محدد في الطلب، استخدم "hourly" كقيمة افتراضية
-        if ($request->has('session_category') && $request->session_category !== '') {
-            $query->where('session_category', $request->session_category);
+        // إذا كان هناك نوع محدد في الطلب وليس فارغاً، قم بتطبيق الفلتر
+        // إذا كان المستخدم اختار "جميع الأنواع" (قيمة فارغة)، لا تطبق فلتر
+        // إذا لم يكن هناك session_category في الطلب على الإطلاق (الصفحة الأولى)، استخدم "hourly" كقيمة افتراضية
+        if ($request->has('session_category')) {
+            // إذا كان المستخدم اختار قيمة محددة، طبق الفلتر
+            if ($request->session_category !== '') {
+                $query->where('session_category', $request->session_category);
+            }
+            // إذا كان المستخدم اختار "جميع الأنواع" (قيمة فارغة)، لا تطبق فلتر
         } else {
-            // إذا لم يكن هناك نوع محدد في الطلب، استخدم "hourly" تلقائياً
+            // إذا لم يكن هناك session_category في الطلب على الإطلاق، استخدم "hourly" كقيمة افتراضية
             $query->where('session_category', 'hourly');
         }
 
@@ -43,7 +49,7 @@ class SessionController extends Controller
         }
         // إذا كان session_status === 'all'، لا تطبق فلتر (عرض كل الحالات)
 
-        // Search by user name or session owner name
+        // Search by user name, session owner name, or session notes
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
@@ -54,7 +60,9 @@ class SessionController extends Controller
                               ->orWhere('phone', 'like', '%' . $searchTerm . '%');
                 })
                 // Search in session owner name
-                ->orWhere('session_owner', 'like', '%' . $searchTerm . '%');
+                ->orWhere('session_owner', 'like', '%' . $searchTerm . '%')
+                // Search in session notes
+                ->orWhere('note', 'like', '%' . $searchTerm . '%');
             });
         }
 
@@ -110,16 +118,30 @@ class SessionController extends Controller
         $sessions = $query->orderBy('id', 'desc')->paginate(20);
 
         // Keep filter parameters in pagination links
-        $sessions->appends($request->query());
+        // إضافة القيمة الافتراضية لـ session_category فقط إذا لم تكن موجودة في الطلب على الإطلاق
+        $queryParams = $request->query();
+        if (!isset($queryParams['session_category'])) {
+            // إذا لم يكن موجوداً في الطلب على الإطلاق، أضف 'hourly' كافتراضي
+            $queryParams['session_category'] = 'hourly';
+        }
+        // إذا كان موجوداً ولكنه فارغ (المستخدم اختار "جميع الأنواع"), اتركه كما هو
+        $sessions->appends($queryParams);
 
         // Calculate stats (apply same filters to stats)
         $statsQuery = Session::query();
 
         // Apply same filters to stats
-        if ($request->has('session_category') && $request->session_category !== '') {
-            $statsQuery->where('session_category', $request->session_category);
+        // إذا كان هناك نوع محدد في الطلب وليس فارغاً، قم بتطبيق الفلتر
+        // إذا كان المستخدم اختار "جميع الأنواع" (قيمة فارغة)، لا تطبق فلتر
+        // إذا لم يكن هناك session_category في الطلب على الإطلاق (الصفحة الأولى)، استخدم "hourly" كقيمة افتراضية
+        if ($request->has('session_category')) {
+            // إذا كان المستخدم اختار قيمة محددة، طبق الفلتر
+            if ($request->session_category !== '') {
+                $statsQuery->where('session_category', $request->session_category);
+            }
+            // إذا كان المستخدم اختار "جميع الأنواع" (قيمة فارغة)، لا تطبق فلتر
         } else {
-            // إذا لم يكن هناك نوع محدد في الطلب، استخدم "hourly" تلقائياً
+            // إذا لم يكن هناك session_category في الطلب على الإطلاق، استخدم "hourly" كقيمة افتراضية
             $statsQuery->where('session_category', 'hourly');
         }
 
@@ -144,7 +166,9 @@ class SessionController extends Controller
                               ->orWhere('phone', 'like', '%' . $searchTerm . '%');
                 })
                 // Search in session owner name
-                ->orWhere('session_owner', 'like', '%' . $searchTerm . '%');
+                ->orWhere('session_owner', 'like', '%' . $searchTerm . '%')
+                // Search in session notes
+                ->orWhere('note', 'like', '%' . $searchTerm . '%');
             });
         }
 
@@ -223,8 +247,7 @@ class SessionController extends Controller
         // Available categories for filter dropdown
         $categories = [
             'hourly' => 'ساعي',
-            'subscription' => 'شهري (اشتراك)',
-            'overtime' => 'إضافي'
+            'subscription' => 'اشتراك'
         ];
 
         return view('sessions.index', compact('sessions', 'stats', 'categories'));
@@ -319,7 +342,7 @@ class SessionController extends Controller
         // Available categories for filter dropdown
         $categories = [
             'hourly' => 'ساعي',
-            'subscription' => 'شهري (اشتراك)',
+            'subscription' => '(اشتراكات)',
             'overtime' => 'إضافي'
         ];
 
