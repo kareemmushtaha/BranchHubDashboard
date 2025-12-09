@@ -590,6 +590,11 @@ class Session extends Model
             return $this;
         }
 
+        // فقط الجلسات الساعية يمكن توقيفها
+        if ($this->session_category !== 'hourly') {
+            throw new \InvalidArgumentException('يمكن توقيف الجلسات الساعية فقط');
+        }
+
         // إذا كانت الجلسة منتهية أو ملغاة، لا يمكن توقيفها
         if ($this->session_status !== 'active') {
             throw new \InvalidArgumentException('لا يمكن توقيف جلسة غير نشطة');
@@ -631,6 +636,11 @@ class Session extends Model
         // إذا كانت الجلسة غير متوقفة، لا تفعل شيئاً
         if (!$this->isPaused()) {
             return $this;
+        }
+
+        // فقط الجلسات الساعية يمكن استئنافها
+        if ($this->session_category !== 'hourly') {
+            throw new \InvalidArgumentException('يمكن استئناف الجلسات الساعية فقط');
         }
 
         // حساب المدة المتوقفة منذ آخر توقيف

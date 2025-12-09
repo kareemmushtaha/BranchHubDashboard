@@ -56,7 +56,7 @@
         </div>
     @endif
 
-    @if($session->session_status == 'active' && $session->isPaused() && !$session->start_at->isFuture())
+    @if($session->session_status == 'active' && $session->isPaused() && !$session->start_at->isFuture() && $session->session_category == 'hourly')
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
             <div class="d-flex align-items-center">
                 <i class="bi bi-pause-circle-fill me-2 fs-4"></i>
@@ -85,21 +85,23 @@
                         <small>هذه الجلسة نشطة ولكن لم تبدأ بعد. يمكن تعديلها أو إلغاؤها قبل بدايتها.</small>
                     </div>
                 @else
-                    <!-- أزرار توقيف واستئناف الجلسة -->
-                    @if($session->isPaused())
-                        <form action="{{ route('sessions.resume', $session) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-play-circle"></i> استئناف الجلسة
-                            </button>
-                        </form>
-                    @else
-                        <form action="{{ route('sessions.pause', $session) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-warning" onclick="return confirm('هل تريد توقيف هذه الجلسة؟ سيتم إيقاف عداد الوقت.')">
-                                <i class="bi bi-pause-circle"></i> توقيف الجلسة
-                            </button>
-                        </form>
+                    <!-- أزرار توقيف واستئناف الجلسة - فقط للجلسات الساعية -->
+                    @if($session->session_category == 'hourly')
+                        @if($session->isPaused())
+                            <form action="{{ route('sessions.resume', $session) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-play-circle"></i> استئناف الجلسة
+                                </button>
+                            </form>
+                        @else
+                            <form action="{{ route('sessions.pause', $session) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-warning" onclick="return confirm('هل تريد توقيف هذه الجلسة؟ سيتم إيقاف عداد الوقت.')">
+                                    <i class="bi bi-pause-circle"></i> توقيف مؤقت للجلسة
+                                </button>
+                            </form>
+                        @endif
                     @endif
                 @endif
 
@@ -947,21 +949,22 @@
         </div>
     @endif
 
-    <!-- سجل عمليات التوقيف والاستئناف -->
-    @php
-        $pauseResumeLogs = $session->auditLogs()
-            ->whereIn('action', ['session_paused', 'session_resumed'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-    @endphp
-    
-    @if($pauseResumeLogs->count() > 0 || $session->isPaused())
+    <!-- سجل عمليات التوقيف والاستئناف - فقط للجلسات الساعية -->
+    @if($session->session_category == 'hourly')
+        @php
+            $pauseResumeLogs = $session->auditLogs()
+                ->whereIn('action', ['session_paused', 'session_resumed'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        @endphp
+        
+        @if($pauseResumeLogs->count() > 0 || $session->isPaused())
         <div class="row">
-            <div class="col-12">
+            <div class="col-12 mt-5">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-pause-circle"></i>
+                    <div class="card-header bg-warning bg-opacity-10 border-warning">
+                        <h5 class="card-title mb-0 text-warning fw-bold">
+                            <i class="bi bi-pause-circle-fill"></i>
                             سجل عمليات التوقيف والاستئناف
                         </h5>
                     </div>
@@ -1194,6 +1197,7 @@
                 </div>
             </div>
         </div>
+        @endif
     @endif
 
     <!-- Modal إضافة مشروب -->
