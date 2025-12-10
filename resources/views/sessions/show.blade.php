@@ -309,6 +309,9 @@
                         <div class="col-sm-6">
                             @if($session->end_at)
                                 {{ $session->end_at->format('Y-m-d H:i:s') }}
+                                <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#editEndTimeModal">
+                                    <i class="bi bi-pencil"></i> تعديل
+                                </button>
                             @else
                                 <span class="text-success">لا تزال نشطة</span>
                             @endif
@@ -1751,6 +1754,51 @@
 
                         <div class="mb-3">
                             <label class="form-label">التاريخ الحالي</label>
+                            <div class="form-control-plaintext">{{ $session->start_at->format('Y-m-d H:i:s') }}</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> حفظ التغييرات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal تعديل تاريخ نهاية الجلسة -->
+    <div class="modal fade" id="editEndTimeModal" tabindex="-1" aria-labelledby="editEndTimeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editEndTimeModalLabel">تعديل تاريخ نهاية الجلسة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('sessions.update-end-time', $session) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>تنبيه:</strong> عند تغيير تاريخ نهاية الجلسة، سيتم إعادة حساب تكلفة الإنترنت تلقائياً إذا لم تكن هناك تكلفة مخصصة.
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="end_time" class="form-label">تاريخ ووقت نهاية الجلسة</label>
+                            <input type="datetime-local" class="form-control" id="end_time" name="end_time"
+                                   value="{{ $session->end_at ? $session->end_at->format('Y-m-d\TH:i') : '' }}" required>
+                            <div class="form-text">اختر التاريخ والوقت الجديد لنهاية الجلسة</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">التاريخ الحالي</label>
+                            <div class="form-control-plaintext">{{ $session->end_at ? $session->end_at->format('Y-m-d H:i:s') : 'لا تزال نشطة' }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">تاريخ بداية الجلسة</label>
                             <div class="form-control-plaintext">{{ $session->start_at->format('Y-m-d H:i:s') }}</div>
                         </div>
                     </div>

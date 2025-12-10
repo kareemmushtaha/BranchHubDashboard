@@ -1389,6 +1389,75 @@ class SessionController extends Controller
     }
 
     /**
+     * Update session end time
+     */
+    public function updateEndTime(Request $request, Session $session)
+    {
+        $request->validate([
+            'end_time' => 'required|date_format:Y-m-d\TH:i',
+        ]);
+
+        try {
+            $oldEndTime = $session->end_at;
+            $newEndTime = Carbon::createFromFormat('Y-m-d\TH:i', $request->end_time);
+
+            // التأكد من أن تاريخ النهاية بعد تاريخ البداية
+            if ($newEndTime <= $session->start_at) {
+                return redirect()->back()->with('error', 'تاريخ نهاية الجلسة يجب أن يكون بعد تاريخ البداية');
+            }
+
+            // تحديث تاريخ النهاية
+            $session->end_at = $newEndTime;
+            
+            // إذا كانت الجلسة نشطة، قم بتغيير حالتها إلى مكتملة
+            if ($session->session_status === 'active') {
+                $session->session_status = 'completed';
+            }
+            
+            $session->save();
+
+            // إعادة حساب التكلفة إذا لم تكن هناك تكلفة مخصصة
+            if (!$session->hasCustomInternetCost() && $session->payment) {
+                $this->updateSessionTotal($session);
+            }
+
+            // تسجيل التغيير في سجل التدقيق
+            try {
+                $session->auditLogs()->create([
+                    'action' => 'end_time_updated',
+                    'action_type' => 'session',
+                    'old_values' => ['end_at' => $oldEndTime ? $oldEndTime->format('Y-m-d H:i:s') : null],
+                    'new_values' => ['end_at' => $newEndTime->format('Y-m-d H:i:s')],
+                    'description' => 'تم تحديث تاريخ نهاية الجلسة',
+                    'user_id' => auth()->id()
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Error creating audit log for end time update', [
+                    'session_id' => $session->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            $message = 'تم تحديث تاريخ نهاية الجلسة بنجاح إلى: ' . $newEndTime->format('Y-m-d H:i:s');
+            
+            if (!$session->hasCustomInternetCost()) {
+                $message .= ' - تم إعادة حساب التكلفة تلقائياً';
+            }
+
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            \Log::error('Error updating session end time', [
+                'session_id' => $session->id,
+                'request_data' => $request->all(),
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'حدث خطأ أثناء تحديث تاريخ نهاية الجلسة: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Update expected end date for subscription sessions
      */
     public function updateExpectedEndDate(Request $request, Session $session)
