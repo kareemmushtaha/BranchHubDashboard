@@ -184,6 +184,7 @@ Route::post('sessions/update-all-pricing', [SessionPriceController::class, 'upda
 
 // Session Start Time Update Route
 Route::put('sessions/{session}/update-start-time', [SessionController::class, 'updateStartTime'])->name('sessions.update-start-time');
+Route::put('sessions/{session}/update-end-time', [SessionController::class, 'updateEndTime'])->name('sessions.update-end-time');
 Route::get('sessions/real-time-stats', [SessionPriceController::class, 'getRealTimePricingStats'])->name('sessions.real-time-stats');
 
 // Subscription Session Management Routes
