@@ -15,6 +15,8 @@ $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use App\Models\User;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Cache;
+use Spatie\Permission\PermissionRegistrar;
 
 // Get email from command line argument
 $email = $argv[1] ?? null;
@@ -45,12 +47,31 @@ try {
     // Assign admin role
     $user->assignRole('admin');
     
+    // Ensure admin role has ALL permissions
+    $allPermissions = \Spatie\Permission\Models\Permission::all();
+    $adminRole->syncPermissions($allPermissions);
+    
     echo "SUCCESS: Admin role assigned to user: {$email}\n";
     echo "User: {$user->name} ({$user->email})\n";
+    echo "Admin role now has " . $allPermissions->count() . " permissions.\n";
     
     // Clear permission cache
-    \Artisan::call('permission:cache-reset');
-    echo "Permission cache cleared.\n";
+    try {
+        \Artisan::call('permission:cache-reset');
+        echo "Permission cache cleared.\n";
+    } catch (\Exception $e) {
+        // Alternative method: clear cache directly
+        $permissionRegistrar = app(PermissionRegistrar::class);
+        $permissionRegistrar->forgetCachedPermissions();
+        Cache::forget('spatie.permission.cache');
+        echo "Permission cache cleared (alternative method).\n";
+    }
+    
+    // Verify
+    $user->refresh();
+    if ($user->hasRole('admin')) {
+        echo "VERIFIED: User has admin role with " . $user->getAllPermissions()->count() . " permissions.\n";
+    }
     
 } catch (\Exception $e) {
     echo "ERROR: " . $e->getMessage() . "\n";
