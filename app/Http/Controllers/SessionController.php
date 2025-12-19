@@ -21,6 +21,7 @@ class SessionController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view sessions');
         $query = Session::with(['user', 'creator', 'payment']);
 
         // Filter by session category
@@ -258,6 +259,7 @@ class SessionController extends Controller
      */
     public function overdue(Request $request)
     {
+        $this->authorize('view sessions overdue');
         $query = Session::with(['user', 'payment'])
             ->where('session_status', 'active') // Only active sessions can be overdue
             ->whereNull('end_at'); // Not completed yet
@@ -354,6 +356,7 @@ class SessionController extends Controller
      */
     public function create()
     {
+        $this->authorize('create sessions');
         // جلب جميع المستخدمين المؤهلين لبدء جلسة جديدة
         // يجب أن لا يكون لديهم جلسة نشطة حالياً
         $users = User::where('status', 'active')
@@ -406,6 +409,7 @@ class SessionController extends Controller
      */
     public function createForUser(User $user)
     {
+        $this->authorize('create session for user');
         // التحقق من أن المستخدم نشط
         if ($user->status !== 'active') {
             return redirect()->back()
@@ -448,6 +452,7 @@ class SessionController extends Controller
      */
     public function show(Session $session)
     {
+        $this->authorize('view sessions');
         $session->load(['user', 'creator', 'noteUpdater', 'payment', 'drinks.drink', 'overtimes']);
         $drinks = Drink::where('status', 'available')->get();
 
@@ -459,6 +464,7 @@ class SessionController extends Controller
      */
     public function edit(Session $session)
     {
+        $this->authorize('edit sessions');
         $users = User::where('status', 'active')
             ->orderBy('id', 'asc')
             ->get();
@@ -471,6 +477,7 @@ class SessionController extends Controller
      */
     public function update(Request $request, Session $session)
     {
+        $this->authorize('edit sessions');
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'session_category' => 'required|in:hourly,prepaid,subscription,overtime',
@@ -521,6 +528,7 @@ class SessionController extends Controller
      */
     public function cancel(Session $session)
     {
+        $this->authorize('cancel session');
         $session->update(['session_status' => 'cancelled']);
 
         return redirect()->route('sessions.index')
@@ -532,6 +540,7 @@ class SessionController extends Controller
      */
     public function endSession(Request $request, Session $session)
     {
+        $this->authorize('end session');
         if ($session->session_status !== 'active') {
             return redirect()->back()->with('error', 'الجلسة غير نشطة');
         }
@@ -553,6 +562,7 @@ class SessionController extends Controller
      */
     public function addDrink(Request $request, Session $session)
     {
+        $this->authorize('add drink to session');
         // التحقق من أن الجلسة نشطة أو مكتملة
         if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
             return redirect()->back()->with('error', 'لا يمكن إضافة مشروبات للجلسات الملغية');
@@ -618,6 +628,7 @@ class SessionController extends Controller
      */
     public function removeDrink(Session $session, SessionDrink $sessionDrink)
     {
+        $this->authorize('remove drink from session');
         // التحقق من أن الجلسة نشطة أو مكتملة
         if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
             return redirect()->back()->with('error', 'لا يمكن حذف المشروبات من الجلسات الملغية');
@@ -673,6 +684,7 @@ class SessionController extends Controller
      */
     public function updateDrinkDate(Request $request, Session $session, SessionDrink $sessionDrink)
     {
+        $this->authorize('update session drink date');
         // التحقق من أن الجلسة نشطة أو مكتملة
         if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
             return redirect()->back()->with('error', 'لا يمكن تعديل تاريخ المشروبات في الجلسات الملغية');
@@ -717,6 +729,8 @@ class SessionController extends Controller
      */
     public function updateDrinkPrice(Request $request, Session $session, SessionDrink $sessionDrink)
     {
+        $this->authorize('update session drink price');
+        $this->authorize('update session drink price');
         // التحقق من أن الجلسة نشطة أو مكتملة
         if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
             return redirect()->back()->with('error', 'لا يمكن تعديل سعر المشروبات في الجلسات الملغية');
@@ -839,6 +853,7 @@ class SessionController extends Controller
      */
     public function updateOvertimeRate(Request $request, Session $session)
     {
+        $this->authorize('update overtime rate');
         // التحقق من أن الجلسة نشطة أو مكتملة
         if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
             return redirect()->back()->with('error', 'لا يمكن تعديل سعر الساعات الإضافية للجلسات الملغية');
@@ -882,6 +897,7 @@ class SessionController extends Controller
      */
     public function updateOvertime(Request $request, Session $session, \App\Models\SessionOvertime $overtime)
     {
+        $this->authorize('update overtime');
         // التحقق من أن الجلسة نشطة أو مكتملة
         if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
             return redirect()->back()->with('error', 'لا يمكن تعديل الساعات الإضافية في الجلسات الملغية');
@@ -957,6 +973,7 @@ class SessionController extends Controller
      */
     public function removeOvertime(Session $session, \App\Models\SessionOvertime $overtime)
     {
+        $this->authorize('remove overtime from session');
         // التحقق من أن الجلسة نشطة أو مكتملة
         if ($session->session_status !== 'active' && $session->session_status !== 'completed') {
             return redirect()->back()->with('error', 'لا يمكن حذف الساعات الإضافية من الجلسات الملغية');
@@ -1065,6 +1082,7 @@ class SessionController extends Controller
      */
     public function destroy(Session $session)
     {
+        $this->authorize('delete sessions');
         // التحقق من أن الجلسة ليست نشطة
         if ($session->session_status === 'active') {
             return redirect()->back()->with('error', "لا يمكن حذف الجلسة النشطة رقم #{$session->id}. يجب إنهاؤها أولاً قبل الحذف.");
@@ -1080,6 +1098,7 @@ class SessionController extends Controller
      */
     public function trashed()
     {
+        $this->authorize('view trashed sessions');
         $trashedSessions = Session::onlyTrashed()
             ->with(['user', 'payment'])
             ->orderBy('deleted_at', 'desc')
@@ -1099,6 +1118,7 @@ class SessionController extends Controller
      */
     public function restore($id)
     {
+        $this->authorize('restore sessions');
         $session = Session::onlyTrashed()->findOrFail($id);
         $session->restore();
 
@@ -1111,6 +1131,7 @@ class SessionController extends Controller
      */
     public function forceDelete($id)
     {
+        $this->authorize('force delete sessions');
         $session = Session::onlyTrashed()->findOrFail($id);
 
         // حذف المدفوعات والمشروبات المرتبطة
@@ -1169,6 +1190,7 @@ class SessionController extends Controller
      */
     public function bulkRestore(Request $request)
     {
+        $this->authorize('restore sessions');
         $request->validate([
             'session_ids' => 'required|array|min:1',
             'session_ids.*' => 'integer'
@@ -1193,6 +1215,7 @@ class SessionController extends Controller
      */
     public function bulkForceDelete(Request $request)
     {
+        $this->authorize('force delete sessions');
         $request->validate([
             'session_ids' => 'required|array|min:1',
             'session_ids.*' => 'integer'
@@ -1281,6 +1304,7 @@ class SessionController extends Controller
      */
     public function updateInternetCost(Request $request, Session $session)
     {
+        $this->authorize('update internet cost');
         $request->validate([
             'custom_internet_cost' => 'nullable|numeric|min:0',
         ]);
@@ -1337,6 +1361,7 @@ class SessionController extends Controller
      */
     public function updateStartTime(Request $request, Session $session)
     {
+        $this->authorize('update session start time');
         $request->validate([
             'start_time' => 'required|date_format:Y-m-d\TH:i',
         ]);
@@ -1393,6 +1418,7 @@ class SessionController extends Controller
      */
     public function updateEndTime(Request $request, Session $session)
     {
+        $this->authorize('update session end time');
         $request->validate([
             'end_time' => 'required|date_format:Y-m-d\TH:i',
         ]);
@@ -1408,12 +1434,12 @@ class SessionController extends Controller
 
             // تحديث تاريخ النهاية
             $session->end_at = $newEndTime;
-            
+
             // إذا كانت الجلسة نشطة، قم بتغيير حالتها إلى مكتملة
             if ($session->session_status === 'active') {
                 $session->session_status = 'completed';
             }
-            
+
             $session->save();
 
             // إعادة حساب التكلفة إذا لم تكن هناك تكلفة مخصصة
@@ -1439,7 +1465,7 @@ class SessionController extends Controller
             }
 
             $message = 'تم تحديث تاريخ نهاية الجلسة بنجاح إلى: ' . $newEndTime->format('Y-m-d H:i:s');
-            
+
             if (!$session->hasCustomInternetCost()) {
                 $message .= ' - تم إعادة حساب التكلفة تلقائياً';
             }
@@ -1462,6 +1488,7 @@ class SessionController extends Controller
      */
     public function updateExpectedEndDate(Request $request, Session $session)
     {
+        $this->authorize('update expected end date');
         $request->validate([
             'expected_end_date' => 'required|date_format:Y-m-d\TH:i',
         ]);
@@ -1504,6 +1531,7 @@ class SessionController extends Controller
      */
     public function endSubscriptionSession(Request $request, Session $session)
     {
+        $this->authorize('end subscription session');
         $request->validate([
             'end_time' => 'nullable|date_format:Y-m-d\TH:i',
         ]);
@@ -1552,6 +1580,7 @@ class SessionController extends Controller
      */
     public function updateNote(Request $request, Session $session)
     {
+        $this->authorize('update session note');
         $request->validate([
             'note' => 'nullable|string|max:1000',
         ]);
@@ -1581,6 +1610,7 @@ class SessionController extends Controller
      */
     public function cancelSession(Request $request, Session $session)
     {
+        $this->authorize('cancel session');
         try {
             // التحقق من أن الجلسة مكتملة
             if ($session->session_status !== 'completed') {
@@ -1636,6 +1666,7 @@ class SessionController extends Controller
      */
     public function pauseSession(Request $request, Session $session)
     {
+        $this->authorize('pause session');
         try {
             // توقيف الجلسة
             $session->pause();
@@ -1665,6 +1696,7 @@ class SessionController extends Controller
      */
     public function resumeSession(Request $request, Session $session)
     {
+        $this->authorize('resume session');
         try {
             // استئناف الجلسة
             $session->resume();

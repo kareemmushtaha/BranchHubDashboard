@@ -15,6 +15,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view users');
         // تحديد عدد العناصر في الصفحة (افتراضي 15)
         $perPage = $request->get('per_page', 15);
         if (!in_array($perPage, [10, 15, 25, 50, 100])) {
@@ -194,6 +195,7 @@ class UserController extends Controller
      */
     public function prepaid(Request $request)
     {
+        $this->authorize('view users prepaid');
         // تحديد عدد العناصر في الصفحة (افتراضي 15)
         $perPage = $request->get('per_page', 15);
         if (!in_array($perPage, [10, 15, 25, 50, 100])) {
@@ -252,6 +254,7 @@ class UserController extends Controller
      */
     public function create()
     {
+        $this->authorize('create users');
         return view('users.create');
     }
 
@@ -260,6 +263,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create users');
         $request->validate([
             'name' => 'required|string|max:255',
             'name_ar' => 'nullable|string|max:255',
@@ -294,6 +298,7 @@ class UserController extends Controller
      */
     public function show(User $user, Request $request)
     {
+        $this->authorize('show user details');
         $user->load(['wallet', 'overTimes']);
         
         // Paginate sessions ordered by latest first
@@ -319,7 +324,10 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('users.edit', compact('user'));
+        $this->authorize('edit users');
+        $roles = \Spatie\Permission\Models\Role::orderBy('name')->get();
+        $userRoles = $user->roles->pluck('name')->toArray();
+        return view('users.edit', compact('user', 'roles', 'userRoles'));
     }
 
     /**
@@ -327,20 +335,30 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $this->authorize('edit users');
         $request->validate([
             'name' => 'required|string|max:255',
             'name_ar' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
             'user_type' => 'required|in:hourly,prepaid,subscription,admin,manager',
-            'status' => 'required|in:active,inactive,suspended'
+            'status' => 'required|in:active,inactive,suspended',
+            'roles' => 'nullable|array',
+            'roles.*' => 'exists:roles,name'
         ]);
 
         $user->update($request->only([
             'name', 'name_ar', 'email', 'phone', 'user_type', 'status'
         ]));
 
-        return redirect()->route('users.index')
+        // Sync roles
+        if ($request->has('roles')) {
+            $user->syncRoles($request->roles);
+        } else {
+            $user->syncRoles([]);
+        }
+
+        return redirect()->route('users.show', $user)
             ->with('success', 'تم تحديث المستخدم بنجاح');
     }
 
@@ -349,6 +367,7 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        $this->authorize('delete users');
         $user->delete(); // Soft delete because of SoftDeletes trait
         return redirect()->route('users.index')
             ->with('success', 'تم حذف المستخدم بنجاح (يمكن استرجاعه لاحقاً)');
@@ -359,6 +378,7 @@ class UserController extends Controller
      */
     public function trashed(Request $request)
     {
+        $this->authorize('view trashed users');
         // تحديد عدد العناصر في الصفحة (افتراضي 15)
         $perPage = $request->get('per_page', 15);
         if (!in_array($perPage, [10, 15, 25, 50, 100])) {
@@ -411,6 +431,7 @@ class UserController extends Controller
      */
     public function restore($id)
     {
+        $this->authorize('restore users');
         $user = User::onlyTrashed()->findOrFail($id);
         $user->restore();
 
@@ -525,6 +546,7 @@ class UserController extends Controller
      */
     public function chargeWallet(Request $request, User $user)
     {
+        $this->authorize('charge user wallet');
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'required|in:cash,bank_transfer',
@@ -593,6 +615,7 @@ class UserController extends Controller
      */
     public function deductWallet(Request $request, User $user)
     {
+        $this->authorize('deduct user wallet');
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'notes' => 'nullable|string|max:500'
@@ -640,6 +663,7 @@ class UserController extends Controller
      */
     public function updateTransaction(Request $request, User $user, WalletTransaction $transaction)
     {
+        $this->authorize('update user wallet transaction');
         // التحقق من أن المعاملة تخص المستخدم
         if ($transaction->user_id !== $user->id) {
             return redirect()->back()
@@ -757,6 +781,7 @@ class UserController extends Controller
      */
     public function addDebt(Request $request, User $user)
     {
+        $this->authorize('add user debt');
         $request->validate([
             'debt_amount' => 'required|numeric|min:0.01',
             'notes' => 'nullable|string|max:500'
@@ -802,6 +827,7 @@ class UserController extends Controller
      */
     public function deleteAllTransactions(User $user)
     {
+        $this->authorize('delete user wallet transactions');
         $transactionsCount = $user->walletTransactions()->count();
 
         if ($transactionsCount == 0) {
@@ -821,6 +847,7 @@ class UserController extends Controller
      */
     public function walletHistory(User $user)
     {
+        $this->authorize('view user wallet history');
         $transactions = $user->walletTransactions()->paginate(20);
         $wallet = $user->wallet;
 

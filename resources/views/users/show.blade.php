@@ -439,6 +439,51 @@
             </div>
         </div>
 
+        <!-- معلومات الأدوار -->
+        @if($user->roles->count() > 0 || $user->user_type == 'admin' || $user->user_type == 'manager')
+        <div class="card stats-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="bi bi-shield-check me-2"></i>
+                    الأدوار والصلاحيات
+                </h5>
+                <div class="mb-2">
+                    <strong>نوع المستخدم:</strong>
+                    <span class="badge {{ $userTypeBadges[$user->user_type]['class'] ?? 'bg-secondary' }} ms-2">
+                        {{ $userTypeBadges[$user->user_type]['label'] ?? $user->user_type }}
+                    </span>
+                </div>
+                @if($user->roles->count() > 0)
+                    <div class="mt-3">
+                        <strong>الأدوار المعينة:</strong>
+                        <div class="mt-2">
+                            @foreach($user->roles as $role)
+                                <span class="badge bg-primary me-1 mb-1">
+                                    <i class="bi bi-shield me-1"></i>
+                                    {{ $role->name }}
+                                </span>
+                            @endforeach
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            عدد الصلاحيات: {{ $user->getAllPermissions()->count() }}
+                        </small>
+                    </div>
+                @else
+                    <div class="mt-2">
+                        <small class="text-muted">لا توجد أدوار معينة</small>
+                    </div>
+                @endif
+                @canany(['view roles', 'edit roles'])
+                <div class="mt-3">
+                    <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i> تعديل الأدوار
+                    </a>
+                </div>
+                @endcanany
+            </div>
+        </div>
+        @endif
+
         <!-- إحصائيات سريعة -->
         @php
             $userSessions = $user->sessions()->with('payment')->get();

@@ -5,9 +5,11 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">إدارة رواتب الموظفين</h1>
+    @can('create employee salaries')
     <a href="{{ route('employee-salaries.create') }}" class="btn btn-primary">
         <i class="bi bi-plus-circle me-2"></i>إضافة راتب جديد
     </a>
+    @endcan
 </div>
 
 <div class="card">
@@ -75,12 +77,17 @@
                             <td>{{ $salary->created_at->format('Y-m-d H:i') }}</td>
                             <td>
                                 <div class="btn-group" role="group">
+                                    @can('view employee salaries')
                                     <a href="{{ route('employee-salaries.show', $salary) }}" class="btn btn-sm btn-outline-info" title="عرض">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    @endcan
+                                    @can('edit employee salaries')
                                     <a href="{{ route('employee-salaries.edit', $salary) }}" class="btn btn-sm btn-outline-warning" title="تعديل">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                    @endcan
+                                    @can('delete employee salaries')
                                     <form action="{{ route('employee-salaries.destroy', $salary) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا الراتب؟')">
                                         @csrf
                                         @method('DELETE')
@@ -88,6 +95,7 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
@@ -105,9 +113,11 @@
                 <i class="bi bi-wallet2 display-1 text-muted"></i>
                 <h4 class="mt-3 text-muted">لا توجد رواتب موظفين</h4>
                 <p class="text-muted">لم يتم إضافة أي رواتب موظفين بعد</p>
+                @can('create employee salaries')
                 <a href="{{ route('employee-salaries.create') }}" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-2"></i>إضافة أول راتب
                 </a>
+                @endcan
             </div>
         @endif
     </div>

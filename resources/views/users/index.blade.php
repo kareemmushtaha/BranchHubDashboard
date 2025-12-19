@@ -16,12 +16,16 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">{{ $pageTitle ?? 'إدارة المستخدمين' }}</h1>
     <div>
+        @can('view users')
         <a href="{{ route('users.trashed') }}" class="btn btn-outline-danger me-2">
             <i class="bi bi-trash"></i> المستخدمين المحذوفين
         </a>
+        @endcan
+        @can('create users')
         <a href="{{ route('users.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> إضافة مستخدم جديد
         </a>
+        @endcan
     </div>
 </div>
 
@@ -316,22 +320,31 @@
                         <td>{{ $user->created_at->format('Y-m-d') }}</td>
                         <td>
                             <div class="btn-group" role="group">
+                                @can('view users')
                                 <a href="{{ route('users.show', $user) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                @endcan
+                                @can('edit users')
                                 <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-warning">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                @endcan
                                 @if($user->user_type == 'prepaid')
+                                @can('charge user wallet')
                                 <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#chargeWalletModal{{ $user->id }}" 
                                         title="شحن المحفظة">
                                     <i class="bi bi-wallet"></i>
                                 </button>
+                                @endcan
+                                @can('view user wallet history')
                                 <a href="{{ route('users.wallet-history', $user) }}" class="btn btn-sm btn-outline-info" 
                                    title="تاريخ المحفظة">
                                     <i class="bi bi-clock-history"></i>
                                 </a>
+                                @endcan
                                 @endif
+                                @can('delete users')
                                 <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
@@ -340,6 +353,7 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                @endcan
                             </div>
                         </td>
                     </tr>

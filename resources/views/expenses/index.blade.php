@@ -5,9 +5,11 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">المصروفات المالية</h1>
+    @can('create expenses')
     <a href="{{ route('expenses.create') }}" class="btn btn-primary">
         <i class="bi bi-plus-circle me-2"></i>إضافة مصروف جديد
     </a>
+    @endcan
 </div>
 
 <div class="card">
@@ -69,12 +71,17 @@
                             <td>{{ $expense->created_at->format('Y-m-d H:i') }}</td>
                             <td>
                                 <div class="btn-group" role="group">
+                                    @can('view expenses')
                                     <a href="{{ route('expenses.show', $expense) }}" class="btn btn-sm btn-outline-info" title="عرض">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    @endcan
+                                    @can('edit expenses')
                                     <a href="{{ route('expenses.edit', $expense) }}" class="btn btn-sm btn-outline-warning" title="تعديل">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                    @endcan
+                                    @can('delete expenses')
                                     <form action="{{ route('expenses.destroy', $expense) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا المصروف؟')">
                                         @csrf
                                         @method('DELETE')
@@ -82,6 +89,7 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
@@ -99,9 +107,11 @@
                 <i class="bi bi-receipt display-1 text-muted"></i>
                 <h4 class="mt-3 text-muted">لا توجد مصروفات مالية</h4>
                 <p class="text-muted">لم يتم إضافة أي مصروفات مالية بعد</p>
+                @can('create expenses')
                 <a href="{{ route('expenses.create') }}" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-2"></i>إضافة أول مصروف
                 </a>
+                @endcan
             </div>
         @endif
     </div>

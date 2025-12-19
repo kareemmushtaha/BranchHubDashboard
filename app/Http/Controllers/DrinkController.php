@@ -13,6 +13,7 @@ class DrinkController extends Controller
      */
     public function index()
     {
+        $this->authorize('view drinks');
         $drinks = Drink::orderBy('created_at', 'desc')->paginate(20);
         
         $stats = [
@@ -30,6 +31,7 @@ class DrinkController extends Controller
      */
     public function create()
     {
+        $this->authorize('create drinks');
         return view('drinks.create');
     }
 
@@ -38,6 +40,7 @@ class DrinkController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create drinks');
         $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -81,6 +84,7 @@ class DrinkController extends Controller
      */
     public function edit(Drink $drink)
     {
+        $this->authorize('edit drinks');
         return view('drinks.edit', compact('drink'));
     }
 
@@ -89,6 +93,7 @@ class DrinkController extends Controller
      */
     public function update(Request $request, Drink $drink)
     {
+        $this->authorize('edit drinks');
         $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -112,6 +117,7 @@ class DrinkController extends Controller
      */
     public function destroy(Drink $drink)
     {
+        $this->authorize('delete drinks');
         // التحقق من وجود طلبات مرتبطة
         if ($drink->sessionDrinks()->count() > 0) {
             return redirect()->back()

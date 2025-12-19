@@ -22,8 +22,16 @@ class AdminMiddleware
 
         $user = Auth::user();
         
-        // التحقق من أن المستخدم إداري أو مدير
-        if ($user->user_type !== 'admin' && $user->user_type !== 'manager') {
+        // التحقق من أن المستخدم لديه دور أو صلاحيات (دعم النظام القديم والجديد)
+        $hasAdminRole = $user->hasRole('admin') || $user->hasRole('manager');
+        $hasAdminType = $user->user_type === 'admin' || $user->user_type === 'manager';
+        $hasAnyRole = $user->roles->count() > 0;
+        
+        // السماح بالوصول إذا:
+        // 1. لديه دور admin أو manager (للتوافق مع النظام القديم)
+        // 2. أو user_type هو admin أو manager (للتوافق مع النظام القديم)
+        // 3. أو لديه أي دور معين (للنظام الجديد)
+        if (!$hasAdminRole && !$hasAdminType && !$hasAnyRole) {
             Auth::logout();
             return redirect()->route('login')->with('error', 'ليس لديك صلاحية للوصول إلى لوحة التحكم.');
         }
