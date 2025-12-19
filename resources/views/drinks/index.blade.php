@@ -6,9 +6,11 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">إدارة المشروبات</h1>
     <div>
+        @can('create drinks')
         <a href="{{ route('drinks.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> إضافة مشروب جديد
         </a>
+        @endcan
     </div>
 </div>
 
@@ -124,12 +126,17 @@
                         <td>{{ $drink->created_at->format('Y-m-d') }}</td>
                         <td>
                             <div class="btn-group" role="group">
+                                @can('view drinks')
                                 <a href="{{ route('drinks.show', $drink) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                @endcan
+                                @can('edit drinks')
                                 <a href="{{ route('drinks.edit', $drink) }}" class="btn btn-sm btn-outline-warning">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                @endcan
+                                @can('delete drinks')
                                 <form action="{{ route('drinks.destroy', $drink) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
@@ -138,6 +145,7 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                @endcan
                             </div>
                         </td>
                     </tr>
@@ -155,9 +163,11 @@
             <i class="bi bi-cup display-1 text-muted"></i>
             <h5 class="mt-3">لا توجد مشروبات</h5>
             <p class="text-muted">ابدأ بإضافة مشروب جديد إلى القائمة</p>
+            @can('create drinks')
             <a href="{{ route('drinks.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> إضافة مشروب جديد
             </a>
+            @endcan
         </div>
         @endif
     </div>

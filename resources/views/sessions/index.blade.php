@@ -6,15 +6,21 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">إدارة الجلسات</h1>
     <div>
+        @can('view sessions overdue')
         <a href="{{ route('sessions.overdue') }}" class="btn btn-outline-danger me-2">
             <i class="bi bi-exclamation-triangle"></i> الجلسات المتأخرة
         </a>
+        @endcan
+        @can('view trashed sessions')
         <a href="{{ route('sessions.trashed') }}" class="btn btn-outline-secondary me-2">
             <i class="bi bi-trash"></i> الجلسات المحذوفة
         </a>
+        @endcan
+        @can('create sessions')
         <a href="{{ route('sessions.create') }}" class="btn btn-primary" style="padding-left: 35px; padding-right: 35px;">
             <i class="bi bi-plus-circle"></i> بدء جلسة جديدة
         </a>
+        @endcan
     </div>
 </div>
 
@@ -401,15 +407,20 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group">
+                                @can('view sessions')
                                 <a href="{{ route('sessions.show', $session) }}" class="btn btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                @endcan
                                 @if($session->session_status == 'active')
+                                @can('edit sessions')
                                 <a href="{{ route('sessions.edit', $session) }}" class="btn btn-outline-warning">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                @endcan
                                 @endif
                                 @if($session->session_status == 'completed')
+                                @can('cancel session')
                                 <form action="{{ route('sessions.cancel', $session) }}" method="POST" class="d-inline session-cancel-form">
                                     @csrf
                                     <button type="submit" class="btn btn-outline-danger session-cancel-btn"
@@ -418,8 +429,9 @@
                                         <i class="bi bi-x-circle"></i>
                                     </button>
                                 </form>
+                                @endcan
                                 @endif
-
+                                @can('delete sessions')
                                 <form action="{{ route('sessions.destroy', $session) }}" method="POST" class="d-inline session-delete-form">
                                     @csrf
                                     @method('DELETE')
@@ -430,6 +442,7 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                @endcan
                             </div>
                         </td>
                     </tr>

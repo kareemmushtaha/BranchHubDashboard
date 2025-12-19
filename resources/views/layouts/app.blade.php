@@ -188,11 +188,14 @@
                             <i class="bi bi-speedometer2"></i> لوحة التحكم المباشرة
                         </a>
                     </li>
+                    @canany(['view users', 'create users', 'edit users', 'delete users'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('users.index') && !request()->routeIs('users.monthly') && !request()->routeIs('users.hourly') && !request()->routeIs('users.prepaid') ? 'active' : '' }}" href="{{ route('users.index') }}">
                             <i class="bi bi-people"></i> جميع المستخدمين
                         </a>
                     </li>
+                    @endcanany
+                    @can('view users')
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('users.monthly') ? 'active' : '' }}" href="{{ route('users.monthly') }}">
                             <i class="bi bi-calendar-month"></i> مستخدمين دائمين
@@ -208,68 +211,102 @@
                             <i class="bi bi-wallet2"></i> المستخدمين مسبقين الدفع
                         </a>
                     </li>
+                    @endcan
+                    @canany(['view sessions', 'create sessions', 'edit sessions', 'delete sessions'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('sessions.index') ? 'active' : '' }}" href="{{ route('sessions.index') }}">
                             <i class="bi bi-clock"></i> الجلسات
                         </a>
                     </li>
+                    @endcanany
+                    @can('view trashed sessions')
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('sessions.trashed') ? 'active' : '' }}" href="{{ route('sessions.trashed') }}">
                             <i class="bi bi-trash text-danger"></i> الجلسات المحذوفة
                         </a>
                     </li>
-
+                    @endcan
+                    @canany(['view session payments', 'create session payments', 'edit session payments'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('session-payments.*') ? 'active' : '' }}" href="{{ route('session-payments.index') }}">
                             <i class="bi bi-cash-coin"></i> مدفوعات الجلسات
                         </a>
                     </li>
+                    @endcanany
+                    @canany(['view expenses', 'create expenses', 'edit expenses'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('expenses.*') ? 'active' : '' }}" href="{{ route('expenses.index') }}">
                             <i class="bi bi-receipt"></i> المصروفات المالية
                         </a>
                     </li>
+                    @endcanany
+                    @canany(['view employee salaries', 'create employee salaries', 'edit employee salaries'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('employee-salaries.*') ? 'active' : '' }}" href="{{ route('employee-salaries.index') }}">
                             <i class="bi bi-wallet2"></i> إدارة رواتب الموظفين
                         </a>
                     </li>
+                    @endcanany
+                    @canany(['view electricity meter readings', 'create electricity meter readings', 'edit electricity meter readings'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('electricity-meter-readings.*') ? 'active' : '' }}" href="{{ route('electricity-meter-readings.index') }}">
                             <i class="bi bi-lightning-charge"></i> قراءات عداد الكهرباء
                         </a>
                     </li>
+                    @endcanany
+                    @canany(['view booking requests', 'edit booking requests'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('booking-requests.*') ? 'active' : '' }}" href="{{ route('booking-requests.index') }}">
                             <i class="bi bi-calendar-check"></i> طلبات الحجز
                         </a>
                     </li>
+                    @endcanany
+                    @canany(['view calendar notes', 'create calendar notes', 'edit calendar notes'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('calendar-notes.*') ? 'active' : '' }}" href="{{ route('calendar-notes.index') }}">
                             <i class="bi bi-calendar-event"></i> تقويم الملاحظات
                         </a>
                     </li>
+                    @endcanany
+                    @canany(['view employee notes', 'create employee notes', 'edit employee notes'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('employee-notes.*') ? 'active' : '' }}" href="{{ route('employee-notes.index') }}">
                             <i class="bi bi-person-badge"></i> ملاحظات الموظفين
                         </a>
                     </li>
+                    @endcanany
+                    @canany(['view drinks', 'create drinks', 'edit drinks', 'delete drinks'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('drinks.*') ? 'active' : '' }}" href="{{ route('drinks.index') }}">
                             <i class="bi bi-cup"></i> المشروبات
                         </a>
                     </li>
+                    @endcanany
+                    @canany(['view reports', 'view revenue reports', 'view users reports', 'view drinks reports'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
                             <i class="bi bi-graph-up"></i> التقارير
                         </a>
                     </li>
-
+                    @endcanany
+                    @canany(['view audit', 'view session audit'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('audit.*') ? 'active' : '' }}" href="{{ route('audit.index') }}">
                             <i class="bi bi-clock-history"></i> سجلات التدقيق
                         </a>
                     </li>
+                    @endcanany
+                    @canany(['view roles', 'create roles', 'edit roles', 'delete roles'])
+                    <li class="nav-item mt-3">
+                        <hr class="text-white-50">
+                        <small class="text-white-50 px-3">الإعدادات</small>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('roles.*') ? 'active' : '' }}" href="{{ route('roles.index') }}">
+                            <i class="bi bi-shield-check"></i> الأدوار والصلاحيات
+                        </a>
+                    </li>
+                    @endcanany
                 </ul>
             </nav>
 

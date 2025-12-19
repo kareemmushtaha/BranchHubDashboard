@@ -88,55 +88,73 @@
                     <!-- أزرار توقيف واستئناف الجلسة - فقط للجلسات الساعية -->
                     @if($session->session_category == 'hourly')
                         @if($session->isPaused())
+                            @can('resume session')
                             <form action="{{ route('sessions.resume', $session) }}" method="POST" class="d-inline">
                                 @csrf
                                 <button type="submit" class="btn btn-success">
                                     <i class="bi bi-play-circle"></i> استئناف الجلسة
                                 </button>
                             </form>
+                            @endcan
                         @else
+                            @can('pause session')
                             <form action="{{ route('sessions.pause', $session) }}" method="POST" class="d-inline">
                                 @csrf
                                 <button type="submit" class="btn btn-warning" onclick="return confirm('هل تريد توقيف هذه الجلسة؟ سيتم إيقاف عداد الوقت.')">
                                     <i class="bi bi-pause-circle"></i> توقيف مؤقت للجلسة
                                 </button>
                             </form>
+                            @endcan
                         @endif
                     @endif
                 @endif
 
                 @if($session->isSubscription())
+                    @can('update expected end date')
                     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#updateExpectedEndDateModal">
                         <i class="bi bi-calendar-plus"></i> تحديث تاريخ الانتهاء
                     </button>
+                    @endcan
+                    @can('end subscription session')
                     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#endSubscriptionModal">
                         <i class="bi bi-stop-circle"></i> إنهاء الجلسة
                     </button>
+                    @endcan
                 @else
+                    @can('end session')
                     <form action="{{ route('sessions.end', $session) }}" method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-success" onclick="return confirm('هل تريد إنهاء هذه الجلسة؟')">
                             <i class="bi bi-stop-circle"></i> إنهاء الجلسة
                         </button>
                     </form>
+                    @endcan
                 @endif
+                @can('edit sessions')
                 <a href="{{ route('sessions.edit', $session) }}" class="btn btn-warning">
                     <i class="bi bi-pencil"></i> تعديل
                 </a>
+                @endcan
             @endif
             <!-- زر تصدير PDF - متاح لجميع الجلسات التي لديها مدفوعة -->
             @if($session->payment)
+                @can('generate session payment invoice')
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#invoiceDateModal">
                     <i class="bi bi-file-pdf"></i> تصدير PDF
                 </button>
+                @endcan
+                @can('view session payment invoice')
                 <a href="{{ route('session-payments.invoice.show', $session->payment->id) }}" target="_blank" class="btn btn-info">
                     <i class="bi bi-printer"></i> عرض للطباعة
                 </a>
+                @endcan
             @endif
 
+            @can('view session audit')
             <a href="{{ route('sessions.audit', $session) }}" class="btn btn-info">
                 <i class="bi bi-clock-history"></i> سجلات التدقيق
             </a>
+            @endcan
             <a href="{{ route('sessions.index') }}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> العودة
             </a>
@@ -297,9 +315,11 @@
                             </span>
                             @endif
                             @if($session->session_status == 'active')
+                                @can('update session start time')
                                 <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#editStartTimeModal">
                                     <i class="bi bi-pencil"></i> تعديل
                                 </button>
+                                @endcan
                             @endif
                         </div>
                     </div>
@@ -309,9 +329,11 @@
                         <div class="col-sm-6">
                             @if($session->end_at)
                                 {{ $session->end_at->format('Y-m-d H:i:s') }}
+                                @can('update session end time')
                                 <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#editEndTimeModal">
                                     <i class="bi bi-pencil"></i> تعديل
                                 </button>
+                                @endcan
                             @else
                                 <span class="text-success">لا تزال نشطة</span>
                             @endif
@@ -457,9 +479,11 @@
                             @else
                                 <span class="text-muted">لا توجد ملاحظات</span>
                             @endif
+                            @can('update session note')
                             <button type="button" class="btn btn-sm btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#editNoteModal">
                                 <i class="bi bi-pencil"></i> تعديل
                             </button>
+                            @endcan
                         </div>
                     </div>
 
@@ -533,6 +557,22 @@
                         <div class="row">
                             <div class="col-sm-6"><strong>تكلفة الإنترنت:</strong></div>
                             <div class="col-sm-6">
+                                <div class="col-sm-6">
+                                    @if($session->start_at->isFuture())
+                                        <span class="text-info">
+                                <i class="bi bi-clock"></i>
+                                لم تبدأ بعد
+                            </span>
+                                        <br>
+                                        <small class="text-muted">
+                                            ستبدأ {{ $session->start_at->diffForHumans() }}
+                                        </small>
+                                    @elseif($session->end_at)
+                                        {{ $session->formatDuration($session->end_at) }}
+                                    @else
+                                        {{ $session->formatDuration() }} (مستمرة)
+                                    @endif
+                                </div>
                                 @if($session->end_at)
                                     <div class="text-primary fw-bold internet-cost-display">₪{{ number_format($sessionCost, 2) }}</div>
                                     @if($session->hasCustomInternetCost())
@@ -564,11 +604,13 @@
                                 @endif
 
                                 @if($session->session_status == 'active' || $session->session_status == 'completed')
+                                    @can('update internet cost')
                                     <div class="mt-2">
                                         <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#editInternetCostModal">
                                             <i class="bi bi-pencil"></i> تعديل التكلفة
                                         </button>
                                     </div>
+                                    @endcan
                                 @endif
                             </div>
                         </div>
@@ -599,6 +641,7 @@
                                 @endif
 
                                 @if($session->session_status == 'active' || $session->session_status == 'completed')
+                                    @can('update internet cost')
                                     <div class="mt-2">
                                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editInternetCostModal">
                                             <i class="bi bi-pencil"></i> تعديل التكلفة
@@ -608,6 +651,7 @@
                                             يمكنك تحديد تكلفة ثابتة للإنترنت طوال فترة الاشتراك
                                         </small>
                                     </div>
+                                    @endcan
                                 @endif
                             </div>
                         </div>
@@ -731,27 +775,37 @@
                     <!-- أزرار إدارة المدفوعة -->
                     <div class="mt-3">
                         @if($session->payment)
+                            @can('edit session payments')
                             <a href="{{ route('session-payments.edit', $session->payment->id) }}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil"></i> تعديل المدفوعة
                             </a>
+                            @endcan
 
+                            @can('view session payments')
                             <a href="{{ route('session-payments.show', $session->payment->id) }}" class="btn btn-primary btn-sm">
                                 <i class="bi bi-eye"></i> عرض تفاصيل المدفوعة
                             </a>
+                            @endcan
 
                             <!-- أزرار PDF والطباعة - متاحة لجميع الجلسات التي لديها مدفوعة -->
+                            @can('generate session payment invoice')
                             <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#invoiceDateModal">
                                 <i class="bi bi-file-pdf"></i> تصدير PDF
                             </button>
+                            @endcan
+                            @can('view session payment invoice')
                             <a href="{{ route('session-payments.invoice.show', $session->payment->id) }}" target="_blank" class="btn btn-info btn-sm">
                                 <i class="bi bi-printer"></i> عرض للطباعة
                             </a>
+                            @endcan
 
 
                         @else
+                            @can('create session payments')
                             <a href="{{ route('session-payments.create', ['session_id' => $session->id]) }}" class="btn btn-success btn-sm">
                                 <i class="bi bi-plus-circle"></i> إنشاء مدفوعة
                             </a>
+                            @endcan
                         @endif
 
 
@@ -771,9 +825,11 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">المشروبات المطلوبة</h5>
                         @if($session->session_status == 'active' || $session->session_status == 'completed')
+                            @can('add drink to session')
                             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addDrinkModal">
                                 <i class="bi bi-plus-circle"></i> إضافة مشروب
                             </button>
+                            @endcan
                         @endif
                     </div>
                     <div class="card-body">
@@ -802,9 +858,11 @@
                                             <td>
                                                 ₪{{ number_format(($sessionDrink->price / ($sessionDrink->quantity ?? 1)), 2) }}
                                                 @if($session->session_status == 'active' || $session->session_status == 'completed')
+                                                    @can('update session drink price')
                                                     <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#editDrinkPriceModal{{ $sessionDrink->id }}">
                                                         <i class="bi bi-pencil"></i>
                                                     </button>
+                                                    @endcan
                                                 @endif
                                             </td>
                                             <td>₪{{ number_format($sessionDrink->price, 2) }}</td>
@@ -822,14 +880,17 @@
                                             <td>
                                                 {{ $sessionDrink->created_at->format('Y-m-d H:i') }}
                                                 @if($session->session_status == 'active' || $session->session_status == 'completed')
+                                                    @can('update session drink date')
                                                     <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#editDrinkDateModal{{ $sessionDrink->id }}">
                                                         <i class="bi bi-pencil"></i>
                                                     </button>
+                                                    @endcan
                                                 @endif
                                             </td>
                                             @if($session->session_status == 'active' || $session->session_status == 'completed')
                                                 <td>
                                                     <div class="btn-group" role="group">
+                                                        @can('remove drink from session')
                                                         <form action="{{ route('sessions.remove-drink', ['session' => $session, 'sessionDrink' => $sessionDrink]) }}" method="POST" class="d-inline">
                                                             @csrf
                                                             @method('DELETE')
@@ -837,6 +898,7 @@
                                                                 <i class="bi bi-trash"></i>
                                                             </button>
                                                         </form>
+                                                        @endcan
                                                     </div>
                                                 </td>
                                             @endif
@@ -872,9 +934,11 @@
                         <h5 class="card-title mb-0">ساعات العمل الإضافية</h5>
                         @if($session->session_status == 'active' || $session->session_status == 'completed')
                             <div>
+                                @can('add overtime to session')
                                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addOvertimeModal">
                                     <i class="bi bi-plus-circle"></i> إضافة ساعات إضافية
                                 </button>
+                                @endcan
                                 <!-- <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editOvertimeRateModal">
                                     <i class="bi bi-pencil"></i> ضبط السعر
                                 </button> -->
@@ -917,9 +981,12 @@
                                             <td>
                                                 @if($session->session_status == 'active' || $session->session_status == 'completed')
                                                     <div class="btn-group" role="group">
+                                                        @can('update overtime')
                                                         <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editOvertimeModal{{ $overtime->id }}">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
+                                                        @endcan
+                                                        @can('remove overtime from session')
                                                         <form action="{{ route('sessions.remove-overtime', ['session' => $session, 'overtime' => $overtime]) }}" method="POST" class="d-inline">
                                                             @csrf
                                                             @method('DELETE')
@@ -927,6 +994,7 @@
                                                                 <i class="bi bi-trash"></i>
                                                             </button>
                                                         </form>
+                                                        @endcan
                                                     </div>
                                                 @endif
                                             </td>
@@ -960,7 +1028,7 @@
                 ->orderBy('created_at', 'desc')
                 ->get();
         @endphp
-        
+
         @if($pauseResumeLogs->count() > 0 || $session->isPaused())
         <div class="row">
             <div class="col-12 mt-5">
@@ -990,7 +1058,7 @@
                                             $counter = 1;
                                             $pauseResumePairs = [];
                                             $currentPause = null;
-                                            
+
                                             // تجميع عمليات التوقيف والاستئناف بشكل زوجي
                                             foreach($pauseResumeLogs->sortBy('created_at') as $log) {
                                                 if ($log->action === 'session_paused') {
@@ -1004,7 +1072,7 @@
                                                     $currentPause = null;
                                                 }
                                             }
-                                            
+
                                             // إذا كان هناك توقيف بدون استئناف
                                             if ($currentPause) {
                                                 $pauseResumePairs[] = [
@@ -1013,7 +1081,7 @@
                                                     'duration' => null
                                                 ];
                                             }
-                                            
+
                                             // عكس الترتيب لعرض الأحدث أولاً
                                             $pauseResumePairs = array_reverse($pauseResumePairs);
                                         @endphp
@@ -1144,7 +1212,7 @@
                                                 </tr>
                                             @endif
                                         @endforeach
-                                        
+
                                         @if(!$session->isPaused() && $pauseResumeLogs->where('action', 'session_paused')->count() > $pauseResumeLogs->where('action', 'session_resumed')->count())
                                             <!-- حالة خاصة: إذا كانت الجلسة غير متوقفة ولكن آخر عملية كانت توقيف -->
                                             @php
@@ -1205,6 +1273,7 @@
 
     <!-- Modal إضافة مشروب -->
     @if(($session->session_status == 'active' || $session->session_status == 'completed') && (!$session->user || $session->user->user_type != 'subscription'))
+        @can('add drink to session')
         <div class="modal fade" id="addDrinkModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -1249,10 +1318,12 @@
                 </div>
             </div>
         </div>
+        @endcan
     @endif
 
     <!-- Modal تعديل تاريخ ووقت المشروب -->
     @if(($session->session_status == 'active' || $session->session_status == 'completed') && (!$session->user || $session->user->user_type != 'subscription'))
+        @can('update session drink date')
         @foreach($session->drinks as $sessionDrink)
             <div class="modal fade" id="editDrinkDateModal{{ $sessionDrink->id }}" tabindex="-1">
                 <div class="modal-dialog">
@@ -1292,10 +1363,12 @@
                 </div>
             </div>
         @endforeach
+        @endcan
     @endif
 
     <!-- Modal تعديل سعر الواحدة والكمية -->
     @if(($session->session_status == 'active' || $session->session_status == 'completed') && (!$session->user || $session->user->user_type != 'subscription'))
+        @can('update session drink price')
         @foreach($session->drinks as $sessionDrink)
             <div class="modal fade" id="editDrinkPriceModal{{ $sessionDrink->id }}" tabindex="-1">
                 <div class="modal-dialog">
@@ -1346,9 +1419,11 @@
                 </div>
             </div>
         @endforeach
+        @endcan
     @endif
 
     <!-- Modal تعديل تكلفة الإنترنت -->
+    @can('update internet cost')
     <div class="modal fade" id="editInternetCostModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -1434,6 +1509,7 @@
             </div>
         </div>
     </div>
+    @endcan
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1729,6 +1805,7 @@
     </script>
 
     <!-- Modal تعديل تاريخ بداية الجلسة -->
+    @can('update session start time')
     <div class="modal fade" id="editStartTimeModal" tabindex="-1" aria-labelledby="editStartTimeModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -1767,8 +1844,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     <!-- Modal تعديل تاريخ نهاية الجلسة -->
+    @can('update session end time')
     <div class="modal fade" id="editEndTimeModal" tabindex="-1" aria-labelledby="editEndTimeModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -1812,9 +1891,11 @@
             </div>
         </div>
     </div>
+    @endcan
 
     <!-- Modal تحديث التاريخ المتوقع لانتهاء الجلسة الاشتراكية -->
     @if($session->isSubscription())
+        @can('update expected end date')
         <div class="modal fade" id="updateExpectedEndDateModal" tabindex="-1" aria-labelledby="updateExpectedEndDateModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -1865,8 +1946,10 @@
                 </div>
             </div>
         </div>
+        @endcan
 
         <!-- Modal إنهاء الجلسة الاشتراكية -->
+        @can('end subscription session')
         <div class="modal fade" id="endSubscriptionModal" tabindex="-1" aria-labelledby="endSubscriptionModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -1918,6 +2001,7 @@
                 </div>
             </div>
         </div>
+        @endcan
     @endif
 
     <script>
@@ -1951,6 +2035,7 @@
 
     <!-- Modal إضافة ساعات إضافية -->
     @if($session->session_status == 'active' || $session->session_status == 'completed')
+        @can('add overtime to session')
         <div class="modal fade" id="addOvertimeModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -2002,8 +2087,10 @@
                 </div>
             </div>
         </div>
+        @endcan
 
         <!-- Modal تعديل سعر الـ overtime -->
+        @can('update overtime rate')
         <div class="modal fade" id="editOvertimeRateModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -2053,9 +2140,11 @@
                 </div>
             </div>
         </div>
+        @endcan
     @endif
 
     <!-- Modal تعديل الملاحظة -->
+    @can('update session note')
     <div class="modal fade" id="editNoteModal" tabindex="-1" aria-labelledby="editNoteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -2110,9 +2199,11 @@
             </div>
         </div>
     </div>
+    @endcan
 
     <!-- Modal تعديل ساعات العمل الإضافية -->
     @if($session->session_status == 'active' || $session->session_status == 'completed')
+        @can('update overtime')
         @foreach($session->overtimes as $overtime)
             <div class="modal fade" id="editOvertimeModal{{ $overtime->id }}" tabindex="-1">
                 <div class="modal-dialog">
@@ -2191,10 +2282,12 @@
                 </div>
             </div>
         @endforeach
+        @endcan
     @endif
 
     <!-- Modal لاختيار تاريخ إصدار الفاتورة -->
     @if($session->payment)
+        @can('generate session payment invoice')
         <div class="modal fade" id="invoiceDateModal" tabindex="-1" aria-labelledby="invoiceDateModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -2231,6 +2324,7 @@
                 </div>
             </div>
         </div>
+        @endcan
     @endif
 
 @endsection

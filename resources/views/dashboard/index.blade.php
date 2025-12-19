@@ -360,24 +360,32 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-2 mb-2">
+                        @can('create sessions')
                         <a href="{{ route('sessions.create') }}" class="btn btn-primary btn-lg w-100">
                             <i class="bi bi-plus-circle"></i> بدء جلسة جديدة
                         </a>
+                        @endcan
                     </div>
                     <div class="col-md-2 mb-2">
+                        @can('view sessions')
                         <a href="{{ route('sessions.index', ['session_category' => 'subscription', 'session_status' => 'active']) }}" class="btn btn-success btn-lg w-100">
                             <i class="bi bi-calendar-check"></i> الجلسات الاشتراكية
                         </a>
+                        @endcan
                     </div>
                     <div class="col-md-2 mb-2">
+                        @can('create users')
                         <a href="{{ route('users.create') }}" class="btn btn-info btn-lg w-100">
                             <i class="bi bi-person-plus"></i> إضافة مستخدم
                         </a>
+                        @endcan
                     </div>
                     <div class="col-md-2 mb-2">
+                        @can('create drinks')
                         <a href="{{ route('drinks.create') }}" class="btn btn-warning btn-lg w-100">
                             <i class="bi bi-cup"></i> إضافة مشروب
                         </a>
+                        @endcan
                     </div>
                     <div class="col-md-2 mb-2">
                         <a href="{{ route('reports.index') }}" class="btn btn-secondary btn-lg w-100">

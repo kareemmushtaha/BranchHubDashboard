@@ -101,6 +101,39 @@
                             @enderror
                         </div>
                     </div>
+
+                    @canany(['view roles', 'create roles', 'edit roles'])
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">الأدوار <small class="text-muted">(يمكن اختيار أكثر من دور)</small></label>
+                            <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                @if($roles->count() > 0)
+                                    @foreach($roles as $role)
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="roles[]" 
+                                                   value="{{ $role->name }}" 
+                                                   id="role_{{ $role->id }}"
+                                                   {{ in_array($role->name, old('roles', $userRoles ?? [])) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="role_{{ $role->id }}">
+                                                {{ $role->name }}
+                                                @if($role->name === 'admin')
+                                                    <span class="badge bg-danger">مدير النظام</span>
+                                                @endif
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <p class="text-muted">لا توجد أدوار متاحة. <a href="{{ route('roles.index') }}">إنشاء دور جديد</a></p>
+                                @endif
+                            </div>
+                            @error('roles')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">الأدوار تحدد الصلاحيات التي يمتلكها المستخدم في النظام.</small>
+                        </div>
+                    </div>
+                    @endcanany
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{{ route('users.show', $user) }}" class="btn btn-secondary me-md-2">إلغاء</a>

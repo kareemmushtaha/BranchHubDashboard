@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\BookingRequestController;
 use App\Http\Controllers\ElectricityMeterReadingController;
 use App\Http\Controllers\EmployeeSalaryController;
 use App\Http\Controllers\EmployeeNoteController;
+use App\Http\Controllers\RolePermissionController;
 
 
 // Branch Hub Landing Page (for non-authenticated users)
@@ -85,10 +87,10 @@ Route::get('/dashboard/real-time', function() {
 })->name('dashboard.real-time');
 
 // Users Routes
-Route::resource('users', UserController::class);
-Route::get('users-monthly', [UserController::class, 'monthly'])->name('users.monthly');
-Route::get('users-hourly', [UserController::class, 'hourly'])->name('users.hourly');
-Route::get('users-prepaid', [UserController::class, 'prepaid'])->name('users.prepaid');
+Route::resource('users', UserController::class)->middleware('permission:view users|show user details|create users|edit users|delete users');
+Route::get('users-monthly', [UserController::class, 'monthly'])->name('users.monthly')->middleware('permission:view users');
+Route::get('users-hourly', [UserController::class, 'hourly'])->name('users.hourly')->middleware('permission:view users');
+Route::get('users-prepaid', [UserController::class, 'prepaid'])->name('users.prepaid')->middleware('permission:view users');
 Route::post('users/{user}/charge-wallet', [UserController::class, 'chargeWallet'])->name('users.charge-wallet');
 Route::post('users/{user}/deduct-wallet', [UserController::class, 'deductWallet'])->name('users.deduct-wallet');
 Route::post('users/{user}/add-debt', [UserController::class, 'addDebt'])->name('users.add-debt');
@@ -116,7 +118,7 @@ Route::get('drink-invoices/{drinkInvoice}/invoice', [DrinkInvoiceController::cla
 Route::get('drink-invoices/{drinkInvoice}/invoice/show', [DrinkInvoiceController::class, 'showInvoice'])->name('drink-invoices.invoice.show');
 
 // Sessions Routes
-Route::resource('sessions', SessionController::class);
+Route::resource('sessions', SessionController::class)->middleware('permission:view sessions|create sessions|edit sessions|delete sessions');
 Route::get('sessions-overdue', [SessionController::class, 'overdue'])->name('sessions.overdue');
 Route::post('users/{user}/create-session', [SessionController::class, 'createForUser'])->name('users.create-session');
 Route::post('sessions/{session}/end', [SessionController::class, 'endSession'])->name('sessions.end');
@@ -133,7 +135,7 @@ Route::delete('sessions/{session}/overtimes/{overtime}', [SessionController::cla
 
 
 // Soft Delete Routes for Sessions
-Route::get('sessions-trashed', [SessionController::class, 'trashed'])->name('sessions.trashed');
+Route::get('sessions-trashed', [SessionController::class, 'trashed'])->name('sessions.trashed')->middleware('permission:view trashed sessions');
 Route::post('sessions/{id}/restore', [SessionController::class, 'restore'])->name('sessions.restore');
 Route::delete('sessions/{id}/force-delete', [SessionController::class, 'forceDelete'])->name('sessions.force-delete');
 
@@ -144,14 +146,14 @@ Route::post('sessions/bulk-force-delete', [SessionController::class, 'bulkForceD
 
 
 // Session Payments Routes
-Route::resource('session-payments', SessionPaymentController::class);
+Route::resource('session-payments', SessionPaymentController::class)->middleware('permission:view session payments|create session payments|edit session payments|delete session payments');
 Route::get('session-payments/{sessionPayment}/invoice', [SessionPaymentController::class, 'generateInvoice'])->name('session-payments.invoice');
 Route::get('session-payments/{sessionPayment}/invoice/show', [SessionPaymentController::class, 'showInvoice'])->name('session-payments.invoice.show');
 
 
 
 // Drinks Routes
-Route::resource('drinks', DrinkController::class);
+Route::resource('drinks', DrinkController::class)->middleware('permission:view drinks|create drinks|edit drinks|delete drinks');
 
 // Calendar Notes Routes
 Route::get('calendar-notes', [CalendarNoteController::class, 'index'])->name('calendar-notes.index');
@@ -210,6 +212,9 @@ Route::resource('electricity-meter-readings', ElectricityMeterReadingController:
 // Booking Requests Routes (Admin only) - excluding store method
 Route::resource('booking-requests', BookingRequestController::class)->except(['store']);
 Route::put('booking-requests/{id}/status', [BookingRequestController::class, 'updateStatus'])->name('booking-requests.update-status');
+
+// Roles & Permissions Routes
+Route::resource('roles', RolePermissionController::class)->except(['show', 'create']);
 
 });
 

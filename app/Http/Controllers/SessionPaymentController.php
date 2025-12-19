@@ -13,6 +13,7 @@ class SessionPaymentController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view session payments');
         $query = SessionPayment::with(['session.user'])
             ->orderBy('created_at', 'desc');
 
@@ -65,6 +66,7 @@ class SessionPaymentController extends Controller
      */
     public function create(Request $request)
     {
+        $this->authorize('create session payments');
         // Get available sessions that don't have payments yet
         $sessions = Session::whereDoesntHave('payment')
             ->with(['user', 'drinks'])
@@ -83,6 +85,7 @@ class SessionPaymentController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create session payments');
         // Calculate refund amount to determine if note is required
         $session = Session::find($request->session_id);
         $sessionTotal = 0;
@@ -136,6 +139,7 @@ class SessionPaymentController extends Controller
      */
     public function show(SessionPayment $sessionPayment)
     {
+        $this->authorize('view session payments');
         $sessionPayment->load(['session.user', 'session.drinks']);
         return view('session-payments.show', compact('sessionPayment'));
     }
@@ -145,6 +149,7 @@ class SessionPaymentController extends Controller
      */
     public function edit(SessionPayment $sessionPayment)
     {
+        $this->authorize('edit session payments');
         // السماح بتعديل المدفوعة بغض النظر عن حالة الجلسة
         // يمكن تعديل المدفوعة حتى لو كانت الجلسة نشطة أو مكتملة
         $sessionPayment->load(['session.user', 'session.drinks']);
@@ -156,6 +161,7 @@ class SessionPaymentController extends Controller
      */
     public function update(Request $request, SessionPayment $sessionPayment)
     {
+        $this->authorize('edit session payments');
         // السماح بتحديث المدفوعة بغض النظر عن حالة الجلسة
         // يمكن تحديث المدفوعة حتى لو كانت الجلسة نشطة أو مكتملة
 
@@ -255,6 +261,7 @@ class SessionPaymentController extends Controller
      */
     public function showInvoice(SessionPayment $sessionPayment)
     {
+        $this->authorize('view session payment invoice');
         try {
             // Load the session payment with relationships
             $sessionPayment->load(['session.user', 'session.drinks.drink', 'session.overtimes']);
@@ -277,6 +284,7 @@ class SessionPaymentController extends Controller
      */
     public function generateInvoice(Request $request, SessionPayment $sessionPayment)
     {
+        $this->authorize('generate session payment invoice');
         try {
             // Load the session payment with relationships
             $sessionPayment->load(['session.user', 'session.drinks.drink', 'session.overtimes']);
@@ -323,6 +331,7 @@ class SessionPaymentController extends Controller
      */
     public function destroy(SessionPayment $sessionPayment)
     {
+        $this->authorize('delete session payments');
         $sessionPayment->delete();
         
         return redirect()->route('session-payments.index')
