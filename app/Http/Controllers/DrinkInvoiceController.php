@@ -17,6 +17,8 @@ class DrinkInvoiceController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view drink invoices');
+        
         $query = DrinkInvoice::with(['user', 'items.drink'])
             ->orderBy('created_at', 'desc');
 
@@ -65,6 +67,8 @@ class DrinkInvoiceController extends Controller
      */
     public function create(Request $request)
     {
+        $this->authorize('create drink invoices');
+        
         $userId = $request->get('user_id');
         $user = $userId ? User::find($userId) : null;
         
@@ -84,6 +88,8 @@ class DrinkInvoiceController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create drink invoices');
+        
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'created_at' => 'nullable|date_format:Y-m-d\TH:i',
@@ -122,6 +128,8 @@ class DrinkInvoiceController extends Controller
      */
     public function show(DrinkInvoice $drinkInvoice)
     {
+        $this->authorize('view drink invoices');
+        
         $drinkInvoice->load(['user', 'items.drink']);
         $drinks = Drink::where('status', 'available')->get();
 
@@ -133,6 +141,8 @@ class DrinkInvoiceController extends Controller
      */
     public function edit(DrinkInvoice $drinkInvoice)
     {
+        $this->authorize('edit drink invoices');
+        
         $drinkInvoice->load(['user', 'items.drink']);
         return view('drink-invoices.edit', compact('drinkInvoice'));
     }
@@ -142,6 +152,8 @@ class DrinkInvoiceController extends Controller
      */
     public function update(Request $request, DrinkInvoice $drinkInvoice)
     {
+        $this->authorize('edit drink invoices');
+        
         $request->validate([
             'amount_bank' => 'nullable|numeric|min:0',
             'amount_cash' => 'nullable|numeric|min:0',
@@ -170,6 +182,8 @@ class DrinkInvoiceController extends Controller
      */
     public function destroy(DrinkInvoice $drinkInvoice)
     {
+        $this->authorize('delete drink invoices');
+        
         $drinkInvoice->delete();
 
         return redirect()->route('drink-invoices.index')
@@ -181,6 +195,8 @@ class DrinkInvoiceController extends Controller
      */
     public function addDrink(Request $request, DrinkInvoice $drinkInvoice)
     {
+        $this->authorize('add drink to invoice');
+        
         // منع إضافة مشروبات للفاتورة المدفوعة بالكامل
         if ($drinkInvoice->payment_status == 'paid') {
             return redirect()->back()->with('error', 'لا يمكن إضافة مشروبات للفاتورة المدفوعة بالكامل');
@@ -231,6 +247,8 @@ class DrinkInvoiceController extends Controller
      */
     public function removeDrink(DrinkInvoice $drinkInvoice, DrinkInvoiceItem $item)
     {
+        $this->authorize('remove drink from invoice');
+        
         // منع حذف المشروبات من الفاتورة المدفوعة بالكامل
         if ($drinkInvoice->payment_status == 'paid') {
             return redirect()->back()->with('error', 'لا يمكن حذف مشروبات من الفاتورة المدفوعة بالكامل');
@@ -251,6 +269,8 @@ class DrinkInvoiceController extends Controller
      */
     public function updateDrinkDate(Request $request, DrinkInvoice $drinkInvoice, DrinkInvoiceItem $item)
     {
+        $this->authorize('update drink invoice date');
+        
         // منع تعديل المشروبات في الفاتورة المدفوعة بالكامل
         if ($drinkInvoice->payment_status == 'paid') {
             return redirect()->back()->with('error', 'لا يمكن تعديل مشروبات الفاتورة المدفوعة بالكامل');
@@ -284,6 +304,8 @@ class DrinkInvoiceController extends Controller
      */
     public function updateDrinkPrice(Request $request, DrinkInvoice $drinkInvoice, DrinkInvoiceItem $item)
     {
+        $this->authorize('update drink invoice price');
+        
         // منع تعديل المشروبات في الفاتورة المدفوعة بالكامل
         if ($drinkInvoice->payment_status == 'paid') {
             return redirect()->back()->with('error', 'لا يمكن تعديل مشروبات الفاتورة المدفوعة بالكامل');
@@ -319,6 +341,8 @@ class DrinkInvoiceController extends Controller
      */
     public function generateInvoice(DrinkInvoice $drinkInvoice)
     {
+        $this->authorize('generate drink invoice');
+        
         try {
             // Load the drink invoice with relationships
             $drinkInvoice->load(['user', 'items' => function($query) {
@@ -351,6 +375,8 @@ class DrinkInvoiceController extends Controller
      */
     public function showInvoice(DrinkInvoice $drinkInvoice)
     {
+        $this->authorize('view drink invoices');
+        
         try {
             // Load the drink invoice with relationships
             $drinkInvoice->load(['user', 'items' => function($query) {

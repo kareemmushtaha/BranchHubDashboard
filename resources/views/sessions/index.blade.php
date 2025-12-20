@@ -11,7 +11,7 @@
             <i class="bi bi-exclamation-triangle"></i> الجلسات المتأخرة
         </a>
         @endcan
-        @can('view trashed sessions')
+        @can('view sessions')
         <a href="{{ route('sessions.trashed') }}" class="btn btn-outline-secondary me-2">
             <i class="bi bi-trash"></i> الجلسات المحذوفة
         </a>
