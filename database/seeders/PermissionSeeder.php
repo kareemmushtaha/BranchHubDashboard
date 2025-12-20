@@ -24,7 +24,6 @@ class PermissionSeeder extends Seeder
             
             // Users
             'view users',
-            'show user details',
             'create users',
             'edit users',
             'delete users',
@@ -49,7 +48,6 @@ class PermissionSeeder extends Seeder
             'edit sessions',
             'delete sessions',
             'view sessions overdue',
-            'view trashed sessions',
             'create session for user',
             'end session',
             'cancel session',
@@ -180,7 +178,6 @@ class PermissionSeeder extends Seeder
         $managerRole->givePermissionTo([
             'view dashboard',
             'view users',
-            'show user details',
             'view sessions',
             'view session payments',
             'view drinks',

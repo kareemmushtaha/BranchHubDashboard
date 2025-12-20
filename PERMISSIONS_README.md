@@ -69,7 +69,7 @@
 - `delete drinks` - حذف المشروبات
 
 ### Drink Invoices (فواتير المشروبات)
-- `view drink invoices` - عرض الفواتير
+- `view drink invoice` - عرض الفواتير
 - `create drink invoices` - إنشاء فواتير
 - `edit drink invoices` - تعديل الفواتير
 - `delete drink invoices` - حذف الفواتير
