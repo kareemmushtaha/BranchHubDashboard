@@ -78,29 +78,51 @@ try {
     
     // Step 4: Check and assign all permissions to admin role
     echo "\nStep 4: Ensuring admin role has ALL permissions...\n";
+    
+    // First, ensure permissions are seeded
     $allPermissions = Permission::all();
-    echo "  Total permissions in system: " . $allPermissions->count() . "\n";
+    echo "  Current permissions in system: " . $allPermissions->count() . "\n";
     
     if ($allPermissions->count() == 0) {
-        echo "  WARNING: No permissions found! Run: php artisan db:seed --class=PermissionSeeder\n";
-        echo "  Attempting to seed permissions...\n";
-        \Artisan::call('db:seed', ['--class' => 'PermissionSeeder']);
-        $allPermissions = Permission::all();
-        echo "  Permissions after seeding: " . $allPermissions->count() . "\n";
+        echo "  WARNING: No permissions found! Seeding permissions...\n";
+        try {
+            \Artisan::call('db:seed', ['--class' => 'PermissionSeeder', '--force' => true]);
+            echo "  ✓ Permissions seeded\n";
+            $allPermissions = Permission::all();
+            echo "  Permissions after seeding: " . $allPermissions->count() . "\n";
+        } catch (\Exception $e) {
+            echo "  ERROR seeding permissions: " . $e->getMessage() . "\n";
+            echo "  Please run manually: php artisan db:seed --class=PermissionSeeder\n";
+        }
     }
     
     // Get current permissions for admin role
     $adminPermissions = $adminRole->permissions;
     echo "  Current admin role permissions: " . $adminPermissions->count() . "\n";
     
-    // Sync all permissions to admin role
-    $adminRole->syncPermissions($allPermissions);
-    echo "  ✓ Assigned all " . $allPermissions->count() . " permissions to admin role\n";
-    
-    // Verify
-    $adminRole->refresh();
-    $adminPermissionsAfter = $adminRole->permissions;
-    echo "  Verified admin role permissions: " . $adminPermissionsAfter->count() . "\n\n";
+    // Sync all permissions to admin role (this replaces all existing permissions)
+    $allPermissions = Permission::all();
+    if ($allPermissions->count() > 0) {
+        $adminRole->syncPermissions($allPermissions);
+        echo "  ✓ Synced all " . $allPermissions->count() . " permissions to admin role\n";
+        
+        // Verify
+        $adminRole->refresh();
+        $adminPermissionsAfter = $adminRole->permissions;
+        echo "  Verified admin role permissions: " . $adminPermissionsAfter->count() . "\n";
+        
+        if ($adminPermissionsAfter->count() != $allPermissions->count()) {
+            echo "  WARNING: Permission count mismatch! Trying again...\n";
+            // Force sync again
+            DB::table('role_has_permissions')->where('role_id', $adminRole->id)->delete();
+            $adminRole->givePermissionTo($allPermissions);
+            $adminRole->refresh();
+            echo "  Re-verified: " . $adminRole->permissions->count() . " permissions\n";
+        }
+    } else {
+        echo "  ERROR: No permissions available to assign!\n";
+    }
+    echo "\n";
     
     // Step 5: Assign admin role to user 12
     echo "Step 5: Assigning admin role to user 12...\n";
@@ -157,7 +179,7 @@ try {
     echo "  Total roles: " . $finalRoles->count() . "\n";
     echo "  Total permissions: " . $finalPermissions->count() . "\n";
     
-    // Check some key permissions
+    // Check some key permissions for sidebar visibility
     $keyPermissions = [
         'view dashboard',
         'view users',
@@ -169,12 +191,42 @@ try {
         'create sessions',
         'edit sessions',
         'delete sessions',
+        'view session payments',
+        'view expenses',
+        'view employee salaries',
+        'view drinks',
+        'view reports',
+        'view roles',
     ];
     
-    echo "\n  Checking key permissions:\n";
+    echo "\n  Checking key permissions for sidebar visibility:\n";
+    $missingPermissions = [];
     foreach ($keyPermissions as $permName) {
         $hasPerm = $user->can($permName);
-        echo "    - {$permName}: " . ($hasPerm ? 'YES ✓' : 'NO ✗') . "\n";
+        $status = $hasPerm ? 'YES ✓' : 'NO ✗';
+        echo "    - {$permName}: {$status}\n";
+        if (!$hasPerm) {
+            $missingPermissions[] = $permName;
+        }
+    }
+    
+    if (count($missingPermissions) > 0) {
+        echo "\n  WARNING: Missing " . count($missingPermissions) . " key permissions!\n";
+        echo "  Attempting to fix...\n";
+        
+        // Ensure admin role has all permissions
+        $allPerms = Permission::all();
+        $adminRole->syncPermissions($allPerms);
+        
+        // Refresh user
+        $user->refresh();
+        
+        // Check again
+        echo "  Re-checking permissions after fix:\n";
+        foreach ($missingPermissions as $permName) {
+            $hasPerm = $user->can($permName);
+            echo "    - {$permName}: " . ($hasPerm ? 'YES ✓ FIXED' : 'NO ✗ STILL MISSING') . "\n";
+        }
     }
     
     echo "\n========================================\n";
@@ -185,7 +237,15 @@ try {
     echo "  - View and manage all users\n";
     echo "  - View and manage all sessions\n";
     echo "  - Access all features in the system\n";
-    echo "\nPlease try logging in again with: admin@branchhub.com\n";
+    echo "\nIMPORTANT: Please do the following:\n";
+    echo "  1. Log out completely from the dashboard\n";
+    echo "  2. Clear your browser cache/cookies\n";
+    echo "  3. Log in again with: admin@branchhub.com\n";
+    echo "  4. All sidebar sections should now be visible\n";
+    echo "\nIf sections still don't show, check:\n";
+    echo "  - User has admin role: " . ($user->hasRole('admin') ? 'YES' : 'NO') . "\n";
+    echo "  - Admin role has permissions: " . $adminRole->permissions->count() . "\n";
+    echo "  - User total permissions: " . $user->getAllPermissions()->count() . "\n";
     
 } catch (\Exception $e) {
     echo "\n========================================\n";

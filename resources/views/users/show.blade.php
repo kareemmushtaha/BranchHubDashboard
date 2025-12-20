@@ -361,6 +361,7 @@
             <i class="bi bi-clock-history me-1"></i> حركات المحفظة
         </a>
         @endif
+        @can('create drink invoices')
         @if($hasUnpaidInvoices)
         <button type="button" class="btn btn-secondary btn-custom me-2" onclick="showInvoiceAlert()" title="انقر لعرض التفاصيل">
             <i class="bi bi-cup-hot me-1"></i> فاتورة مشروبات
@@ -370,9 +371,12 @@
             <i class="bi bi-cup-hot me-1"></i> فاتورة مشروبات
         </a>
         @endif
+        @endcan
+        @can('edit users')
         <a href="{{ route('users.edit', $user) }}" class="btn btn-warning btn-custom me-2">
             <i class="bi bi-pencil me-1"></i> تعديل
         </a>
+        @endcan
         <a href="{{ route('users.index') }}" class="btn btn-secondary btn-custom">
             <i class="bi bi-arrow-left me-1"></i> العودة
         </a>
@@ -1065,6 +1069,7 @@
 
         <!-- فواتير المشروبات -->
         @if($user->user_type == 'subscription')
+        @canany(['view drink invoices', 'create drink invoices', 'edit drink invoices'])
         <div class="card sessions-card mb-4">
             <div class="card-header bg-transparent border-0">
                 <div class="d-flex justify-content-between align-items-center">
@@ -1076,9 +1081,11 @@
                         <div class="badge bg-primary badge-custom">
                             {{ $drinkInvoices->count() }} فاتورة
                         </div>
+                        @can('create drink invoices')
                         <a href="{{ route('drink-invoices.create', ['user_id' => $user->id]) }}" class="btn btn-sm btn-primary">
                             <i class="bi bi-plus-circle"></i> فاتورة جديدة
                         </a>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -1101,9 +1108,13 @@
                                 @foreach($drinkInvoices as $invoice)
                                 <tr>
                                     <td>
+                                        @can('view drink invoices')
                                         <a href="{{ route('drink-invoices.show', $invoice) }}" class="text-decoration-none session-link">
                                             #{{ $invoice->id }}
                                         </a>
+                                        @else
+                                        #{{ $invoice->id }}
+                                        @endcan
                                     </td>
                                     <td>{{ $invoice->items->sum('quantity') }}</td>
                                     <td>₪{{ number_format($invoice->total_price, 2) }}</td>
@@ -1124,12 +1135,16 @@
                                     <td>{{ $invoice->created_at->format('Y-m-d H:i') }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
+                                            @can('view drink invoices')
                                             <a href="{{ route('drink-invoices.show', $invoice) }}" class="btn btn-sm btn-primary" title="عرض">
                                                 <i class="bi bi-eye"></i>
                                             </a>
+                                            @endcan
+                                            @can('edit drink invoices')
                                             <a href="{{ route('drink-invoices.edit', $invoice) }}" class="btn btn-sm btn-warning" title="تعديل">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
@@ -1141,9 +1156,11 @@
                     <div class="text-center py-4">
                         <i class="bi bi-cup-hot display-4 text-muted mb-3"></i>
                         <p class="text-muted">لا توجد فواتير مشروبات لهذا المستخدم</p>
+                        @can('create drink invoices')
                         <a href="{{ route('drink-invoices.create', ['user_id' => $user->id]) }}" class="btn btn-primary">
                             <i class="bi bi-plus-circle"></i> إنشاء فاتورة جديدة
                         </a>
+                        @endcan
                     </div>
                 @endif
                 @php
@@ -1157,6 +1174,7 @@
                 @endif
             </div>
         </div>
+        @endcanany
         @endif
 
         <!-- تفاصيل الجلسات المتبقية -->
