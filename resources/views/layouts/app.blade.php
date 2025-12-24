@@ -282,6 +282,13 @@
                         </a>
                     </li>
                     @endcanany
+                    @can('show drink-invoice-items')
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('drink-invoice-items.*') ? 'active' : '' }}" href="{{ route('drink-invoice-items.index') }}">
+                            <i class="bi bi-list-ul"></i> عناصر فواتير المشروبات
+                        </a>
+                    </li>
+                    @endcan
                     @canany(['view reports', 'view revenue reports', 'view users reports', 'view drinks reports'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
