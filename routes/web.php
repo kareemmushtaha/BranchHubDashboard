@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SessionPaymentController;
 use App\Http\Controllers\DrinkInvoiceController;
+use App\Http\Controllers\DrinkInvoiceItemController;
 use App\Http\Controllers\DrinkController;
 use App\Http\Controllers\CalendarNoteController;
 use App\Http\Controllers\ReportController;
@@ -116,6 +117,9 @@ Route::put('drink-invoices/{drinkInvoice}/items/{item}/update-date', [DrinkInvoi
 Route::put('drink-invoices/{drinkInvoice}/items/{item}/update-price', [DrinkInvoiceController::class, 'updateDrinkPrice'])->name('drink-invoices.update-drink-price');
 Route::get('drink-invoices/{drinkInvoice}/invoice', [DrinkInvoiceController::class, 'generateInvoice'])->name('drink-invoices.invoice');
 Route::get('drink-invoices/{drinkInvoice}/invoice/show', [DrinkInvoiceController::class, 'showInvoice'])->name('drink-invoices.invoice.show');
+
+// Drink Invoice Items Routes
+Route::get('drink-invoice-items', [DrinkInvoiceItemController::class, 'index'])->name('drink-invoice-items.index');
 
 // Sessions Routes
 Route::resource('sessions', SessionController::class)->middleware('permission:view sessions|create sessions|edit sessions|delete sessions');

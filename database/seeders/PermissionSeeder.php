@@ -101,6 +101,7 @@ class PermissionSeeder extends Seeder
             'update drink invoice price',
             'generate drink invoice',
             'view drink invoice',
+            'show drink-invoice-items',
             
             // Calendar Notes
             'view calendar notes',
