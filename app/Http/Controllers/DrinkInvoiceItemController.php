@@ -17,8 +17,7 @@ class DrinkInvoiceItemController extends Controller
     {
         $this->authorize('show drink-invoice-items');
         
-        $query = DrinkInvoiceItem::with(['drink', 'invoice.user'])
-            ->orderBy('created_at', 'desc');
+        $query = DrinkInvoiceItem::with(['drink', 'invoice.user']);
 
         // Default to today's date range if no dates are provided
         $today = Carbon::today()->format('Y-m-d');
@@ -51,6 +50,10 @@ class DrinkInvoiceItemController extends Controller
         if ($request->filled('drink_id')) {
             $query->where('drink_id', $request->drink_id);
         }
+
+        // Sort by created_at descending (newest first)
+        $query->orderBy('created_at', 'desc')
+              ->orderBy('id', 'desc');
 
         $perPage = $request->get('per_page', 15);
         $items = $query->paginate($perPage)->withQueryString();
