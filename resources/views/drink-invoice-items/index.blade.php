@@ -69,6 +69,9 @@
                             @if($items->count() < $items->total())
                                 (عرض {{ $items->count() }} في هذه الصفحة)
                             @endif
+                            | 
+                            <i class="bi bi-currency-exchange"></i>
+                            إجمالي المبيعات: <strong>₪{{ number_format($totalPrice, 2) }}</strong>
                         </small>
                     </div>
                 </div>
