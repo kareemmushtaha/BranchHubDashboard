@@ -51,6 +51,9 @@ class DrinkInvoiceItemController extends Controller
             $query->where('drink_id', $request->drink_id);
         }
 
+        // Calculate total price of all matching items (before pagination)
+        $totalPrice = (clone $query)->sum('price');
+
         // Sort by created_at descending (newest first)
         $query->orderBy('created_at', 'desc')
               ->orderBy('id', 'desc');
@@ -69,7 +72,7 @@ class DrinkInvoiceItemController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('drink-invoice-items.index', compact('items', 'dateFrom', 'dateTo', 'users', 'drinks'));
+        return view('drink-invoice-items.index', compact('items', 'dateFrom', 'dateTo', 'users', 'drinks', 'totalPrice'));
     }
 }
 
