@@ -58,6 +58,7 @@ class PermissionSeeder extends Seeder
             'update session drink date',
             'update session drink price',
             'remove drink from session',
+            'view session drinks',
             'add overtime to session',
             'update overtime rate',
             'update overtime',

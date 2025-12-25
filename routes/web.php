@@ -10,6 +10,7 @@ use App\Http\Controllers\SessionPaymentController;
 use App\Http\Controllers\DrinkInvoiceController;
 use App\Http\Controllers\DrinkInvoiceItemController;
 use App\Http\Controllers\DrinkController;
+use App\Http\Controllers\SessionDrinkController;
 use App\Http\Controllers\CalendarNoteController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SessionAuditController;
@@ -120,6 +121,9 @@ Route::get('drink-invoices/{drinkInvoice}/invoice/show', [DrinkInvoiceController
 
 // Drink Invoice Items Routes
 Route::get('drink-invoice-items', [DrinkInvoiceItemController::class, 'index'])->name('drink-invoice-items.index');
+
+// Session Drinks Routes
+Route::get('session-drinks', [SessionDrinkController::class, 'index'])->name('session-drinks.index');
 
 // Sessions Routes
 Route::resource('sessions', SessionController::class)->middleware('permission:view sessions|create sessions|edit sessions|delete sessions');
