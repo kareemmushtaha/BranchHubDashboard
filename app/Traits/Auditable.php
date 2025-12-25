@@ -76,6 +76,8 @@ trait Auditable
             'Session' => 'session',
             'SessionPayment' => 'payment',
             'SessionDrink' => 'drink',
+            'DrinkInvoice' => 'drink_invoice',
+            'DrinkInvoiceItem' => 'drink_invoice',
         ];
 
         return $types[$className] ?? 'other';

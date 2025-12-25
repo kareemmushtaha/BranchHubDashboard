@@ -6,12 +6,50 @@ use App\Models\DrinkInvoice;
 use App\Models\DrinkInvoiceItem;
 use App\Models\User;
 use App\Models\Drink;
+use App\Models\SessionAuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class DrinkInvoiceController extends Controller
 {
+    /**
+     * Log audit for drink invoice operations
+     */
+    private function logDrinkInvoiceAudit($action, $description, $drinkInvoiceId = null, $oldValues = null, $newValues = null)
+    {
+        try {
+            SessionAuditLog::create([
+                'session_id' => null, // Drink invoices don't have sessions
+                'user_id' => Auth::id(),
+                'action' => $action,
+                'action_type' => 'drink_invoice',
+                'description' => $description . ($drinkInvoiceId ? " (فاتورة #{$drinkInvoiceId})" : ''),
+                'old_values' => $oldValues ? $this->filterAuditValues($oldValues) : null,
+                'new_values' => $newValues ? $this->filterAuditValues($newValues) : null,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+        } catch (\Exception $e) {
+            // Log error but don't break the operation
+            \Log::error('Failed to log drink invoice audit', [
+                'error' => $e->getMessage(),
+                'action' => $action,
+                'description' => $description
+            ]);
+        }
+    }
+
+    /**
+     * Filter audit values to exclude sensitive fields
+     */
+    private function filterAuditValues($values)
+    {
+        $excludedFields = ['updated_at', 'created_at', 'remember_token', 'password'];
+        return array_diff_key($values, array_flip($excludedFields));
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -102,6 +140,8 @@ class DrinkInvoiceController extends Controller
                 ->withInput();
         }
 
+        $user = User::findOrFail($request->user_id);
+        
         $invoice = DrinkInvoice::create([
             'user_id' => $request->user_id,
             'total_price' => 0,
@@ -118,6 +158,15 @@ class DrinkInvoiceController extends Controller
             $invoice->updated_at = $customCreatedAt;
             $invoice->save();
         }
+
+        // Log audit
+        $this->logDrinkInvoiceAudit(
+            'create',
+            "تم إنشاء فاتورة مشروبات جديدة للمستخدم: {$user->name}",
+            $invoice->id,
+            null,
+            $invoice->toArray()
+        );
 
         return redirect()->route('drink-invoices.show', $invoice)
             ->with('success', 'تم إنشاء فاتورة المشروبات بنجاح');
@@ -161,6 +210,8 @@ class DrinkInvoiceController extends Controller
             'note' => 'nullable|string'
         ]);
 
+        $oldValues = $drinkInvoice->toArray();
+
         $drinkInvoice->update([
             'amount_bank' => $request->amount_bank ?? 0,
             'amount_cash' => $request->amount_cash ?? 0,
@@ -173,6 +224,15 @@ class DrinkInvoiceController extends Controller
         $drinkInvoice->remaining_amount = max(0, $drinkInvoice->total_price - $totalPaid);
         $drinkInvoice->save();
 
+        // Log audit
+        $this->logDrinkInvoiceAudit(
+            'update',
+            "تم تحديث فاتورة المشروبات - الحالة: {$request->payment_status}, البنك: " . ($request->amount_bank ?? 0) . ", النقد: " . ($request->amount_cash ?? 0),
+            $drinkInvoice->id,
+            $oldValues,
+            $drinkInvoice->fresh()->toArray()
+        );
+
         return redirect()->route('drink-invoices.show', $drinkInvoice)
             ->with('success', 'تم تحديث الفاتورة بنجاح');
     }
@@ -184,7 +244,20 @@ class DrinkInvoiceController extends Controller
     {
         $this->authorize('delete drink invoices');
         
+        $invoiceId = $drinkInvoice->id;
+        $userName = $drinkInvoice->user ? $drinkInvoice->user->name : 'غير محدد';
+        $oldValues = $drinkInvoice->toArray();
+        
         $drinkInvoice->delete();
+
+        // Log audit
+        $this->logDrinkInvoiceAudit(
+            'delete',
+            "تم حذف فاتورة المشروبات للمستخدم: {$userName}",
+            $invoiceId,
+            $oldValues,
+            null
+        );
 
         return redirect()->route('drink-invoices.index')
             ->with('success', 'تم حذف الفاتورة بنجاح');
@@ -239,6 +312,15 @@ class DrinkInvoiceController extends Controller
 
         $drinkInvoice->updateTotal();
 
+        // Log audit
+        $this->logDrinkInvoiceAudit(
+            'add_drink',
+            "تم إضافة مشروب {$drink->name} (الكمية: {$quantity}, السعر: ₪{$totalPrice})",
+            $drinkInvoice->id,
+            null,
+            $item->toArray()
+        );
+
         return redirect()->back()->with('success', 'تم إضافة المشروب بنجاح');
     }
 
@@ -258,8 +340,20 @@ class DrinkInvoiceController extends Controller
             return redirect()->back()->with('error', 'المشروب لا ينتمي لهذه الفاتورة');
         }
 
+        $drinkName = $item->drink ? $item->drink->name : 'غير محدد';
+        $oldValues = $item->toArray();
+        
         $item->delete();
         $drinkInvoice->updateTotal();
+
+        // Log audit
+        $this->logDrinkInvoiceAudit(
+            'remove_drink',
+            "تم حذف مشروب {$drinkName} من الفاتورة",
+            $drinkInvoice->id,
+            $oldValues,
+            null
+        );
 
         return redirect()->back()->with('success', 'تم حذف المشروب بنجاح');
     }
@@ -296,6 +390,16 @@ class DrinkInvoiceController extends Controller
 
         $item->refresh();
 
+        // Log audit
+        $drinkName = $item->drink ? $item->drink->name : 'غير محدد';
+        $this->logDrinkInvoiceAudit(
+            'update_drink_date',
+            "تم تحديث تاريخ مشروب {$drinkName} من {$oldDate} إلى {$newDate->format('Y-m-d H:i:s')}",
+            $drinkInvoice->id,
+            ['created_at' => $oldDate],
+            ['created_at' => $newDate->format('Y-m-d H:i:s')]
+        );
+
         return redirect()->back()->with('success', 'تم تحديث تاريخ ووقت المشروب بنجاح');
     }
 
@@ -320,6 +424,7 @@ class DrinkInvoiceController extends Controller
             'quantity' => 'required|integer|min:1'
         ]);
 
+        $oldValues = $item->toArray();
         $newUnitPrice = $request->unit_price;
         $newQuantity = $request->quantity;
         $newTotalPrice = $newUnitPrice * $newQuantity;
@@ -332,6 +437,16 @@ class DrinkInvoiceController extends Controller
 
         // تحديث إجمالي الفاتورة
         $drinkInvoice->updateTotal();
+
+        // Log audit
+        $drinkName = $item->drink ? $item->drink->name : 'غير محدد';
+        $this->logDrinkInvoiceAudit(
+            'update_drink_price',
+            "تم تحديث سعر وكمية مشروب {$drinkName} - السعر: ₪{$oldValues['unit_price']} → ₪{$newUnitPrice}, الكمية: {$oldValues['quantity']} → {$newQuantity}",
+            $drinkInvoice->id,
+            $oldValues,
+            $item->fresh()->toArray()
+        );
 
         return redirect()->back()->with('success', 'تم تحديث السعر والكمية بنجاح');
     }
@@ -356,6 +471,13 @@ class DrinkInvoiceController extends Controller
             $pdf->setPaper('A4', 'portrait');
             
             $filename = 'drink_invoice_' . $drinkInvoice->id . '_' . date('Y-m-d_H-i-s') . '.pdf';
+            
+            // Log audit
+            $this->logDrinkInvoiceAudit(
+                'generate_invoice',
+                "تم إنشاء ملف PDF للفاتورة",
+                $drinkInvoice->id
+            );
             
             return $pdf->download($filename);
             

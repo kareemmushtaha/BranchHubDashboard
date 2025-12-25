@@ -79,6 +79,9 @@ class SessionAuditLog extends Model
             'create_payment' => 'إنشاء مدفوعة',
             'update_payment' => 'تحديث مدفوعة',
             'full_bank_payment' => 'دفع بنكي كامل',
+            'update_drink_date' => 'تحديث تاريخ المشروب',
+            'update_drink_price' => 'تحديث سعر المشروب',
+            'generate_invoice' => 'إنشاء ملف PDF للفاتورة',
         ];
 
         return $actions[$this->action] ?? $this->action;
@@ -91,6 +94,7 @@ class SessionAuditLog extends Model
             'payment' => 'الدفع',
             'drink' => 'المشروب',
             'internet_cost' => 'تكلفة الإنترنت',
+            'drink_invoice' => 'فاتورة المشروبات',
         ];
 
         return $types[$this->action_type] ?? $this->action_type;
