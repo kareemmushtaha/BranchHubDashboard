@@ -22,7 +22,7 @@
                     </div>
                     <div class="col-md-3">
                         <label for="user_id" class="form-label">المستخدم</label>
-                        <select class="form-select" name="user_id" id="user_id">
+                        <select class="form-select select2" name="user_id" id="user_id" data-placeholder="اختر المستخدم أو ابحث...">
                             <option value="">جميع المستخدمين</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
@@ -33,7 +33,7 @@
                     </div>
                     <div class="col-md-3">
                         <label for="drink_id" class="form-label">نوع المشروب</label>
-                        <select class="form-select" name="drink_id" id="drink_id">
+                        <select class="form-select select2" name="drink_id" id="drink_id" data-placeholder="اختر المشروب أو ابحث...">
                             <option value="">جميع المشروبات</option>
                             @foreach($drinks as $drink)
                                 <option value="{{ $drink->id }}" {{ request('drink_id') == $drink->id ? 'selected' : '' }}>
@@ -136,5 +136,44 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+<!-- Select2 JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2 for User dropdown
+    $('#user_id').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        dir: 'rtl',
+        language: 'ar',
+        placeholder: 'اختر المستخدم أو ابحث...',
+        allowClear: true,
+        minimumInputLength: 0,
+        maximumResultsForSearch: 50,
+        dropdownParent: $('body')
+    });
+
+    // Initialize Select2 for Drink dropdown
+    $('#drink_id').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        dir: 'rtl',
+        language: 'ar',
+        placeholder: 'اختر المشروب أو ابحث...',
+        allowClear: true,
+        minimumInputLength: 0,
+        maximumResultsForSearch: 50,
+        dropdownParent: $('body')
+    });
+});
+</script>
 @endsection
 
