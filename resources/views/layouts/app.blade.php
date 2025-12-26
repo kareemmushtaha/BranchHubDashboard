@@ -233,13 +233,7 @@
                         </a>
                     </li>
                     @endcanany
-                    @can('view session drinks')
-                    <li class="nav-item">
-                        <a class="nav-link text-white {{ request()->routeIs('session-drinks.*') ? 'active' : '' }}" href="{{ route('session-drinks.index') }}">
-                            <i class="bi bi-cup-straw"></i> مشروبات الجلسات
-                        </a>
-                    </li>
-                    @endcan
+                  
                     @canany(['view expenses', 'create expenses', 'edit expenses'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('expenses.*') ? 'active' : '' }}" href="{{ route('expenses.index') }}">
@@ -293,6 +287,13 @@
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('drink-invoice-items.*') ? 'active' : '' }}" href="{{ route('drink-invoice-items.index') }}">
                             <i class="bi bi-list-ul"></i> عناصر فواتير المشروبات
+                        </a>
+                    </li>
+                    @endcan
+                    @can('view session drinks')
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('session-drinks.*') ? 'active' : '' }}" href="{{ route('session-drinks.index') }}">
+                            <i class="bi bi-cup-straw"></i> مشروبات الجلسات
                         </a>
                     </li>
                     @endcan
