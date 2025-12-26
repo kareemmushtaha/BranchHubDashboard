@@ -112,6 +112,7 @@ Route::post('users/bulk-force-delete', [UserController::class, 'bulkForceDelete'
 
 // Drink Invoices Routes
 Route::resource('drink-invoices', DrinkInvoiceController::class);
+Route::get('drink-invoices-pending', [DrinkInvoiceController::class, 'pending'])->name('drink-invoices.pending');
 Route::post('drink-invoices/{drinkInvoice}/add-drink', [DrinkInvoiceController::class, 'addDrink'])->name('drink-invoices.add-drink');
 Route::delete('drink-invoices/{drinkInvoice}/items/{item}', [DrinkInvoiceController::class, 'removeDrink'])->name('drink-invoices.remove-drink');
 Route::put('drink-invoices/{drinkInvoice}/items/{item}/update-date', [DrinkInvoiceController::class, 'updateDrinkDate'])->name('drink-invoices.update-drink-date');

@@ -88,6 +88,45 @@ class DrinkInvoiceController extends Controller
     }
 
     /**
+     * Display pending invoices
+     */
+    public function pending(Request $request)
+    {
+        $this->authorize('view drink invoices');
+        
+        $query = DrinkInvoice::with(['user', 'items.drink'])
+            ->where('payment_status', 'pending')
+            ->orderBy('created_at', 'desc');
+
+        // Search by invoice ID or user name
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($userQuery) use ($search) {
+                      $userQuery->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter by user
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        $perPage = $request->get('per_page', 15);
+        $invoices = $query->paginate($perPage)->withQueryString();
+
+        // Get users for filter dropdown
+        $users = User::where('status', 'active')
+            ->where('user_type', 'subscription')
+            ->orderBy('name')
+            ->get();
+
+        return view('drink-invoices.pending', compact('invoices', 'users'));
+    }
+
+    /**
      * Check if user can create a new invoice
      */
     private function canCreateInvoice($userId)

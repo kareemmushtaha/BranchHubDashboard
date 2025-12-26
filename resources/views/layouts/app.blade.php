@@ -283,6 +283,13 @@
                         </a>
                     </li>
                     @endcanany
+                    @canany(['view drink invoices', 'create drink invoices', 'edit drink invoices'])
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('drink-invoices.pending') ? 'active' : '' }}" href="{{ route('drink-invoices.pending') }}">
+                            <i class="bi bi-exclamation-triangle"></i> الفواتير المعلقة
+                        </a>
+                    </li>
+                    @endcanany
                     @can('show drink-invoice-items')
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('drink-invoice-items.*') ? 'active' : '' }}" href="{{ route('drink-invoice-items.index') }}">
