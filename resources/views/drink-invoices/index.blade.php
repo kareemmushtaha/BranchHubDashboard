@@ -66,9 +66,13 @@
                             <tr>
                                 <td>#{{ $invoice->id }}</td>
                                 <td>
-                                    <a href="{{ route('users.show', $invoice->user) }}" class="text-decoration-none">
-                                        {{ $invoice->user->name }}
-                                    </a>
+                                    @if($invoice->user)
+                                        <a href="{{ route('users.show', $invoice->user) }}" class="text-decoration-none">
+                                            {{ $invoice->user->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-muted">مستخدم محذوف</span>
+                                    @endif
                                 </td>
                                 <td>₪{{ number_format($invoice->total_price, 2) }}</td>
                                 <td>
@@ -91,9 +95,12 @@
                                         <a href="{{ route('drink-invoices.show', $invoice) }}" class="btn btn-sm btn-primary">
                                             <i class="bi bi-eye"></i>
                                         </a>
+                                        @can('edit drink invoices')
                                         <a href="{{ route('drink-invoices.edit', $invoice) }}" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+                                        @endcan
+                                        @can('delete drink invoices')
                                         <form action="{{ route('drink-invoices.destroy', $invoice) }}" method="POST" class="d-inline" onsubmit="return confirm('هل تريد حذف هذه الفاتورة؟')">
                                             @csrf
                                             @method('DELETE')
@@ -101,6 +108,7 @@
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
