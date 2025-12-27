@@ -80,9 +80,13 @@
                             <tr>
                                 <td>#{{ $invoice->id }}</td>
                                 <td>
-                                    <a href="{{ route('users.show', $invoice->user) }}" class="text-decoration-none">
-                                        {{ $invoice->user->name }}
-                                    </a>
+                                    @if($invoice->user)
+                                        <a href="{{ route('users.show', $invoice->user) }}" class="text-decoration-none">
+                                            {{ $invoice->user->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-muted">مستخدم محذوف</span>
+                                    @endif
                                 </td>
                                 <td>₪{{ number_format($invoice->total_price, 2) }}</td>
                                 <td class="text-danger">
