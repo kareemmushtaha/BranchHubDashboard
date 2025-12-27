@@ -58,7 +58,8 @@ class DrinkInvoiceController extends Controller
         $this->authorize('view drink invoices');
         
         $query = DrinkInvoice::with(['user', 'items.drink'])
-            ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc');
 
         // Search by invoice ID or user name
         if ($request->filled('search')) {
@@ -82,7 +83,27 @@ class DrinkInvoiceController extends Controller
         }
 
         $perPage = $request->get('per_page', 15);
-        $invoices = $query->paginate($perPage)->withQueryString();
+        if (!in_array($perPage, [10, 15, 25, 50, 100])) {
+            $perPage = 15;
+        }
+
+        try {
+            $invoices = $query->paginate($perPage)->withQueryString();
+            
+            // Validate page number - redirect if page exceeds last page
+            $currentPage = $request->get('page', 1);
+            if ($currentPage > $invoices->lastPage() && $invoices->lastPage() > 0) {
+                return redirect()->route('drink-invoices.index', array_merge($request->except('page'), ['page' => $invoices->lastPage()]));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error paginating drink invoices', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Fallback: return first page
+            $invoices = $query->paginate($perPage, ['*'], 'page', 1)->withQueryString();
+        }
 
         return view('drink-invoices.index', compact('invoices'));
     }
