@@ -351,9 +351,13 @@ class DrinkInvoiceController extends Controller
     {
         $this->authorize('add drink to invoice');
         
-        // منع إضافة مشروبات للفاتورة المدفوعة بالكامل
+        // منع إضافة مشروبات للفاتورة المدفوعة بالكامل أو الملغية
         if ($drinkInvoice->payment_status == 'paid') {
             return redirect()->back()->with('error', 'لا يمكن إضافة مشروبات للفاتورة المدفوعة بالكامل');
+        }
+        
+        if ($drinkInvoice->payment_status == 'cancelled') {
+            return redirect()->back()->with('error', 'لا يمكن إضافة مشروبات للفاتورة الملغية');
         }
 
         $request->validate([
@@ -412,11 +416,16 @@ class DrinkInvoiceController extends Controller
     {
         $this->authorize('remove drink from invoice');
         
-        // منع حذف المشروبات من الفاتورة المدفوعة بالكامل
+        // منع حذف المشروبات من الفاتورة المدفوعة بالكامل أو الملغية
         if ($drinkInvoice->payment_status == 'paid') {
             return redirect()->back()->with('error', 'لا يمكن حذف مشروبات من الفاتورة المدفوعة بالكامل');
         }
+        
+        if ($drinkInvoice->payment_status == 'cancelled') {
+            return redirect()->back()->with('error', 'لا يمكن حذف مشروبات من الفاتورة الملغية');
+        }
 
+        // التحقق من أن العنصر ينتمي للفاتورة
         if ($item->drink_invoice_id !== $drinkInvoice->id) {
             return redirect()->back()->with('error', 'المشروب لا ينتمي لهذه الفاتورة');
         }
@@ -446,9 +455,13 @@ class DrinkInvoiceController extends Controller
     {
         $this->authorize('update drink invoice date');
         
-        // منع تعديل المشروبات في الفاتورة المدفوعة بالكامل
+        // منع تعديل المشروبات في الفاتورة المدفوعة بالكامل أو الملغية
         if ($drinkInvoice->payment_status == 'paid') {
             return redirect()->back()->with('error', 'لا يمكن تعديل مشروبات الفاتورة المدفوعة بالكامل');
+        }
+        
+        if ($drinkInvoice->payment_status == 'cancelled') {
+            return redirect()->back()->with('error', 'لا يمكن تعديل مشروبات الفاتورة الملغية');
         }
 
         if ($item->drink_invoice_id !== $drinkInvoice->id) {
@@ -491,9 +504,13 @@ class DrinkInvoiceController extends Controller
     {
         $this->authorize('update drink invoice price');
         
-        // منع تعديل المشروبات في الفاتورة المدفوعة بالكامل
+        // منع تعديل المشروبات في الفاتورة المدفوعة بالكامل أو الملغية
         if ($drinkInvoice->payment_status == 'paid') {
             return redirect()->back()->with('error', 'لا يمكن تعديل مشروبات الفاتورة المدفوعة بالكامل');
+        }
+        
+        if ($drinkInvoice->payment_status == 'cancelled') {
+            return redirect()->back()->with('error', 'لا يمكن تعديل مشروبات الفاتورة الملغية');
         }
 
         if ($item->drink_invoice_id !== $drinkInvoice->id) {

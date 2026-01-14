@@ -330,22 +330,13 @@ class SessionController extends Controller
                         return $session->isOverdue();
                     })
                     ->count(),
-                'overtime' => Session::where('session_status', 'active')
-                    ->whereNull('end_at')
-                    ->where('session_category', 'overtime')
-                    ->get()
-                    ->filter(function($session) {
-                        return $session->isOverdue();
-                    })
-                    ->count(),
             ]
         ];
 
         // Available categories for filter dropdown
         $categories = [
             'hourly' => 'ساعي',
-            'subscription' => '(اشتراكات)',
-            'overtime' => 'إضافي'
+            'subscription' => '(اشتراكات)'
         ];
 
         return view('sessions.overdue', compact('sessions', 'stats', 'categories'));
@@ -377,10 +368,26 @@ class SessionController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'session_category' => 'required|in:hourly,prepaid,subscription,overtime',
+            'session_category' => 'required|in:hourly,prepaid,subscription',
             'note' => 'nullable|string',
             'session_owner' => 'nullable|string|max:255'
         ]);
+
+          //check_have_active_session
+        $active_session = Session::query()->where('user_id', $request->user_id)
+        ->where('session_status', 'active')->first();
+
+        if($active_session){
+            return redirect()->route('sessions.create')
+                ->with('error', 'المستخدم لديه جلسة نشطة بالفعل');
+        }
+
+        $total_price = 0;
+        $custom_internet_cost = null;
+        if($request->session_category == "subscription"){
+            $total_price= 500; //this is default price
+            $custom_internet_cost = 500; //this is default internet coust
+        }
 
         $session = Session::create([
             'start_at' => Carbon::now(),
@@ -390,13 +397,15 @@ class SessionController extends Controller
             'note' => $request->note,
             'session_owner' => $request->session_owner,
             'created_by' => auth()->id(),
+            'custom_internet_cost' => $custom_internet_cost,
             'note_updated_by' => $request->note ? auth()->id() : null
         ]);
 
+       
         // إنشاء سجل دفع فارغ
         SessionPayment::create([
             'session_id' => $session->id,
-            'total_price' => 0,
+            'total_price' => $total_price,
             'payment_status' => 'pending'
         ]);
 
@@ -480,7 +489,7 @@ class SessionController extends Controller
         $this->authorize('edit sessions');
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'session_category' => 'required|in:hourly,prepaid,subscription,overtime',
+            'session_category' => 'required|in:hourly,prepaid,subscription',
             'note' => 'nullable|string',
             'session_owner' => 'nullable|string|max:255',
             'custom_internet_cost' => 'nullable|numeric|min:0'
@@ -1274,12 +1283,6 @@ class SessionController extends Controller
         switch ($session->session_category) {
             case 'hourly':
                 $sessionCost = $durationInHours * ($publicPrices->hourly_rate ?? 5.00);
-                break;
-            case 'overtime':
-                $hour = $startTime->hour;
-                $isNight = $hour >= 18 || $hour <= 6;
-                $rate = $isNight ? ($publicPrices->price_overtime_night ?? 7.00) : ($publicPrices->price_overtime_morning ?? 5.00);
-                $sessionCost = $durationInHours * $rate;
                 break;
             case 'prepaid':
             case 'subscription':
