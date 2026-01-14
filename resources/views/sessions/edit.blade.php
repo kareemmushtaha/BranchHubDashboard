@@ -51,7 +51,6 @@
                                 <option value="hourly" {{ old('session_category', $session->session_category) == 'hourly' ? 'selected' : '' }}>ساعي</option>
 
                                 <option value="subscription" {{ old('session_category', $session->session_category) == 'subscription' ? 'selected' : '' }}>اشتراك</option>
-                                <option value="overtime" {{ old('session_category', $session->session_category) == 'overtime' ? 'selected' : '' }}>وقت إضافي</option>
                             </select>
                             @error('session_category')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -80,7 +79,7 @@
                         </div>
                     </div>
                     
-                    @if($session->session_category == 'hourly' || $session->session_category == 'overtime')
+                    @if($session->session_category == 'hourly')
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="custom_internet_cost" class="form-label">تكلفة الإنترنت المخصصة</label>
@@ -150,9 +149,6 @@
 
                         @case('subscription')
                             <span class="badge bg-info">اشتراك</span>
-                            @break
-                        @case('overtime')
-                            <span class="badge bg-warning">وقت إضافي</span>
                             @break
                     @endswitch
                 </p>

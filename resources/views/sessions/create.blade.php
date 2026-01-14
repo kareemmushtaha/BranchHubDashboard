@@ -30,7 +30,6 @@
                                     <option value="hourly"  selected >ساعي</option>
 
                                     <option value="subscription" {{ old('session_category') == 'subscription' ? 'selected' : '' }}>اشتراك</option>
-                                    <option value="overtime" {{ old('session_category') == 'overtime' ? 'selected' : '' }}>وقت إضافي</option>
                                 </select>
                                 @error('session_category')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -136,7 +135,7 @@
                     <h6>قواعد التصفية:</h6>
                     <ul class="list-unstyled small">
                         <li><i class="bi bi-funnel text-primary"></i> <strong>ساعي:</strong> يظهر المستخدمين من نوع <span class="badge bg-info">ساعي</span> فقط</li>
-                        <li><i class="bi bi-funnel text-primary"></i> <strong>اشتراك/وقت إضافي:</strong> يظهر المستخدمين من نوع <span class="badge bg-success">اشتراك</span> فقط</li>
+                        <li><i class="bi bi-funnel text-primary"></i> <strong>اشتراك:</strong> يظهر المستخدمين من نوع <span class="badge bg-success">اشتراك</span> فقط</li>
                     </ul>
 
                     <div id="user-count-info" class="alert alert-info mt-2" style="display: none;">
@@ -336,7 +335,7 @@
                         }
                     });
                     console.log('المستخدمين من نوع ساعي ومسبق الدفع:', filteredCount);
-                } else if (selectedCategory === 'subscription' || selectedCategory === 'overtime') {
+                } else if (selectedCategory === 'subscription') {
                     // إضافة المستخدمين من نوع اشتراك فقط
                     allOriginalOptions.forEach(function(option) {
                         if (option.userType === 'subscription') {
@@ -393,8 +392,7 @@
 
                 if (selectedCategory) {
                     const categoryName = selectedCategory === 'hourly' ? 'ساعي' :
-                        selectedCategory === 'subscription' ? 'اشتراك' :
-                            selectedCategory === 'overtime' ? 'وقت إضافي' : selectedCategory;
+                        selectedCategory === 'subscription' ? 'اشتراك' : selectedCategory;
 
                     userCountText.text(`${visibleOptions} مستخدم متاح للفئة "${categoryName}"`);
                     userCountInfo.show();
