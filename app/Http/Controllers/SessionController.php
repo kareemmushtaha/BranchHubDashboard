@@ -330,6 +330,7 @@ class SessionController extends Controller
                         return $session->isOverdue();
                     })
                     ->count(),
+              
             ]
         ];
 
