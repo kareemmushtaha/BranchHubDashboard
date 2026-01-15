@@ -161,6 +161,51 @@
         </div>
     </div>
 
+    <!-- ملاحظات الجلسة - عرض بارز في أعلى الصفحة -->
+    @if($session->note)
+        <div class="alert alert-primary border-primary mb-4 shadow-sm" role="alert">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading mb-3">
+                        <i class="bi bi-sticky-fill me-2"></i>
+                        ملاحظات مهمة
+                    </h5>
+                    <div class="mb-3 fs-5">
+                        {{ $session->note }}
+                    </div>
+                    @if($session->noteUpdater)
+                        <small class="text-muted d-block">
+                            <i class="bi bi-person-pencil"></i>
+                            كتبها: <span class="text-info fw-bold">{{ $session->noteUpdater->name }}</span>
+                            @if($session->updated_at)
+                                - {{ $session->updated_at->format('Y-m-d H:i:s') }}
+                            @endif
+                        </small>
+                    @endif
+                </div>
+                @can('update session note')
+                <button type="button" class="btn btn-sm btn-outline-primary ms-3" data-bs-toggle="modal" data-bs-target="#editNoteModal">
+                    <i class="bi bi-pencil"></i> تعديل
+                </button>
+                @endcan
+            </div>
+        </div>
+    @else
+        @can('update session note')
+        <div class="alert alert-light border mb-4" role="alert">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">
+                    <i class="bi bi-sticky me-2"></i>
+                    لا توجد ملاحظات حالياً
+                </span>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editNoteModal">
+                    <i class="bi bi-pencil"></i> إضافة ملاحظة
+                </button>
+            </div>
+        </div>
+        @endcan
+    @endif
+
     <div class="row">
         <!-- معلومات الجلسة -->
         <div class="col-md-6 mb-4">
@@ -458,34 +503,6 @@
                             </div>
                         </div>
                     @endif
-
-                    <hr>
-                    <div class="row">
-                        <div class="col-sm-6"><strong>ملاحظات:</strong></div>
-                        <div class="col-sm-6">
-                            @if($session->note)
-                                <div class="mb-2">
-                                    {{ $session->note }}
-                                </div>
-                                @if($session->noteUpdater)
-                                    <small class="text-muted d-block mb-2">
-                                        <i class="bi bi-person-pencil"></i>
-                                        كتبها: <span class="text-info fw-bold">{{ $session->noteUpdater->name }}</span>
-                                        @if($session->updated_at)
-                                            - {{ $session->updated_at->format('Y-m-d H:i:s') }}
-                                        @endif
-                                    </small>
-                                @endif
-                            @else
-                                <span class="text-muted">لا توجد ملاحظات</span>
-                            @endif
-                            @can('update session note')
-                            <button type="button" class="btn btn-sm btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#editNoteModal">
-                                <i class="bi bi-pencil"></i> تعديل
-                            </button>
-                            @endcan
-                        </div>
-                    </div>
 
                     <!-- معلومات إضافية للجلسات الاشتراكية -->
                     @if($session->isSubscription())

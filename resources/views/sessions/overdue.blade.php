@@ -36,7 +36,7 @@
 
 <!-- إحصائيات الجلسات المتأخرة -->
 <div class="row mb-4">
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
         <div class="card text-white bg-danger">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -52,7 +52,7 @@
         </div>
     </div>
     
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
         <div class="card text-white bg-warning">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -68,7 +68,7 @@
         </div>
     </div>
     
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
         <div class="card text-white bg-info">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -84,21 +84,6 @@
         </div>
     </div>
     
-    <div class="col-md-3 mb-3">
-        <div class="card text-white bg-secondary">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4>{{ $stats['overdue_by_category']['overtime'] }}</h4>
-                        <p class="card-text">جلسات إضافية متأخرة</p>
-                    </div>
-                    <div>
-                        <i class="bi bi-hourglass-split fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- فلتر الجلسات المتأخرة -->
