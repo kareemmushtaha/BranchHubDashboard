@@ -61,13 +61,14 @@ class DrinkInvoiceController extends Controller
             ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc');
 
-        // Search by invoice ID or user name
+        // Search by invoice ID or user name (both Arabic and English)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
                   ->orWhereHas('user', function ($userQuery) use ($search) {
-                      $userQuery->where('name', 'like', "%{$search}%");
+                      $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('name_ar', 'like', "%{$search}%");
                   });
             });
         }
@@ -120,13 +121,14 @@ class DrinkInvoiceController extends Controller
             ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc');
 
-        // Search by invoice ID or user name
+        // Search by invoice ID or user name (both Arabic and English)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
                   ->orWhereHas('user', function ($userQuery) use ($search) {
-                      $userQuery->where('name', 'like', "%{$search}%");
+                      $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('name_ar', 'like', "%{$search}%");
                   });
             });
         }

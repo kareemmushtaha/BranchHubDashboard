@@ -25,7 +25,7 @@
                             <option value="">جميع المستخدمين</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
-                                    {{ $user->name }}
+                                    {{ $user->name_ar ?: $user->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -82,7 +82,7 @@
                                 <td>
                                     @if($invoice->user)
                                         <a href="{{ route('users.show', $invoice->user) }}" class="text-decoration-none">
-                                            {{ $invoice->user->name }}
+                                            {{ $invoice->user->name_ar ?: $invoice->user->name }}
                                         </a>
                                     @else
                                         <span class="text-muted">مستخدم محذوف</span>
