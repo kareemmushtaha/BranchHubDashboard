@@ -1075,7 +1075,7 @@
         <!-- Modern Hero Section -->
         <section class="course-hero" data-aos="fade-in">
             @if($course->cover_image)
-                <div class="hero-bg-image" style="background-image: url('{{ asset('storage/' . $course->cover_image) }}');"></div>
+                <div class="hero-bg-image" style="background-image: url('{{ asset('storage/app/public/' . $course->cover_image) }}');"></div>
             @endif
             
             <div class="container">
@@ -1184,7 +1184,7 @@
                                                     <!-- Professional Image Frame -->
                                                     <div class="instructor-image-frame">
                                                         @if($leader->photo)
-                                                            <img src="{{ asset('storage/' . $leader->photo) }}" 
+                                                            <img src="{{ asset('storage/app/public/' . $leader->photo) }}" 
                                                                  alt="{{ $leader->name }}">
                                                         @else
                                                             <div class="instructor-image-placeholder">
@@ -1254,7 +1254,7 @@
                                 <!-- Course Image -->
                                 <div class="course-img-wrap">
                                     @if($course->cover_image)
-                                        <img src="{{ asset('storage/' . $course->cover_image) }}" alt="{{ $course->title }}">
+                                        <img src="{{ asset('storage/app/public/' . $course->cover_image) }}" alt="{{ $course->title }}">
                                     @else
                                         <div class="course-img-placeholder">
                                             <i class="bi bi-camera-video display-1"></i>
