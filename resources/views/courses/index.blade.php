@@ -53,7 +53,7 @@
                     <tr>
                         <td>
                             @if($course->thumbnail_image)
-                                <img src="{{ asset('storage/' . $course->thumbnail_image) }}" alt="" class="rounded" style="height: 48px; width: 64px; object-fit: cover;">
+                                <img src="{{ asset('storage/app/public/' . $course->thumbnail_image) }}" alt="" class="rounded" style="height: 48px; width: 64px; object-fit: cover;">
                             @else
                                 <div class="bg-secondary bg-opacity-25 rounded d-inline-flex align-items-center justify-content-center text-secondary" style="height: 48px; width: 64px;">
                                     <i class="bi bi-image"></i>

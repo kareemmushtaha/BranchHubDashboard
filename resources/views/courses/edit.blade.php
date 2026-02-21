@@ -133,7 +133,7 @@
                         <div class="col-md-6 mb-3">
                             @if($course->cover_image)
                                 <p class="text-muted small mb-2">الغلاف الحالي:</p>
-                                <img src="{{ asset('storage/' . $course->cover_image) }}" alt="" class="img-thumbnail mb-2" style="max-height: 100px;">
+                                <img src="{{ asset('storage/app/public/' . $course->cover_image) }}" alt="" class="img-thumbnail mb-2" style="max-height: 100px;">
                             @endif
                             <label for="cover_image" class="form-label">استبدال صورة الغلاف</label>
                             <input type="file" class="form-control @error('cover_image') is-invalid @enderror" id="cover_image" name="cover_image" accept="image/*">
@@ -142,7 +142,7 @@
                         <div class="col-md-6 mb-3">
                             @if($course->thumbnail_image)
                                 <p class="text-muted small mb-2">المصغرة الحالية:</p>
-                                <img src="{{ asset('storage/' . $course->thumbnail_image) }}" alt="" class="img-thumbnail mb-2" style="max-height: 100px;">
+                                <img src="{{ asset('storage/app/public/' . $course->thumbnail_image) }}" alt="" class="img-thumbnail mb-2" style="max-height: 100px;">
                             @endif
                             <label for="thumbnail_image" class="form-label">استبدال الصورة المصغرة</label>
                             <input type="file" class="form-control @error('thumbnail_image') is-invalid @enderror" id="thumbnail_image" name="thumbnail_image" accept="image/*">

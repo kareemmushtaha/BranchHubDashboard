@@ -355,7 +355,7 @@
                 <div class="col-md-auto text-center text-md-start mb-4 mb-md-0">
                     <div class="leader-photo-wrapper">
                         @if($leader->photo)
-                            <img src="{{ asset('storage/' . $leader->photo) }}" alt="{{ $leader->name }}" class="leader-photo">
+                            <img src="{{ asset('storage/app/public/' . $leader->photo) }}" alt="{{ $leader->name }}" class="leader-photo">
                         @else
                             <div class="leader-photo-placeholder">
                                 {{ mb_substr($leader->name, 0, 1) }}

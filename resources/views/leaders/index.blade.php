@@ -34,7 +34,7 @@
                     <tr>
                         <td>
                             @if($leader->photo)
-                                <img src="{{ asset('storage/' . $leader->photo) }}" alt="" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                <img src="{{ asset('storage/app/public/' . $leader->photo) }}" alt="" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                             @else
                                 <span class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">{{ substr($leader->name, 0, 1) }}</span>
                             @endif

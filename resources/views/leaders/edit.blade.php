@@ -55,7 +55,7 @@
                         <div class="col-md-6 mb-3">
                             @if($leader->photo)
                                 <p class="text-muted small mb-1">الصورة الحالية:</p>
-                                <img src="{{ asset('storage/' . $leader->photo) }}" alt="" class="rounded-circle mb-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                <img src="{{ asset('storage/app/public/' . $leader->photo) }}" alt="" class="rounded-circle mb-2" style="width: 50px; height: 50px; object-fit: cover;">
                             @endif
                             <label for="photo" class="form-label">استبدال الصورة</label>
                             <input type="file" class="form-control @error('photo') is-invalid @enderror" id="photo" name="photo" accept="image/*">
