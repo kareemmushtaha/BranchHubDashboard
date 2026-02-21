@@ -20,7 +20,7 @@
         <div class="card text-center">
             <div class="card-body py-4">
                 @if($leader->photo)
-                    <img src="{{ asset('storage/' . $leader->photo) }}" alt="{{ $leader->name }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                    <img src="{{ asset('storage/app/public/' . $leader->photo) }}" alt="{{ $leader->name }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
                 @else
                     <span class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px; font-size: 2.5rem;">{{ substr($leader->name, 0, 1) }}</span>
                 @endif

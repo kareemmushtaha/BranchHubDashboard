@@ -18,7 +18,7 @@
 <div class="row">
     <div class="col-md-8">
         @if($course->cover_image)
-            <img src="{{ asset('storage/' . $course->cover_image) }}" alt="{{ $course->title }}" class="img-fluid rounded mb-3">
+            <img src="{{ asset('storage/app/public/' . $course->cover_image) }}" alt="{{ $course->title }}" class="img-fluid rounded mb-3">
         @endif
         @if($course->short_description)
             <p class="lead text-muted">{{ $course->short_description }}</p>
@@ -85,7 +85,7 @@
                     @foreach($course->leaders as $leader)
                     <li class="d-flex align-items-center mb-3">
                         @if($leader->photo)
-                            <img src="{{ asset('storage/' . $leader->photo) }}" alt="" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            <img src="{{ asset('storage/app/public/' . $leader->photo) }}" alt="" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
                         @else
                             <span class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">{{ substr($leader->name, 0, 1) }}</span>
                         @endif
