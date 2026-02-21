@@ -494,7 +494,7 @@
                                 <div class="course-image-wrapper">
                                     <a href="{{ route('public.courses.show', $course) }}">
                                         @if($course->thumbnail_image)
-                                            <img src="{{ asset('storage/' . $course->thumbnail_image) }}" alt="{{ $course->title }}">
+                                            <img src="{{ asset('storage/app/public/' . $course->thumbnail_image) }}" alt="{{ $course->title }}">
                                         @else
                                             <div class="d-flex align-items-center justify-content-center h-100 text-white">
                                                 <i class="bi bi-card-image" style="font-size: 4rem; opacity: 0.5;"></i>
