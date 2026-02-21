@@ -20,8 +20,19 @@ body {
     font-family: 'Almarai', 'Segoe UI', 'Tahoma', 'Arial', sans-serif !important;
 }
 
+/* Global Link Style Reset */
+a {
+    text-decoration: none !important;
+    color: inherit;
+}
+
 /* تحسين مظهر النصوص العربية */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-weight: 700;
 }
 
@@ -70,4 +81,3 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 400;
     font-size: 0.95rem;
 }
-

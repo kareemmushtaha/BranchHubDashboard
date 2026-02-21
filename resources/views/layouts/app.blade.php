@@ -318,6 +318,47 @@
                         </a>
                     </li>
                     @endcanany
+                    @canany(['view courses', 'view categories', 'view skills', 'view leaders', 'view course enrollment requests'])
+                    <li class="nav-item mt-3">
+                        <hr class="text-white-50">
+                        <small class="text-white-50 px-3">الدورات</small>
+                    </li>
+                    @endcanany
+                    @canany(['view courses', 'create courses', 'edit courses', 'delete courses'])
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('courses.*') ? 'active' : '' }}" href="{{ route('courses.index') }}">
+                            <i class="bi bi-journal-bookmark"></i> الدورات
+                        </a>
+                    </li>
+                    @endcanany
+                    @canany(['view categories', 'create categories', 'edit categories', 'delete categories'])
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}">
+                            <i class="bi bi-tags"></i> التصنيفات
+                        </a>
+                    </li>
+                    @endcanany
+                    @canany(['view skills', 'create skills', 'edit skills', 'delete skills'])
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('skills.*') ? 'active' : '' }}" href="{{ route('skills.index') }}">
+                            <i class="bi bi-lightning"></i> المهارات
+                        </a>
+                    </li>
+                    @endcanany
+                    @canany(['view leaders', 'create leaders', 'edit leaders', 'delete leaders'])
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('leaders.*') ? 'active' : '' }}" href="{{ route('leaders.index') }}">
+                            <i class="bi bi-person-badge"></i> القادة
+                        </a>
+                    </li>
+                    @endcanany
+                    @canany(['view course enrollment requests', 'show course enrollment request details', 'update course enrollment request status', 'delete course enrollment requests'])
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('course-enrollment-requests.*') ? 'active' : '' }}" href="{{ route('course-enrollment-requests.index') }}">
+                            <i class="bi bi-mortarboard"></i> طلبات الالتحاق بالدورات
+                        </a>
+                    </li>
+                    @endcanany
                     @canany(['view roles', 'create roles', 'edit roles', 'delete roles'])
                     <li class="nav-item mt-3">
                         <hr class="text-white-50">
@@ -334,13 +375,7 @@
 
             <!-- Main content -->
             <main class="col-md-9 col-lg-10 main-content p-4">
-                @if(session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
-                @if(session('error'))
-                    <div class="alert alert-danger">{{ session('error') }}</div>
-                @endif
-                
+                @include('components.alerts')
                 @yield('content')
             </main>
         </div>
