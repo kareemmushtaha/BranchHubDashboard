@@ -21,6 +21,13 @@ use App\Http\Controllers\ElectricityMeterReadingController;
 use App\Http\Controllers\EmployeeSalaryController;
 use App\Http\Controllers\EmployeeNoteController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\SkillController;
+use App\Http\Controllers\LeaderController;
+use App\Http\Controllers\PublicCourseController;
+use App\Http\Controllers\PublicLeaderController;
+use App\Http\Controllers\CourseEnrollmentRequestController;
 
 
 // Branch Hub Landing Page (for non-authenticated users)
@@ -225,7 +232,32 @@ Route::put('booking-requests/{id}/status', [BookingRequestController::class, 'up
 // Roles & Permissions Routes
 Route::resource('roles', RolePermissionController::class)->except(['show', 'create']);
 
+// Courses, Categories, Skills, Leaders (Admin) - under /dashboard to avoid conflict with public /courses
+Route::prefix('dashboard')->group(function () {
+    Route::resource('courses', CourseController::class)->middleware('permission:view courses|create courses|edit courses|delete courses');
+    Route::patch('courses/{course}/toggle-published', [CourseController::class, 'togglePublished'])->name('courses.toggle-published')->middleware('permission:toggle publish courses');
+    Route::resource('categories', CategoryController::class)->middleware('permission:view categories|create categories|edit categories|delete categories');
+    Route::resource('skills', SkillController::class)->middleware('permission:view skills|create skills|edit skills|delete skills');
+    Route::resource('leaders', LeaderController::class)->middleware('permission:view leaders|create leaders|edit leaders|delete leaders');
+});
+
+// Course Enrollment Requests (Admin dashboard)
+Route::get('course-enrollment-requests', [CourseEnrollmentRequestController::class, 'index'])->name('course-enrollment-requests.index')->middleware('permission:view course enrollment requests');
+Route::get('course-enrollment-requests/{id}', [CourseEnrollmentRequestController::class, 'show'])->name('course-enrollment-requests.show')->middleware('permission:show course enrollment request details');
+Route::put('course-enrollment-requests/{id}/status', [CourseEnrollmentRequestController::class, 'updateStatus'])->name('course-enrollment-requests.update-status')->middleware('permission:update course enrollment request status');
+Route::delete('course-enrollment-requests/{id}', [CourseEnrollmentRequestController::class, 'destroy'])->name('course-enrollment-requests.destroy')->middleware('permission:delete course enrollment requests');
+
 });
 
 // Public booking request submission (no auth required)
 Route::post('booking-requests', [BookingRequestController::class, 'store'])->name('booking-requests.store');
+
+// Public course enrollment request submission (no auth required)
+Route::post('course-enrollment-requests', [CourseEnrollmentRequestController::class, 'store'])->name('course-enrollment-requests.store');
+
+// Public course list and detail (no auth required) - must be before admin /dashboard/courses
+Route::get('courses', [PublicCourseController::class, 'index'])->name('public.courses.index');
+Route::get('courses/{course:slug}', [PublicCourseController::class, 'show'])->name('public.courses.show');
+
+// Public leader profile (no auth required)
+Route::get('leaders/{leader}', [PublicLeaderController::class, 'show'])->name('public.leaders.show');

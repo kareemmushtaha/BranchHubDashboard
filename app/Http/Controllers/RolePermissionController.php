@@ -117,6 +117,11 @@ class RolePermissionController extends Controller
             'Employee Salaries' => ['view employee salaries', 'create employee salaries', 'edit employee salaries', 'delete employee salaries'],
             'Electricity Meter Readings' => ['view electricity meter readings', 'create electricity meter readings', 'edit electricity meter readings', 'delete electricity meter readings'],
             'Booking Requests' => ['view booking requests', 'edit booking requests', 'delete booking requests', 'update booking request status'],
+            'Courses' => ['view courses', 'create courses', 'edit courses', 'delete courses', 'toggle publish courses'],
+            'Categories' => ['view categories', 'create categories', 'edit categories', 'delete categories'],
+            'Skills' => ['view skills', 'create skills', 'edit skills', 'delete skills'],
+            'Leaders' => ['view leaders', 'create leaders', 'edit leaders', 'delete leaders'],
+            'Course Enrollment Requests' => ['view course enrollment requests', 'show course enrollment request details', 'update course enrollment request status', 'delete course enrollment requests'],
             'Roles & Permissions' => ['view roles', 'create roles', 'edit roles', 'delete roles', 'view permissions', 'assign permissions'],
         ];
 

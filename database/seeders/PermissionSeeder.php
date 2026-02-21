@@ -164,6 +164,37 @@ class PermissionSeeder extends Seeder
             'delete roles',
             'view permissions',
             'assign permissions',
+
+            // Courses
+            'view courses',
+            'create courses',
+            'edit courses',
+            'delete courses',
+            'toggle publish courses',
+
+            // Categories
+            'view categories',
+            'create categories',
+            'edit categories',
+            'delete categories',
+
+            // Skills
+            'view skills',
+            'create skills',
+            'edit skills',
+            'delete skills',
+
+            // Leaders
+            'view leaders',
+            'create leaders',
+            'edit leaders',
+            'delete leaders',
+
+            // Course Enrollment Requests
+            'view course enrollment requests',
+            'show course enrollment request details',
+            'update course enrollment request status',
+            'delete course enrollment requests',
         ];
 
         // Create permissions
@@ -190,6 +221,11 @@ class PermissionSeeder extends Seeder
             'view calendar notes',
             'view employee notes',
             'view reports',
+            'view courses',
+            'view categories',
+            'view skills',
+            'view leaders',
+            'view course enrollment requests',
         ]);
 
         $this->command->info('Permissions and roles created successfully!');
