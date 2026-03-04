@@ -1,13 +1,12 @@
 @extends('layouts.public')
 
-@section('title', 'أكاديمية Branch Hub - الدورات التدريبية')
+@section('title', 'أكاديمية Branch Hub - المدربون')
 
-@section('meta_description', 'طور مهاراتك وانطلق نحو الاحتراف مع نخبة من أفضل المدربين في بيئة تعليمية متكاملة')
+@section('meta_description', 'تعرّف على نخبة المدربين والخبراء الأكاديميين في أكاديمية Branch Hub')
 
 @section('styles')
     <style>
         :root {
-            
             --secondary-color:rgb(96, 90, 91);
             --accent-color: #f093fb;
         }
@@ -78,7 +77,7 @@
             font-weight: 800;
             margin-bottom: 1.5rem;
             line-height: 1.1;
-            font-family:"Orbitron", sans-serif !important;
+            font-family: "Orbitron", sans-serif !important;
         }
 
         .hero-title .accent-text {
@@ -125,9 +124,7 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            /* display: flex; */
             align-items: center;
-            justify-center;
             margin: 0 auto 1rem;
             font-size: 1.5rem;
         }
@@ -148,8 +145,8 @@
             opacity: 0.9;
         }
 
-        /* Courses Section */
-        .courses-section {
+        /* Leaders Section */
+        .leaders-section {
             padding: 4rem 0;
             background: var(--bg-light);
         }
@@ -163,7 +160,7 @@
             margin-bottom: 3rem;
         }
 
-        .filter-bar select {
+        .filter-bar .search-input {
             border-radius: 15px;
             border: 2px solid #e5e7eb;
             padding: 0.875rem 1.25rem;
@@ -171,14 +168,29 @@
             transition: all 0.3s ease;
         }
 
-        .filter-bar select:focus {
+        .filter-bar .search-input:focus {
             outline: none;
-            border: color #000;
-            box-shadow: 0 0 0 4px #667eea;
+            border-color: #1e40af;
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15);
         }
 
-        /* Course Cards */
-        .course-card {
+        .filter-bar .btn-search {
+            border-radius: 15px;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            color: #ffffff;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .filter-bar .btn-search:hover {
+            box-shadow: 0 6px 20px rgba(30, 58, 138, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Leader Cards */
+        .leader-card {
             background: var(--white);
             border-radius: 25px;
             overflow: hidden;
@@ -190,31 +202,42 @@
             border: 2px solid transparent;
         }
 
-        .course-card:hover {
+        .leader-card:hover {
             transform: translateY(-10px);
             box-shadow: var(--shadow-lg);
-            border-color: rgba(102, 126, 234, 0.3);
+            border-color: rgba(30, 64, 175, 0.3);
         }
 
-        .course-image-wrapper {
+        .leader-image-wrapper {
             position: relative;
             aspect-ratio: 16/10;
             overflow: hidden;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
         }
 
-        .course-image-wrapper img {
+        .leader-image-wrapper img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform 0.5s ease;
         }
 
-        .course-card:hover .course-image-wrapper img {
+        .leader-card:hover .leader-image-wrapper img {
             transform: scale(1.1);
         }
 
-        .price-badge {
+        .leader-image-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 5rem;
+            font-weight: 700;
+        }
+
+        .courses-count-badge {
             position: absolute;
             top: 1rem;
             left: 1rem;
@@ -226,34 +249,27 @@
             border: 2px solid rgba(255, 255, 255, 0.5);
         }
 
-        .price-badge .price {
+        .courses-count-badge .count {
             font-size: 1.5rem;
             font-weight: 800;
-            color: var(--accent-red);
+            color: #1e40af;
             font-family: monospace;
         }
 
-        .price-badge .currency {
+        .courses-count-badge .label {
             font-size: 0.75rem;
             color: var(--text-light);
-            text-transform: uppercase;
         }
 
-        .course-body {
+        .leader-body {
             padding: 2rem;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
         }
 
-        .category-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .category-badge {
+        .leader-title-badge {
+            display: inline-block;
             padding: 0.375rem 1rem;
             background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
             border: 1px solid #bae6fd;
@@ -263,9 +279,10 @@
             color: #0c4a6e;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            margin-bottom: 1rem;
         }
 
-        .course-title {
+        .leader-name {
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--text-dark);
@@ -273,25 +290,35 @@
             line-height: 1.3;
         }
 
-        .course-title a {
+        .leader-name a {
             color: inherit;
             text-decoration: none;
             transition: color 0.3s ease;
         }
 
-        .course-title a:hover {
-            color: var(--primary-color);
+        .leader-name a:hover {
+            color: #1e40af;
         }
 
-        .course-description {
+        .leader-bio {
             color: var(--text-light);
             margin-bottom: 1.5rem;
             flex-grow: 1;
             line-height: 1.7;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
+        .leader-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
 
-        .course-meta {
+        .leader-meta {
             display: flex;
             gap: 1.5rem;
         }
@@ -308,25 +335,29 @@
             font-size: 1.125rem;
         }
 
-        .meta-item.learners i { color: #3b82f6; }
-        .meta-item.rating i { color: #fbbf24; }
+        .meta-item.courses i { color: #1e40af; }
+        .meta-item.linkedin i { color: #0a66c2; }
 
-        .course-link-arrow {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-radius: 50%;
-            display: flex;
+        .btn-view-profile {
+            display: inline-flex;
             align-items: center;
-            justify-center;
-            color: white;
-            font-size: 1.25rem;
+            gap: 0.5rem;
+            padding: 0.6rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            color: #ffffff;
+            text-decoration: none;
             transition: all 0.3s ease;
+            border: none;
+            white-space: nowrap;
         }
 
-        .course-card:hover .course-link-arrow {
-            transform: scale(1.1);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .btn-view-profile:hover {
+            box-shadow: 0 6px 20px rgba(30, 58, 138, 0.4);
+            transform: translateY(-2px);
+            color: #ffffff;
         }
 
         /* Empty State */
@@ -341,11 +372,11 @@
         .empty-icon {
             width: 120px;
             height: 120px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, #1e3a8a, #1e40af);
             border-radius: 50%;
             display: flex;
             align-items: center;
-            justify-center;
+            justify-content: center;
             margin: 0 auto 2rem;
             color: white;
             font-size: 3rem;
@@ -369,18 +400,20 @@
             border-radius: 50px;
             font-weight: 600;
             font-size: 1.1rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, #1e3a8a, #1e40af);
             border: none;
             color: white;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none;
         }
 
         .btn-primary-custom:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 15px 35px rgba(30, 58, 138, 0.3);
+            color: white;
         }
 
         /* ===== Modern Pagination ===== */
@@ -563,7 +596,12 @@
                 font-size: 1.5rem;
             }
 
-            .course-meta {
+            .leader-footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .leader-meta {
                 gap: 1rem;
             }
         }
@@ -579,28 +617,28 @@
             <div class="hero-content" data-aos="fade-up">
                 <div class="hero-badge">
                     <span class="pulse-dot"></span>
-                    <span style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">أكاديمية برانش هب</span>
+                    <span style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">فريق المدربين</span>
                 </div>
 
                 <h1 class="hero-title">
-                    BRANCH <span class="accent-text">ACADEMY</span>
+                    OUR <span class="accent-text">INSTRUCTORS</span>
                 </h1>
 
                 <p class="hero-subtitle">
-                    طور مهاراتك وانطلق نحو الاحتراف مع نخبة من أفضل المدربين في بيئة تعليمية متكاملة
+                    تعرّف على نخبة الخبراء والمدربين الذين يقودون رحلتك التعليمية في أكاديمية Branch Hub
                 </p>
 
                 <div class="hero-stats">
                     <div class="stat-box" data-aos="fade-up" data-aos-delay="100">
                         <div class="stat-icon red">
-                            <i class="bi bi-mortarboard-fill"></i>
+                            <i class="bi bi-person-workspace"></i>
                         </div>
-                        <span class="stat-number">{{ $courses->total() }}</span>
-                        <span class="stat-label">دورة تدريبية</span>
+                        <span class="stat-number">{{ $leaders->total() }}</span>
+                        <span class="stat-label">مدرب متميز</span>
                     </div>
                     <div class="stat-box" data-aos="fade-up" data-aos-delay="200">
                         <div class="stat-icon blue">
-                            <i class="bi bi-people-fill"></i>
+                            <i class="bi bi-mortarboard-fill"></i>
                         </div>
                         <span class="stat-number">+500</span>
                         <span class="stat-label">متعلم نشط</span>
@@ -617,81 +655,84 @@
         </div>
     </section>
 
-
-    <!-- Courses Section -->
-    <section class="courses-section">
+    <!-- Leaders Section -->
+    <section class="leaders-section">
         <div class="container">
             <!-- Filter Bar -->
             <div class="filter-bar" data-aos="fade-up">
-                <form method="GET" action="{{ route('public.courses.index') }}" class="d-flex align-items-center gap-4 flex-wrap">
-                    <label for="category" class="fw-bold text-dark" style="white-space: nowrap;">تصفح حسب القسم:</label>
-                    <select name="category" id="category" onchange="this.form.submit()" class="form-select flex-grow-1" style="max-width: 350px;">
-                        <option value="">كل الأقسام</option>
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
+                <form method="GET" action="{{ route('public.leaders.index') }}" class="d-flex align-items-center gap-4 flex-wrap">
+                    <label for="search" class="fw-bold text-dark" style="white-space: nowrap;">بحث عن مدرب:</label>
+                    <input type="text" name="search" id="search" value="{{ request('search') }}" class="form-control search-input flex-grow-1" style="max-width: 350px;" placeholder="اسم المدرب أو التخصص...">
+                    <button type="submit" class="btn btn-search">
+                        <i class="bi bi-search me-2"></i>بحث
+                    </button>
                 </form>
             </div>
 
-            <!-- Courses Grid -->
-            @if($courses->count() > 0)
+            <!-- Leaders Grid -->
+            @if($leaders->count() > 0)
                 <div class="row g-4">
-                    @foreach($courses as $course)
+                    @foreach($leaders as $leader)
                         <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
-                            <div class="course-card">
-                                <!-- Course Image -->
-                                <div class="course-image-wrapper">
-                                    <a href="{{ route('public.courses.show', $course) }}">
-                                        @if($course->thumbnail_image)
-                                            <img src="{{ asset('storage/app/public/' . $course->thumbnail_image) }}" alt="{{ $course->title }}">
+                            <div class="leader-card">
+                                <!-- Leader Image -->
+                                <div class="leader-image-wrapper">
+                                    <a href="{{ route('public.leaders.show', $leader) }}">
+                                        @if($leader->photo)
+                                            <img src="{{ asset('storage/app/public/' . $leader->photo) }}" alt="{{ $leader->name }}">
                                         @else
-                                            <div class="d-flex align-items-center justify-content-center h-100 text-white">
-                                                <i class="bi bi-card-image" style="font-size: 4rem; opacity: 0.5;"></i>
+                                            <div class="leader-image-placeholder">
+                                                {{ mb_substr($leader->name, 0, 1) }}
                                             </div>
                                         @endif
                                     </a>
 
-                                    <!-- Price Badge -->
-                                    <div class="price-badge">
-                                        <div class="currency">السعر</div>
-                                        <div class="price">${{ number_format($course->price, 0) }}</div>
-                                    </div>
+                                    <!-- Courses Count Badge -->
+                                    @if($leader->courses_count > 0)
+                                        <div class="courses-count-badge">
+                                            <div class="label">الدورات</div>
+                                            <div class="count">{{ $leader->courses_count }}</div>
+                                        </div>
+                                    @endif
                                 </div>
 
-                                <!-- Course Body -->
-                                <div class="course-body">
-                                    <!-- Category Badges -->
-                                    <div class="category-badges">
-                                        @foreach($course->categories->take(2) as $cat)
-                                            <span class="category-badge">{{ $cat->name }}</span>
-                                        @endforeach
-                                    </div>
-
-                                    <!-- Course Title -->
-                                    <h3 class="course-title">
-                                        <a href="{{ route('public.courses.show', $course) }}">{{ $course->title }}</a>
-                                    </h3>
-
-                                    <!-- Course Description -->
-                                    @if($course->short_description)
-                                        <p class="course-description">
-                                            {{ Str::limit($course->short_description, 120) }}
-                                        </p>
+                                <!-- Leader Body -->
+                                <div class="leader-body">
+                                    <!-- Job Title Badge -->
+                                    @if($leader->job_title)
+                                        <span class="leader-title-badge">{{ $leader->job_title }}</span>
                                     @endif
 
-                                    <!-- Course Footer -->
-                                    <div class="course-footer">
-                                        <div class="course-meta">
-                                            <div class="meta-item learners">
-                                                <i class="bi bi-people-fill"></i>
-                                                <span>{{ number_format($course->learner_count) }}</span>
+                                    <!-- Leader Name -->
+                                    <h3 class="leader-name">
+                                        <a href="{{ route('public.leaders.show', $leader) }}">{{ $leader->name }}</a>
+                                    </h3>
+
+                                    <!-- Leader Bio -->
+                                    @if($leader->job_description)
+                                        <p class="leader-bio">{{ Str::limit($leader->job_description, 150) }}</p>
+                                    @else
+                                        <p class="leader-bio">متخصص في مجال التدريب الأكاديمي والتطوير المهني بخبرة واسعة في تقديم المحتوى التعليمي المتميز.</p>
+                                    @endif
+
+                                    <!-- Leader Footer -->
+                                    <div class="leader-footer">
+                                        <div class="leader-meta">
+                                            <div class="meta-item courses">
+                                                <i class="bi bi-journal-bookmark-fill"></i>
+                                                <span>{{ $leader->courses_count }} {{ $leader->courses_count == 1 ? 'دورة' : 'دورات' }}</span>
                                             </div>
-                                            <div class="meta-item rating">
-                                                <i class="bi bi-star-fill"></i>
-                                                <span>{{ $course->review_count > 0 ? number_format($course->review_count, 1) : '4.8' }}</span>
-                                            </div>
+                                            @if($leader->linkedin)
+                                                <a href="{{ $leader->linkedin }}" target="_blank" class="meta-item linkedin text-decoration-none">
+                                                    <i class="bi bi-linkedin"></i>
+                                                    <span>LinkedIn</span>
+                                                </a>
+                                            @endif
                                         </div>
+                                        <a href="{{ route('public.leaders.show', $leader) }}" class="btn-view-profile">
+                                            <i class="bi bi-person-lines-fill"></i>
+                                            الملف الشخصي
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -701,7 +742,7 @@
 
                 <!-- Pagination -->
                 <div class="pagination-wrapper">
-                    {{ $courses->links('custom.pagination.modern') }}
+                    {{ $leaders->links('custom.pagination.modern') }}
                 </div>
             @else
                 <!-- Empty State -->
@@ -709,12 +750,12 @@
                     <div class="empty-icon">
                         <i class="bi bi-search"></i>
                     </div>
-                    <h3 class="empty-title">لا توجد دورات متاحة حالياً</h3>
+                    <h3 class="empty-title">لا يوجد مدربون حالياً</h3>
                     <p class="empty-text">يرجى المحاولة في وقت لاحق أو تغيير خيارات البحث.</p>
-                    @if(request('category'))
-                        <a href="{{ route('public.courses.index') }}" class="btn-primary-custom">
+                    @if(request('search'))
+                        <a href="{{ route('public.leaders.index') }}" class="btn-primary-custom">
                             <i class="bi bi-grid-fill"></i>
-                            عرض جميع الدورات
+                            عرض جميع المدربين
                         </a>
                     @endif
                 </div>

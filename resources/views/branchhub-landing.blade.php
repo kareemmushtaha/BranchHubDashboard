@@ -7,6 +7,8 @@
 @section('styles')
     <!-- Orbitron and Tektur Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Tektur:wght@400..900&display=swap" rel="stylesheet">
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 
     <style>
 
@@ -2938,6 +2940,507 @@
                 opacity: 1;
             }
         }
+
+        /* Featured Courses Section */
+        .featured-courses-section {
+            padding: 5rem 0;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        .featured-courses-section .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .featured-courses-section .section-title h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin-bottom: 1rem;
+        }
+
+        .featured-courses-section .section-title p {
+            font-size: 1.15rem;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .course-card {
+            background: #ffffff;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid transparent;
+        }
+
+        .course-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .course-image-wrapper {
+            position: relative;
+            aspect-ratio: 16/10;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea, #605a5b);
+        }
+
+        .course-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .course-card:hover .course-image-wrapper img {
+            transform: scale(1.1);
+        }
+
+        .price-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1.25rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .price-badge .price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-red, #dc2626);
+            font-family: monospace;
+        }
+
+        .price-badge .currency {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+
+        .course-body {
+            padding: 2rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .category-badge {
+            padding: 0.375rem 1rem;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #0c4a6e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .course-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .course-title a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .course-title a:hover {
+            color: #667eea;
+        }
+
+        .course-description {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+            line-height: 1.7;
+        }
+
+        .course-meta {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .meta-item i {
+            font-size: 1.125rem;
+        }
+
+        .meta-item.learners i { color: #3b82f6; }
+        .meta-item.rating i { color: #fbbf24; }
+
+        .btn-all-courses {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, var(--accent-red, #dc2626), #b91c1c);
+            border: none;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-all-courses:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(220, 38, 38, 0.3);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .featured-courses-section .section-title h2 {
+                font-size: 2rem;
+            }
+
+            .course-meta {
+                gap: 1rem;
+            }
+        }
+
+        /* ===== Meet Our Instructors Section ===== */
+        .instructors-section {
+            padding: 5rem 0;
+            background: #ffffff;
+            position: relative;
+        }
+
+        .instructors-section .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .instructors-section .section-title h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin-bottom: 1rem;
+        }
+
+        .instructors-section .section-title p {
+            font-size: 1.15rem;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .instructors-landing-wrapper {
+            position: relative;
+            padding: 1rem 0 3rem;
+            overflow: hidden;
+            margin: 0 -0.5rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .instructors-landing-swiper {
+            overflow: hidden;
+            padding-bottom: 3rem;
+            width: 100%;
+        }
+
+        .instructors-landing-swiper .swiper-slide {
+            height: auto;
+            box-sizing: border-box;
+        }
+
+        .instructor-card-academic {
+            background: #ffffff;
+            border: 2px solid rgba(30, 64, 175, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            height: 100%;
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .instructor-card-academic:hover {
+            box-shadow: 0 12px 40px rgba(30, 64, 175, 0.2);
+            transform: translateY(-12px);
+            border-color: rgba(30, 64, 175, 0.3);
+        }
+
+        .instructor-image-frame {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border-radius: 50%;
+            border: 4px solid #e0f2fe;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
+        }
+
+        .instructor-image-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .instructor-card-academic:hover .instructor-image-frame img {
+            transform: scale(1.15);
+        }
+
+        .instructor-image-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .instructor-expert-badge {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--accent-red, #dc2626) 0%, #b91c1c 100%);
+            color: #ffffff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+        }
+
+        .instructor-name-academic {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .instructor-title-academic {
+            font-size: 0.875rem;
+            color: #1e40af;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .instructor-bio-academic {
+            font-size: 0.875rem;
+            color: #6b7280;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .instructor-courses-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #0c4a6e;
+            margin-bottom: 1rem;
+        }
+
+        .instructor-actions-academic {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .btn-academic {
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-academic-primary {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-academic-primary:hover {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            box-shadow: 0 6px 20px rgba(30, 58, 138, 0.4);
+            transform: translateY(-2px);
+            color: #ffffff;
+        }
+
+        .btn-academic-outline {
+            background: transparent;
+            color: #1e40af;
+            border: 2px solid #1e40af;
+        }
+
+        .btn-academic-outline:hover {
+            background: #1e40af;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .instructors-landing-swiper .swiper-button-next,
+        .instructors-landing-swiper .swiper-button-prev {
+            width: 48px;
+            height: 48px;
+            background: #ffffff;
+            border: 2px solid rgba(30, 58, 138, 0.15);
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            z-index: 10;
+        }
+
+        .instructors-landing-swiper .swiper-button-next {
+            left: auto;
+            right: 10px;
+        }
+
+        .instructors-landing-swiper .swiper-button-prev {
+            right: auto;
+            left: 10px;
+        }
+
+        .instructors-landing-swiper .swiper-button-next:hover,
+        .instructors-landing-swiper .swiper-button-prev:hover {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            border-color: transparent;
+            box-shadow: 0 6px 20px rgba(30, 58, 138, 0.3);
+        }
+
+        .instructors-landing-swiper .swiper-button-next:after,
+        .instructors-landing-swiper .swiper-button-prev:after {
+            font-size: 20px;
+            font-weight: 900;
+            color: #1e3a8a;
+        }
+
+        .instructors-landing-swiper .swiper-button-next:hover:after,
+        .instructors-landing-swiper .swiper-button-prev:hover:after {
+            color: #ffffff;
+        }
+
+        .instructors-landing-swiper .swiper-pagination {
+            bottom: 0;
+        }
+
+        .instructors-landing-swiper .swiper-pagination-bullet {
+            width: 10px;
+            height: 10px;
+            background: #cbd5e1;
+            opacity: 1;
+            transition: all 0.4s ease;
+        }
+
+        .instructors-landing-swiper .swiper-pagination-bullet-active {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            width: 30px;
+            border-radius: 5px;
+        }
+
+        @media (max-width: 991px) {
+            .instructors-landing-swiper .swiper-button-next,
+            .instructors-landing-swiper .swiper-button-prev {
+                width: 40px;
+                height: 40px;
+            }
+
+            .instructors-landing-swiper .swiper-button-next {
+                right: 5px;
+            }
+
+            .instructors-landing-swiper .swiper-button-prev {
+                left: 5px;
+            }
+
+            .instructors-landing-wrapper {
+                margin: 0 -0.25rem;
+                padding-left: 0.25rem;
+                padding-right: 0.25rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .instructors-section .section-title h2 {
+                font-size: 2rem;
+            }
+
+            .instructors-landing-wrapper {
+                padding: 0.5rem 0 2.5rem;
+                margin: 0;
+            }
+
+            .instructors-landing-swiper {
+                padding-bottom: 2.5rem;
+            }
+
+            .instructors-landing-swiper .swiper-button-next,
+            .instructors-landing-swiper .swiper-button-prev {
+                width: 35px;
+                height: 35px;
+            }
+
+            .instructors-landing-swiper .swiper-button-next:after,
+            .instructors-landing-swiper .swiper-button-prev:after {
+                font-size: 14px;
+            }
+        }
     </style>
 @endsection
 
@@ -3069,6 +3572,163 @@
             </div>
         </div>
     </section>
+
+    <!-- Featured Courses Section -->
+    @if($featuredCourses->count() > 0)
+    <section id="courses" class="featured-courses-section">
+        <div class="container">
+            <div class="section-title" data-aos="fade-up">
+                <h2>الدورات التدريبية المميزة</h2>
+                <p>طور مهاراتك مع نخبة من أفضل المدربين في أكاديمية Branch Hub</p>
+            </div>
+
+            <div class="row g-4">
+                @foreach($featuredCourses as $course)
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+                        <div class="course-card">
+                            <div class="course-image-wrapper">
+                                <a href="{{ route('public.courses.show', $course) }}">
+                                    @if($course->thumbnail_image)
+                                        <img src="{{ asset('storage/app/public/' . $course->thumbnail_image) }}" alt="{{ $course->title }}">
+                                    @else
+                                        <div class="d-flex align-items-center justify-content-center h-100 text-white">
+                                            <i class="bi bi-card-image" style="font-size: 4rem; opacity: 0.5;"></i>
+                                        </div>
+                                    @endif
+                                </a>
+
+                                <div class="price-badge">
+                                    <div class="currency">السعر</div>
+                                    <div class="price">${{ number_format($course->price, 0) }}</div>
+                                </div>
+                            </div>
+
+                            <div class="course-body">
+                                <div class="category-badges">
+                                    @foreach($course->categories->take(2) as $cat)
+                                        <span class="category-badge">{{ $cat->name }}</span>
+                                    @endforeach
+                                </div>
+
+                                <h3 class="course-title">
+                                    <a href="{{ route('public.courses.show', $course) }}">{{ $course->title }}</a>
+                                </h3>
+
+                                @if($course->short_description)
+                                    <p class="course-description">
+                                        {{ Str::limit($course->short_description, 120) }}
+                                    </p>
+                                @endif
+
+                                <div class="course-footer">
+                                    <div class="course-meta">
+                                        <div class="meta-item learners">
+                                            <i class="bi bi-people-fill"></i>
+                                            <span>{{ number_format($course->learner_count) }}</span>
+                                        </div>
+                                        <div class="meta-item rating">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span>{{ $course->review_count > 0 ? number_format($course->review_count, 1) : '4.8' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="text-center mt-5" data-aos="fade-up">
+                <a href="{{ route('public.courses.index') }}" class="btn-all-courses">
+                    <i class="bi bi-grid-fill"></i>
+                    عرض جميع الدورات
+                </a>
+            </div>
+        </div>
+    </section>
+    @endif
+
+    <!-- Meet Our Instructors Section -->
+    @if($featuredLeaders->count() > 0)
+    <section id="instructors" class="instructors-section">
+        <div class="container">
+            <div class="section-title" data-aos="fade-up">
+                <h2>تعرّف على مدربينا</h2>
+                <p>نخبة من الخبراء المتميزين في مجالاتهم لمساعدتك على تحقيق أهدافك</p>
+            </div>
+
+            <div class="instructors-landing-wrapper">
+                <div class="swiper instructors-landing-swiper" data-aos="fade-up" data-aos-delay="100">
+                    <div class="swiper-wrapper">
+                        @foreach($featuredLeaders as $leader)
+                            <div class="swiper-slide">
+                                <div class="instructor-card-academic">
+                                    <div class="instructor-image-frame">
+                                        @if($leader->photo)
+                                            <img src="{{ asset('storage/app/public/' . $leader->photo) }}" alt="{{ $leader->name }}">
+                                        @else
+                                            <div class="instructor-image-placeholder">
+                                                {{ mb_substr($leader->name, 0, 1) }}
+                                            </div>
+                                        @endif
+
+                                        <div class="instructor-expert-badge">
+                                            <i class="bi bi-award-fill" style="font-size: 0.75rem;"></i>
+                                        </div>
+                                    </div>
+
+                                    <a href="{{ route('public.leaders.show', $leader) }}" class="text-decoration-none">
+                                        <h5 class="instructor-name-academic" style="transition: color 0.3s ease;">{{ $leader->name }}</h5>
+                                    </a>
+
+                                    @if($leader->job_title)
+                                        <p class="instructor-title-academic">{{ $leader->job_title }}</p>
+                                    @endif
+
+                                    @if($leader->courses_count > 0)
+                                        <div class="instructor-courses-count">
+                                            <i class="bi bi-mortarboard-fill"></i>
+                                            <span>{{ $leader->courses_count }} {{ $leader->courses_count == 1 ? 'دورة تدريبية' : 'دورات تدريبية' }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($leader->job_description)
+                                        <p class="instructor-bio-academic">{{ $leader->job_description }}</p>
+                                    @else
+                                        <p class="instructor-bio-academic">متخصص في مجال التدريب الأكاديمي والتطوير المهني بخبرة واسعة في تقديم المحتوى التعليمي المتميز.</p>
+                                    @endif
+
+                                    <div class="instructor-actions-academic">
+                                        <a href="{{ route('public.leaders.show', $leader) }}" class="btn-academic btn-academic-primary w-100">
+                                            <i class="bi bi-person-lines-fill me-2"></i>عرض الملف الشخصي
+                                        </a>
+
+                                        @if($leader->linkedin)
+                                            <a href="{{ $leader->linkedin }}" target="_blank" class="btn-academic btn-academic-outline w-100">
+                                                <i class="bi bi-linkedin me-2"></i>LinkedIn
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-pagination"></div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4" data-aos="fade-up">
+                <a href="{{ route('public.leaders.index') }}" class="btn-all-courses">
+                    <i class="bi bi-people-fill"></i>
+                    عرض جميع المدربين
+                </a>
+            </div>
+        </div>
+    </section>
+    @endif
 
     <!-- Booking Plans Section -->
     <section id="plans" class="plans-section">
@@ -3293,17 +3953,48 @@
 @endsection
 
 @section('scripts')
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
     <script>
         // Force font loading for Orbitron and Tektur (landing page specific)
         document.fonts.ready.then(function () {
             console.log('Fonts loaded');
-            // Force reflow to apply fonts
             document.querySelectorAll('.orbitron-text, .orbitron-bold, .orbitron-heavy, .orbitron-medium').forEach(function(element) {
                 element.style.fontFamily = '"Orbitron", sans-serif';
             });
             document.querySelectorAll('.tektur-text, .tektur-bold, .tektur-heavy, .tektur-medium').forEach(function(element) {
                 element.style.fontFamily = '"Tektur", sans-serif';
             });
+        });
+
+        // Initialize Instructors Carousel
+        document.addEventListener('DOMContentLoaded', function() {
+            const swiperEl = document.querySelector('.instructors-landing-swiper');
+            if (swiperEl) {
+                new Swiper('.instructors-landing-swiper', {
+                    slidesPerView: 1,
+                    spaceBetween: 24,
+                    breakpoints: {
+                        576: { slidesPerView: 1, spaceBetween: 24 },
+                        768: { slidesPerView: 2, spaceBetween: 30 },
+                        992: { slidesPerView: 3, spaceBetween: 30 },
+                    },
+                    navigation: {
+                        nextEl: '.instructors-landing-swiper .swiper-button-next',
+                        prevEl: '.instructors-landing-swiper .swiper-button-prev',
+                    },
+                    pagination: {
+                        el: '.instructors-landing-swiper .swiper-pagination',
+                        clickable: true,
+                    },
+                    speed: 600,
+                    grabCursor: true,
+                    keyboard: { enabled: true },
+                    watchSlidesProgress: true,
+                    watchOverflow: true,
+                });
+            }
         });
     </script>
 @endsection

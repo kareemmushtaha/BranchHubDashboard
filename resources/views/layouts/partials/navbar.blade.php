@@ -45,7 +45,7 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('public.courses.*') ? 'active' : '' }}" 
                        href="{{ route('public.courses.index') }}">
-                        الأكاديمية
+                        الأكاديمية / الدورات
                     </a>
                 </li>
                 <li class="nav-item">
