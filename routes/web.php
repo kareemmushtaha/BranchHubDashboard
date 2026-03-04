@@ -35,7 +35,18 @@ Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');
     }
-    return view('branchhub-landing');
+    $featuredCourses = \App\Models\Course::where('is_published', true)
+        ->with('categories')
+        ->latest()
+        ->take(6)
+        ->get();
+    $featuredLeaders = \App\Models\Leader::withCount(['courses' => function ($q) {
+            $q->where('is_published', true);
+        }])
+        ->latest()
+        ->take(6)
+        ->get();
+    return view('branchhub-landing', compact('featuredCourses', 'featuredLeaders'));
 })->name('branchhub.landing');
 
 // Welcome Page (alternative welcome page)
@@ -67,7 +78,18 @@ Route::get('/branchhub', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');
     }
-    return view('branchhub-landing');
+    $featuredCourses = \App\Models\Course::where('is_published', true)
+        ->with('categories')
+        ->latest()
+        ->take(6)
+        ->get();
+    $featuredLeaders = \App\Models\Leader::withCount(['courses' => function ($q) {
+            $q->where('is_published', true);
+        }])
+        ->latest()
+        ->take(8)
+        ->get();
+    return view('branchhub-landing', compact('featuredCourses', 'featuredLeaders'));
 })->name('branchhub');
 
 // Branch Hub Booking Form
@@ -259,5 +281,6 @@ Route::post('course-enrollment-requests', [CourseEnrollmentRequestController::cl
 Route::get('courses', [PublicCourseController::class, 'index'])->name('public.courses.index');
 Route::get('courses/{course:slug}', [PublicCourseController::class, 'show'])->name('public.courses.show');
 
-// Public leader profile (no auth required)
+// Public leaders list and profile (no auth required)
+Route::get('leaders', [PublicLeaderController::class, 'index'])->name('public.leaders.index');
 Route::get('leaders/{leader}', [PublicLeaderController::class, 'show'])->name('public.leaders.show');

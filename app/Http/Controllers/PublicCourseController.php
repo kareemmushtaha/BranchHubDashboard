@@ -19,7 +19,7 @@ class PublicCourseController extends Controller
             $query->whereHas('categories', fn ($q) => $q->where('categories.id', $request->category));
         }
 
-        $courses = $query->latest()->paginate(12)->withQueryString();
+        $courses = $query->latest()->paginate(6)->withQueryString();
         $categories = Category::has('courses')->orderBy('name')->get();
 
         return view('public.courses.index', compact('courses', 'categories'));
