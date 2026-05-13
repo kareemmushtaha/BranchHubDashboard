@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DrinkSeeder::class,
             PublicPriceSeeder::class,
+            ExpenseCategorySeeder::class,
         ]);
     }
 }

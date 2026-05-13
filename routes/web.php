@@ -16,6 +16,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SessionAuditController;
 use App\Http\Controllers\SessionPriceController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\BookingRequestController;
 use App\Http\Controllers\ElectricityMeterReadingController;
 use App\Http\Controllers\EmployeeSalaryController;
@@ -148,8 +149,9 @@ Route::put('drink-invoices/{drinkInvoice}/items/{item}/update-date', [DrinkInvoi
 Route::put('drink-invoices/{drinkInvoice}/items/{item}/update-price', [DrinkInvoiceController::class, 'updateDrinkPrice'])->name('drink-invoices.update-drink-price');
 Route::get('drink-invoices/{drinkInvoice}/invoice', [DrinkInvoiceController::class, 'generateInvoice'])->name('drink-invoices.invoice');
 Route::get('drink-invoices/{drinkInvoice}/invoice/show', [DrinkInvoiceController::class, 'showInvoice'])->name('drink-invoices.invoice.show');
-
+    
 // Drink Invoice Items Routes
+Route::get('drink-invoice-items/export-pdf', [DrinkInvoiceItemController::class, 'exportPdf'])->name('drink-invoice-items.export-pdf');
 Route::get('drink-invoice-items', [DrinkInvoiceItemController::class, 'index'])->name('drink-invoice-items.index');
 
 // Session Drinks Routes
@@ -239,7 +241,14 @@ Route::post('sessions/{session}/pause', [SessionController::class, 'pauseSession
 Route::post('sessions/{session}/resume', [SessionController::class, 'resumeSession'])->name('sessions.resume');
 
 // Expenses Routes
-Route::resource('expenses', ExpenseController::class);
+Route::get('expenses-export-pdf', [ExpenseController::class, 'exportPdf'])
+    ->name('expenses.export-pdf')
+    ->middleware('permission:view expenses');
+Route::get('expenses-export-print', [ExpenseController::class, 'exportPrint'])
+    ->name('expenses.export-print')
+    ->middleware('permission:view expenses');
+Route::resource('expenses', ExpenseController::class)->middleware('permission:view expenses|create expenses|edit expenses|delete expenses');
+Route::resource('expense-categories', ExpenseCategoryController::class)->middleware('permission:view expense categories|create expense categories|edit expense categories|delete expense categories');
 
 // Employee Salaries Routes
 Route::resource('employee-salaries', EmployeeSalaryController::class);

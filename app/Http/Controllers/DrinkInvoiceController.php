@@ -117,7 +117,7 @@ class DrinkInvoiceController extends Controller
         $this->authorize('view drink invoices');
         
         $query = DrinkInvoice::with(['user', 'items.drink'])
-            ->where('payment_status', 'pending')
+            ->whereIn('payment_status', ['pending','partial'])
             ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc');
 

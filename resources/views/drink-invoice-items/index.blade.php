@@ -42,9 +42,12 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary me-2">
+                    <div class="col-md-2 d-flex align-items-end flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary">
                             <i class="bi bi-search"></i> بحث
+                        </button>
+                        <button type="submit" formaction="{{ route('drink-invoice-items.export-pdf') }}" formmethod="get" class="btn btn-outline-danger">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF
                         </button>
                         <a href="{{ route('drink-invoice-items.index') }}" class="btn btn-secondary">
                             <i class="bi bi-x-circle"></i> إعادة تعيين

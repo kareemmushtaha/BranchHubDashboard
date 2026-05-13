@@ -21,4 +21,9 @@ class Drink extends Model
     {
         return $this->hasMany(SessionDrink::class);
     }
+
+    public function drinkInvoiceItems()
+    {
+        return $this->hasMany(DrinkInvoiceItem::class);
+    }
 }

@@ -41,6 +41,24 @@
                         @enderror
                     </div>
 
+                    <div class="mb-3">
+                        <label for="expense_category_id" class="form-label">تصنيف المصروف <span class="text-danger">*</span></label>
+                        <select class="form-select @error('expense_category_id') is-invalid @enderror"
+                                id="expense_category_id"
+                                name="expense_category_id"
+                                required>
+                            <option value="">اختر تصنيف المصروف</option>
+                            @foreach($expenseCategories as $category)
+                                <option value="{{ $category->id }}" {{ (string) old('expense_category_id', $expense->expense_category_id) === (string) $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('expense_category_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="amount" class="form-label">سعر البند (شيكل) <span class="text-danger">*</span></label>

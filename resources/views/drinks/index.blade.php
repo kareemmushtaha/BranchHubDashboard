@@ -122,7 +122,7 @@
                                 <span class="badge bg-danger">غير متوفر</span>
                             @endif
                         </td>
-                        <td>{{ $drink->sessionDrinks()->count() }}</td>
+                        <td>{{ $drink->session_drinks_count + $drink->drink_invoice_items_count }}</td>
                         <td>{{ $drink->created_at->format('Y-m-d') }}</td>
                         <td>
                             <div class="btn-group" role="group">

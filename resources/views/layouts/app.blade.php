@@ -241,6 +241,13 @@
                         </a>
                     </li>
                     @endcanany
+                    @canany(['view expense categories', 'create expense categories', 'edit expense categories'])
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('expense-categories.*') ? 'active' : '' }}" href="{{ route('expense-categories.index') }}">
+                            <i class="bi bi-tags"></i> تصنيفات المصروفات
+                        </a>
+                    </li>
+                    @endcanany
                     @canany(['view employee salaries', 'create employee salaries', 'edit employee salaries'])
                     <li class="nav-item">
                         <a class="nav-link text-white {{ request()->routeIs('employee-salaries.*') ? 'active' : '' }}" href="{{ route('employee-salaries.index') }}">
