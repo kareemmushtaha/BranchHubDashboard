@@ -47,6 +47,17 @@
                     </div>
                     
                     <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">التصنيف:</label>
+                        <p class="form-control-plaintext">
+                            <span class="badge bg-secondary fs-6">
+                                {{ $expense->expenseCategory?->name ?? 'غير محدد' }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">طريقة الدفع:</label>
                         <p class="form-control-plaintext">
                             <span class="badge {{ $expense->payment_type === 'bank' ? 'bg-info' : 'bg-success' }} fs-6">

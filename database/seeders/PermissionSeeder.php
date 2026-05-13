@@ -138,6 +138,10 @@ class PermissionSeeder extends Seeder
             'create expenses',
             'edit expenses',
             'delete expenses',
+            'view expense categories',
+            'create expense categories',
+            'edit expense categories',
+            'delete expense categories',
             
             // Employee Salaries
             'view employee salaries',
@@ -223,6 +227,7 @@ class PermissionSeeder extends Seeder
             'view reports',
             'view courses',
             'view categories',
+            'view expense categories',
             'view skills',
             'view leaders',
             'view course enrollment requests',

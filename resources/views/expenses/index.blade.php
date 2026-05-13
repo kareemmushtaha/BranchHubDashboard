@@ -5,11 +5,73 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">المصروفات المالية</h1>
-    @can('create expenses')
-    <a href="{{ route('expenses.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-2"></i>إضافة مصروف جديد
-    </a>
-    @endcan
+    <div class="d-flex gap-2">
+        <a href="{{ route('expenses.export-pdf', request()->query()) }}" class="btn btn-danger">
+            <i class="bi bi-file-pdf me-2"></i>تصدير PDF
+        </a>
+        <a href="{{ route('expenses.export-print', request()->query()) }}" target="_blank" class="btn btn-outline-dark">
+            <i class="bi bi-printer me-2"></i>طباعة وحفظ PDF (أفضل للعربية)
+        </a>
+        @can('create expenses')
+        <a href="{{ route('expenses.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>إضافة مصروف جديد
+        </a>
+        @endcan
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">فلترة المصروفات</h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ route('expenses.index') }}">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label for="from_date" class="form-label">من تاريخ</label>
+                    <input type="date" class="form-control" id="from_date" name="from_date" value="{{ request('from_date') }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="to_date" class="form-label">إلى تاريخ</label>
+                    <input type="date" class="form-control" id="to_date" name="to_date" value="{{ request('to_date') }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="expense_category_id" class="form-label">نوع المصروف</label>
+                    <select class="form-select" id="expense_category_id" name="expense_category_id">
+                        <option value="">الكل</option>
+                        @foreach($expenseCategories as $category)
+                            <option value="{{ $category->id }}" {{ (string) request('expense_category_id') === (string) $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="from_price" class="form-label">من سعر</label>
+                    <input type="number" step="0.01" min="0" class="form-control" id="from_price" name="from_price" value="{{ request('from_price') }}" placeholder="0.00">
+                </div>
+                <div class="col-md-2">
+                    <label for="to_price" class="form-label">إلى سعر</label>
+                    <input type="number" step="0.01" min="0" class="form-control" id="to_price" name="to_price" value="{{ request('to_price') }}" placeholder="0.00">
+                </div>
+                <div class="col-md-2">
+                    <label for="payment_type" class="form-label">طريقة الدفع</label>
+                    <select class="form-select" id="payment_type" name="payment_type">
+                        <option value="">الكل</option>
+                        <option value="bank" {{ request('payment_type') === 'bank' ? 'selected' : '' }}>بنكي</option>
+                        <option value="cash" {{ request('payment_type') === 'cash' ? 'selected' : '' }}>كاش</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <a href="{{ route('expenses.index') }}" class="btn btn-outline-secondary">إعادة تعيين</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel me-2"></i>تطبيق الفلتر
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="card">
@@ -21,6 +83,7 @@
                         <tr>
                             <th>#</th>
                             <th>اسم البند</th>
+                            <th>التصنيف</th>
                             <th>سعر البند</th>
                             <th>طريقة الدفع</th>
                             <th>تاريخ الدفع</th>
@@ -36,6 +99,11 @@
                             <td>{{ $expense->id }}</td>
                             <td>
                                 <strong>{{ $expense->item_name ?? 'غير محدد' }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ $expense->expenseCategory?->name ?? 'غير محدد' }}
+                                </span>
                             </td>
                             <td>
                                 <span class="badge bg-danger fs-6">
@@ -126,7 +194,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h5 class="card-title">إجمالي المصروفات</h5>
-                        <h3 class="mb-0">{{ number_format($expenses->sum('amount'), 2) }} ₪</h3>
+                        <h3 class="mb-0">{{ number_format((float) ($stats->total_amount ?? 0), 2) }} ₪</h3>
                     </div>
                     <div class="align-self-center">
                         <i class="bi bi-currency-exchange display-4"></i>
@@ -141,7 +209,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h5 class="card-title">المصروفات البنكية</h5>
-                        <h3 class="mb-0">{{ number_format($expenses->where('payment_type', 'bank')->sum('amount'), 2) }} ₪</h3>
+                        <h3 class="mb-0">{{ number_format((float) ($stats->bank_amount ?? 0), 2) }} ₪</h3>
                     </div>
                     <div class="align-self-center">
                         <i class="bi bi-bank display-4"></i>
@@ -156,7 +224,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h5 class="card-title">المصروفات النقدية</h5>
-                        <h3 class="mb-0">{{ number_format($expenses->where('payment_type', 'cash')->sum('amount'), 2) }} ₪</h3>
+                        <h3 class="mb-0">{{ number_format((float) ($stats->cash_amount ?? 0), 2) }} ₪</h3>
                     </div>
                     <div class="align-self-center">
                         <i class="bi bi-cash-coin display-4"></i>

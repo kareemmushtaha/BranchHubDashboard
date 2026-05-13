@@ -114,6 +114,7 @@ class RolePermissionController extends Controller
             'Audit' => ['view session audit', 'view audit', 'export audit'],
             'Session Pricing' => ['update internet cost', 'update internet cost form', 'view session pricing', 'update all pricing'],
             'Expenses' => ['view expenses', 'create expenses', 'edit expenses', 'delete expenses'],
+            'Expense Categories' => ['view expense categories', 'create expense categories', 'edit expense categories', 'delete expense categories'],
             'Employee Salaries' => ['view employee salaries', 'create employee salaries', 'edit employee salaries', 'delete employee salaries'],
             'Electricity Meter Readings' => ['view electricity meter readings', 'create electricity meter readings', 'edit electricity meter readings', 'delete electricity meter readings'],
             'Booking Requests' => ['view booking requests', 'edit booking requests', 'delete booking requests', 'update booking request status'],

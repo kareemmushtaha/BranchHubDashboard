@@ -79,7 +79,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-sm-6"><strong>إجمالي المبيعات:</strong></div>
-                    <div class="col-sm-6">{{ $salesStats['total_sold'] }} مرة</div>
+                    <div class="col-sm-6">{{ $drink->session_drinks_count + $drink->drink_invoice_items_count }} مرة</div>
                 </div>
                 <hr>
                 <div class="row">

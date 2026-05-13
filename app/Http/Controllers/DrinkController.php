@@ -14,7 +14,10 @@ class DrinkController extends Controller
     public function index()
     {
         $this->authorize('view drinks');
-        $drinks = Drink::orderBy('created_at', 'desc')->paginate(20);
+        $drinks = Drink::query()
+            ->withCount(['sessionDrinks', 'drinkInvoiceItems'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
         
         $stats = [
             'total_drinks' => Drink::count(),
@@ -64,9 +67,12 @@ class DrinkController extends Controller
      */
     public function show(Drink $drink)
     {
+        $drink->loadCount(['sessionDrinks', 'drinkInvoiceItems']);
+
         $salesStats = [
-            'total_sold' => $drink->sessionDrinks()->count(),
-            'total_revenue' => $drink->sessionDrinks()->sum('price'),
+            'total_sold' => $drink->session_drinks_count + $drink->drink_invoice_items_count,
+            'total_revenue' => $drink->sessionDrinks()->sum('price')
+                + $drink->drinkInvoiceItems()->sum('price'),
             'last_order' => $drink->sessionDrinks()->latest()->first()?->created_at,
         ];
 
