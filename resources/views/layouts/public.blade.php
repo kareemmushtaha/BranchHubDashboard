@@ -32,7 +32,7 @@
 
     <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-
+<meta name="google-site-verification" content="UdloH2puOSgX-yyUe_uH70958qKn3sZSxVQRsxnW_2Q" />
     <!-- Base Styles -->
     <style>
         * {
